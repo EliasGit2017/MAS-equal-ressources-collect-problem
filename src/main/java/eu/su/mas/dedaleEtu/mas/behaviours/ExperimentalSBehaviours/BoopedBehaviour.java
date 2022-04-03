@@ -2,6 +2,7 @@ package eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours;
 
 import java.util.List;
 
+import eu.su.mas.dedaleEtu.mas.agents.dummies.explo.ExploreCoopAgent;
 import jade.core.Agent;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -29,6 +30,7 @@ public class BoopedBehaviour extends SimpleBehaviour {
 		
 		if (msg != null) {
 			// Use ExploCoopAgent to set exploration behaviours
+			//((ExploreCoopAgent)this.myAgent).moving=false;
 			
 			msg.getContent();
 			System.out.println(" --> " + this.myAgent.getLocalName() + " <--- Received boop from " + msg.getSender().getLocalName());

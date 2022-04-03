@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
+import eu.su.mas.dedale.mas.agent.behaviours.startMyBehaviours;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.InitialiazeMap;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.PingBoopBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.ReceiveMap;
@@ -44,6 +45,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 	private static final String ShareMap = "ShareMap";
 	private static final String Boop = "Boop";
 	private static final String R_Map = "ReceiveMap";
+	private static final String Explo = "Exploration";
 	private static final String Move = "MoveTo";
 	private static final String StopAg = "Stop";
 	
@@ -51,7 +53,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 		
 		super.setup();
 		
-		//Initialize agent parameters using arguments
+		//Initialize agent parameters using arguments :
 		final Object[] args = getArguments();
 		
 		List<String> agentNames=new ArrayList<String>();
@@ -70,7 +72,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 		this.cptAgents = agentNames.size();
 		this.agenda = agentNames;
 		
-		// Define behaviours of the finite state machine
+		// Define states(behaviours) of the finite state machine :
 		this.fsmb = new FSMBehaviour(this);
 		
 		fsmb.registerFirstState(new InitialiazeMap(), Init);
@@ -78,12 +80,20 @@ public class fsmAgent extends AbstractDedaleAgent {
 		fsmb.registerState(new ShareMapB(this, this.myMap, agenda), ShareMap);
 		fsmb.registerState(new ReceiveMap(this), R_Map);
 		
-		// Define states & transitions
+		// Define transitions :
 		
+		/*
+		 * Start Behaviours and print in console
+		 */
+		
+		this.lb = new ArrayList<Behaviour>();
+		this.lb.add(fsmb);
+		addBehaviour(new startMyBehaviours(this, this.lb));
+		System.out.println(" ---> FSMAgent : " + this.getLocalName() + " just started, verify state definition if any problem occurs.");
 	}
 
 	public MapRepresentation getMyMap() {
-		return myMap;
+		return this.myMap;
 	}
 
 	public void setMyMap(MapRepresentation myMap) {
