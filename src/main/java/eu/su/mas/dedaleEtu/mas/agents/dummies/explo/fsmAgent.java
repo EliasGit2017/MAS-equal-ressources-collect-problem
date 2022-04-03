@@ -78,7 +78,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 		fsmb.registerState(new ShareMapB(this, this.myMap, agenda), ShareMap);
 		fsmb.registerState(new ReceiveMap(this), R_Map);
 		
-		
+		// Define states & transitions
 		
 	}
 
