@@ -1,0 +1,20 @@
+graph g{
+        Init
+        Boop
+        ShareMap
+        R_MAP
+        Explo
+        StopAg
+
+        Init -- Explo
+        Explo -- Explo
+        Explo -- Boop
+        Explo -- ShareMap
+        Boop -- Explo
+        ShareMap -- R_MAP
+        R_MAP -- R_MAP
+        R_MAP -- Explo
+        Explo -- StopAg
+
+}
+

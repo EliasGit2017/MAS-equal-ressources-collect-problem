@@ -5,6 +5,7 @@ import java.util.List;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.startMyBehaviours;
+import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.BoopedBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.ExploreBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.InitialiazeMap;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.PingBoopBehaviour;
@@ -37,6 +38,8 @@ public class fsmAgent extends AbstractDedaleAgent {
 	
 	private int cptAgents;
 	
+	private int BackpackCapacity, CollectedQty = 0;
+	
 	private List<String> agenda;
 	
 	private List<Behaviour> lb;
@@ -48,6 +51,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 	private static final String Boop = "Boop";
 	private static final String R_Map = "ReceiveMap";
 	private static final String Explo = "Exploration";
+	private static final String Booped = "Booped";
 	//private static final String Move = "MoveTo";
 	private static final String StopAg = "Stop";
 	
@@ -77,12 +81,13 @@ public class fsmAgent extends AbstractDedaleAgent {
 		// Define states(behaviours) of the finite state machine :
 		this.fsmb = new FSMBehaviour(this);
 		
-		fsmb.registerFirstState(new InitialiazeMap(), Init);
-		fsmb.registerState(new PingBoopBehaviour(this, agenda), Boop);
-		fsmb.registerState(new ShareMapB(this, this.myMap, agenda), ShareMap);
-		fsmb.registerState(new ReceiveMap(this), R_Map);
-		fsmb.registerState(new ExploreBehaviour(this, this.myMap, PokeTime, this.agenda), Explo);
-		fsmb.registerLastState(new StopBehaviour(), StopAg);
+		fsmb.registerFirstState(new InitialiazeMap(), Init); // Initialize Agent Map
+		fsmb.registerState(new PingBoopBehaviour(this, agenda), Boop); // Send Poke
+		fsmb.registerState(new BoopedBehaviour(this, this.agenda), Booped); // Receive Poke
+		fsmb.registerState(new ShareMapB(this, this.myMap, agenda), ShareMap); // ShareMap Behaviour
+		fsmb.registerState(new ReceiveMap(this), R_Map); // ReceiveMap Behaviour
+		fsmb.registerState(new ExploreBehaviour(this, this.myMap, PokeTime, this.agenda), Explo); // Exploration
+		fsmb.registerLastState(new StopBehaviour(), StopAg); // Ending
 		
 		// Define transitions :
 		

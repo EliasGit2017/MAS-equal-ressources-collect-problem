@@ -23,7 +23,7 @@ import jade.lang.acl.UnreadableException;
  * </pre>
  */
 
-public class ExploreBehaviour extends OneShotBehaviour {
+public class ExploreBehaviour extends SimpleBehaviour {
 
 	private static final long serialVersionUID = -5775943961809349356L;
 	
@@ -49,10 +49,13 @@ public class ExploreBehaviour extends OneShotBehaviour {
 	@Override
 	public void action() {
 		
+		// Might be useless due to how the fsmAgent's first state is defined
 		if(this.myMap==null) {
 			this.myMap= new MapRepresentation();
 			this.myAgent.addBehaviour(new ShareMapB(this.myAgent, this.myMap, agenda));
 		}
+		
+		//System.out.println(" --> Exploration Begins for : " + this.myAgent.getLocalName());
 		
 		String cur_pos = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 		
@@ -94,19 +97,19 @@ public class ExploreBehaviour extends OneShotBehaviour {
 					// Define Sub behaviour here
 				}
 				// Receive Map and merge
-				MessageTemplate msgTemplate=MessageTemplate.and(
-						MessageTemplate.MatchProtocol("ProtocoleShareMap"),
-						MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-				ACLMessage msgReceived=this.myAgent.receive(msgTemplate);
-				if (msgReceived!=null) {
-					SerializableSimpleGraph<String, MapAttribute> sgreceived=null;
-					try {
-						sgreceived = (SerializableSimpleGraph<String, MapAttribute>)msgReceived.getContentObject();
-					} catch (UnreadableException e) {
-						e.printStackTrace();
-					}
-					this.myMap.mergeMap(sgreceived);
-				}
+//				MessageTemplate msgTemplate=MessageTemplate.and(
+//						MessageTemplate.MatchProtocol("ProtocoleShareMap"),
+//						MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+//				ACLMessage msgReceived=this.myAgent.receive(msgTemplate);
+//				if (msgReceived!=null) {
+//					SerializableSimpleGraph<String, MapAttribute> sgreceived=null;
+//					try {
+//						sgreceived = (SerializableSimpleGraph<String, MapAttribute>)msgReceived.getContentObject();
+//					} catch (UnreadableException e) {
+//						e.printStackTrace();
+//					}
+//					this.myMap.mergeMap(sgreceived);
+//				}
 
 				((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 				
@@ -114,6 +117,11 @@ public class ExploreBehaviour extends OneShotBehaviour {
 			}
 			
 		}
+	}
+
+	@Override
+	public boolean done() {
+		return false;
 	}
 
 //	@Override

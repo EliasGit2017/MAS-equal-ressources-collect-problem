@@ -38,6 +38,8 @@ public class PingBoopBehaviour extends OneShotBehaviour {
 		}
 		
 		((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+		
+		System.out.println(" ---> Agent : " + this.myAgent.getLocalName() + " booped its agenda <--");
 	}
 
 }

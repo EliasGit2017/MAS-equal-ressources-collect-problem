@@ -51,6 +51,7 @@ public class ShareMapB extends OneShotBehaviour {
 			e.printStackTrace();
 		}
 		((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+		
 		System.out.println(" ---> " + this.myAgent.getLocalName() + " just sent its map");
 	}
 
