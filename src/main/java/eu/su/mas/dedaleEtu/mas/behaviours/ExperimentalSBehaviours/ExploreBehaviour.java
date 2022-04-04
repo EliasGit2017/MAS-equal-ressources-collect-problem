@@ -51,7 +51,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 		
 		if(this.myMap==null) {
 			this.myMap= new MapRepresentation();
-			this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent, 500, this.myMap, agenda));
+			this.myAgent.addBehaviour(new ShareMapB(this.myAgent, this.myMap, agenda));
 		}
 		
 		String cur_pos = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
