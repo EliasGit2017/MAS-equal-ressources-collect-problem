@@ -5,10 +5,12 @@ import java.util.List;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.startMyBehaviours;
+import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.ExploreBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.InitialiazeMap;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.PingBoopBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.ReceiveMap;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.ShareMapB;
+import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.StopBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.FSMBehaviour;
@@ -46,7 +48,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 	private static final String Boop = "Boop";
 	private static final String R_Map = "ReceiveMap";
 	private static final String Explo = "Exploration";
-	private static final String Move = "MoveTo";
+	//private static final String Move = "MoveTo";
 	private static final String StopAg = "Stop";
 	
 	protected void setup() {
@@ -79,9 +81,21 @@ public class fsmAgent extends AbstractDedaleAgent {
 		fsmb.registerState(new PingBoopBehaviour(this, agenda), Boop);
 		fsmb.registerState(new ShareMapB(this, this.myMap, agenda), ShareMap);
 		fsmb.registerState(new ReceiveMap(this), R_Map);
+		fsmb.registerState(new ExploreBehaviour(this, this.myMap, PokeTime), Explo);
+		fsmb.registerLastState(new StopBehaviour(), StopAg);
 		
 		// Define transitions :
 		
+		fsmb.registerDefaultTransition(Init, Explo);
+		fsmb.registerDefaultTransition(Explo, Explo);
+		fsmb.registerTransition(Explo, Boop, 1);
+		fsmb.registerTransition(Explo, ShareMap, 2);
+		fsmb.registerDefaultTransition(Boop, Explo);
+		fsmb.registerDefaultTransition(ShareMap, R_Map);
+		fsmb.registerDefaultTransition(R_Map, R_Map);
+		fsmb.registerTransition(R_Map, Explo, 1);
+		
+		fsmb.registerTransition(Explo, StopAg, 100);
 		/*
 		 * Start Behaviours and print in console
 		 */

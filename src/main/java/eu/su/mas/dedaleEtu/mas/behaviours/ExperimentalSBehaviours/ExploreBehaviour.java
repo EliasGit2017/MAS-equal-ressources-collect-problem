@@ -3,6 +3,7 @@ package eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours;
 import java.util.Iterator;
 import java.util.List;
 
+import dataStructures.serializableGraph.SerializableSimpleGraph;
 import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
@@ -10,6 +11,9 @@ import eu.su.mas.dedaleEtu.mas.agents.dummies.explo.fsmAgent;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import jade.core.behaviours.OneShotBehaviour;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 
 /*
  * <pre>
@@ -35,6 +39,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 		this.timer = timer;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void action() {
 		
@@ -68,7 +73,23 @@ public class ExploreBehaviour extends OneShotBehaviour {
 				} else {
 					// Define Sub behaviour here
 				}
-				
+				// Receive Map and merge
+				MessageTemplate msgTemplate=MessageTemplate.and(
+						MessageTemplate.MatchProtocol("ProtocoleShareMap"),
+						MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+				ACLMessage msgReceived=this.myAgent.receive(msgTemplate);
+				if (msgReceived!=null) {
+					SerializableSimpleGraph<String, MapAttribute> sgreceived=null;
+					try {
+						sgreceived = (SerializableSimpleGraph<String, MapAttribute>)msgReceived.getContentObject();
+					} catch (UnreadableException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					this.myMap.mergeMap(sgreceived);
+				}
+
+				((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 				
 
 			}
