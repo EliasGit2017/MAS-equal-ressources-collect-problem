@@ -8,9 +8,11 @@ import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.agents.dummies.explo.fsmAgent;
+import eu.su.mas.dedaleEtu.mas.behaviours.ShareMapBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SimpleBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
@@ -27,27 +29,45 @@ public class ExploreBehaviour extends OneShotBehaviour {
 	
 	private MapRepresentation myMap;
 	
-	private String nNode = "";
+	private List<String> agenda;
 	
-	private int timer;
+	//private String nNode = "";
+	
+	//private int timer;
 	
 	public boolean terminated = false;
 	
-	public ExploreBehaviour(final AbstractDedaleAgent cur_a, MapRepresentation myMap, int timer) {
+	public ExploreBehaviour(final AbstractDedaleAgent cur_a, MapRepresentation myMap, int timer, List<String> contacts) {
 		super(cur_a);
 		this.myMap = ((fsmAgent)this.myAgent).getMyMap();
-		this.timer = timer;
+		this.agenda = contacts;
+		//this.myAgent.addBehaviour(new ShareMapB(this.myAgent, this.myMap, this.agenda));
+		//this.timer = timer;
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
 	public void action() {
 		
+		if(this.myMap==null) {
+			this.myMap= new MapRepresentation();
+			this.myAgent.addBehaviour(new ShareMapBehaviour(this.myAgent, 500, this.myMap, agenda));
+		}
+		
 		String cur_pos = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 		
 		if (cur_pos != null) {
 			
 			List<Couple<String,List<Couple<Observation,Integer>>>> lobs = ((AbstractDedaleAgent)this.myAgent).observe();
+			
+			/**
+			 * Just added here to let you see what the agent is doing, otherwise he will be too quick
+			 */
+			try {
+				this.myAgent.doWait(1000);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			
 			//1) remove the current node from openlist and add it to closedNodes.
 			this.myMap.addNode(cur_pos, MapAttribute.closed);
@@ -83,7 +103,6 @@ public class ExploreBehaviour extends OneShotBehaviour {
 					try {
 						sgreceived = (SerializableSimpleGraph<String, MapAttribute>)msgReceived.getContentObject();
 					} catch (UnreadableException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					this.myMap.mergeMap(sgreceived);
@@ -96,7 +115,12 @@ public class ExploreBehaviour extends OneShotBehaviour {
 			
 		}
 	}
-	
-	
+
+//	@Override
+//	public boolean done() {
+//		return terminated;
+//	}
+
+
 
 }

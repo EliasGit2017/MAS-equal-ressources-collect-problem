@@ -81,7 +81,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 		fsmb.registerState(new PingBoopBehaviour(this, agenda), Boop);
 		fsmb.registerState(new ShareMapB(this, this.myMap, agenda), ShareMap);
 		fsmb.registerState(new ReceiveMap(this), R_Map);
-		fsmb.registerState(new ExploreBehaviour(this, this.myMap, PokeTime), Explo);
+		fsmb.registerState(new ExploreBehaviour(this, this.myMap, PokeTime, this.agenda), Explo);
 		fsmb.registerLastState(new StopBehaviour(), StopAg);
 		
 		// Define transitions :
