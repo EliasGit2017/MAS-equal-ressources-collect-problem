@@ -31,6 +31,8 @@ public class ExploreBehaviour extends OneShotBehaviour {
 	
 	private List<String> agenda;
 	
+	private int exitCode;
+	
 	//private String nNode = "";
 	
 	//private int timer;
@@ -41,13 +43,13 @@ public class ExploreBehaviour extends OneShotBehaviour {
 		super(cur_a);
 		this.myMap = ((fsmAgent)this.myAgent).getMyMap();
 		this.agenda = contacts;
-		//this.myAgent.addBehaviour(new ShareMapB(this.myAgent, this.myMap, this.agenda));
-		//this.timer = timer;
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
 	public void action() {
+		
+		System.out.println(" ---> ExploreBehaviour running for " + this.myAgent.getLocalName() + " <---");
 		
 		// Might be useless due to how the fsmAgent's first state is defined
 		if(this.myMap==null) {
@@ -87,24 +89,24 @@ public class ExploreBehaviour extends OneShotBehaviour {
 				}
 			}
 			
-			List<Couple<Observation, Integer>> lObservations = lobs.get(0).getRight();
-			
-			Boolean b = false;
-			for(Couple<Observation, Integer> o:lObservations) {
-				switch (o.getLeft()) {
-				case DIAMOND: case GOLD:
-					// Print observations :
-					System.out.println(" --> at  " + cur_pos + " " + this.myAgent.getLocalName()+" - My treasure type is : "+((AbstractDedaleAgent) this.myAgent).getMyTreasureType());
-					System.out.println(" --> " + this.myAgent.getLocalName()+" - My current backpack capacity is:"+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
-					System.out.println(" --> " + this.myAgent.getLocalName()+" - Value of the treasure on the current position: "+o.getLeft() +": "+ o.getRight());
-					System.out.println(" --> " + this.myAgent.getLocalName()+" - The agent grabbed :"+((AbstractDedaleAgent) this.myAgent).pick());
-					System.out.println(" --> " + this.myAgent.getLocalName()+" - the remaining backpack capacity is: "+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
-					b = true;
-					break;
-				default:
-					break;
-				}
-			}
+//			List<Couple<Observation, Integer>> lObservations = lobs.get(0).getRight();
+//			
+//			Boolean b = false;
+//			for(Couple<Observation, Integer> o:lObservations) {
+//				switch (o.getLeft()) {
+//				case DIAMOND: case GOLD:
+//					// Print observations :
+//					System.out.println(" --> at  " + cur_pos + " " + this.myAgent.getLocalName()+" - My treasure type is : "+((AbstractDedaleAgent) this.myAgent).getMyTreasureType());
+//					System.out.println(" --> " + this.myAgent.getLocalName()+" - My current backpack capacity is:"+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
+//					System.out.println(" --> " + this.myAgent.getLocalName()+" - Value of the treasure on the current position: "+o.getLeft() +": "+ o.getRight());
+//					System.out.println(" --> " + this.myAgent.getLocalName()+" - The agent grabbed :"+((AbstractDedaleAgent) this.myAgent).pick());
+//					System.out.println(" --> " + this.myAgent.getLocalName()+" - the remaining backpack capacity is: "+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
+//					b = true;
+//					break;
+//				default:
+//					break;
+//				}
+//			}
 			
 			if (!this.myMap.hasOpenNode()) {
 				terminated = true;
@@ -112,8 +114,10 @@ public class ExploreBehaviour extends OneShotBehaviour {
 			} else {
 				if (nextNode == null) {
 					nextNode = this.myMap.getShortestPathToClosestOpenNode(cur_pos).get(0);
+					this.exitCode = 2;
 				} else {
 					// Define Sub behaviour here
+					this.exitCode = 2;
 				}
 				// Receive Map and merge
 //				MessageTemplate msgTemplate=MessageTemplate.and(
@@ -138,15 +142,11 @@ public class ExploreBehaviour extends OneShotBehaviour {
 		}
 	}
 
-//	@Override
-//	public boolean done() {
-//		return false;
-//	}
+	@Override
+	public int onEnd() {
+		return exitCode;
+	}
 
-//	@Override
-//	public boolean done() {
-//		return terminated;
-//	}
 
 
 

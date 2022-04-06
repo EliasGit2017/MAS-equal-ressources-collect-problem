@@ -23,13 +23,14 @@ public class PingBoopBehaviour extends OneShotBehaviour {
 	
 	@Override
 	public void action() {
+		
+		System.out.println("---> " + this.myAgent.getLocalName() + " is trying to boop its friends <---");
+		
 		String cur_pos = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 		
 		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 		msg.setProtocol("ProtocoleBoop");
 		msg.setSender(this.myAgent.getAID());
-		
-		System.out.println("---> " + this.myAgent.getLocalName() + " is trying to boop its friends");
 		
 		msg.setContent(this.myAgent.getLocalName() + " ---> Hello Friend, I'm at " + cur_pos);
 		
