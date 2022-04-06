@@ -33,7 +33,7 @@ public class ShareMapB extends OneShotBehaviour {
 	public void action() {
 		
 		this.myMap = ((fsmAgent)this.myAgent).getMyMap();
-		System.out.println("ShareMapB running for ---> " + this.myAgent.getLocalName() + " <---");
+		System.out.println(" ---> ShareMapB running for ---> " + this.myAgent.getLocalName() + " <---");
 		
 		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 		msg.setProtocol("ProtocoleShareMap");

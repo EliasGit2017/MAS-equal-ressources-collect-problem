@@ -29,6 +29,8 @@ public class BoopedBehaviour extends SimpleBehaviour {
 		
 		final ACLMessage msg = this.myAgent.receive(msgTemplate);
 		
+		System.out.println(" ---> BoopedBehaviour running for ---> " + this.myAgent.getLocalName() + " <---");
+		
 		if (msg != null) {
 			// Use ExploCoopAgent to set exploration behaviours
 			//((ExploreCoopAgent)this.myAgent).moving=false;

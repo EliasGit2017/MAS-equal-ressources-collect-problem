@@ -30,6 +30,8 @@ public class ReceiveMap extends OneShotBehaviour {
 		// Receive a Map
 		this.exitCode = 0;
 		
+		System.out.println(" ---> ReceiveMap running for ---> " + this.myAgent.getLocalName() + " <---");
+		
 		MessageTemplate msgT = MessageTemplate.and(
 				MessageTemplate.MatchProtocol("ProtocoleShareMap"),
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
@@ -69,7 +71,7 @@ public class ReceiveMap extends OneShotBehaviour {
 						+this.myAgent.getLocalName());
 			}
 			this.msg_holder = false;
-			block(6000);
+			block(300);
 		}
 		
 	}
