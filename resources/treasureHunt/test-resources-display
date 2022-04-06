@@ -1,0 +1,6 @@
+mapname:map2019Exam1
+agentExplo:1stAgent:3:free:-1:-1:0:1:1
+agentExplo:2ndAgent:3:free:-1:-1:0:1:1
+agentExplo:3ndAgent:3:free:-1:-1:0:1:1
+agentExplo:4ndAgent:3:free:-1:-1:0:1:1
+wumpus:Golem1:0:7:80:0:1:4:4

@@ -23,7 +23,7 @@ import jade.lang.acl.UnreadableException;
  * </pre>
  */
 
-public class ExploreBehaviour extends SimpleBehaviour {
+public class ExploreBehaviour extends OneShotBehaviour {
 
 	private static final long serialVersionUID = -5775943961809349356L;
 	
@@ -67,7 +67,7 @@ public class ExploreBehaviour extends SimpleBehaviour {
 			 * Just added here to let you see what the agent is doing, otherwise he will be too quick
 			 */
 			try {
-				this.myAgent.doWait(1000);
+				this.myAgent.doWait(((fsmAgent)this.myAgent).speed); // wait : 300ms default
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -86,6 +86,26 @@ public class ExploreBehaviour extends SimpleBehaviour {
 					if (nextNode==null && isNewNode) nextNode=nodeId;
 				}
 			}
+			
+			List<Couple<Observation, Integer>> lObservations = lobs.get(0).getRight();
+			
+			Boolean b = false;
+			for(Couple<Observation, Integer> o:lObservations) {
+				switch (o.getLeft()) {
+				case DIAMOND: case GOLD:
+
+					System.out.println(" --> at  " + cur_pos + this.myAgent.getLocalName()+" - My treasure type is : "+((AbstractDedaleAgent) this.myAgent).getMyTreasureType());
+					System.out.println(" --> " + this.myAgent.getLocalName()+" - My current backpack capacity is:"+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
+					System.out.println(" --> " + this.myAgent.getLocalName()+" - Value of the treasure on the current position: "+o.getLeft() +": "+ o.getRight());
+					System.out.println(" --> " + this.myAgent.getLocalName()+" - The agent grabbed :"+((AbstractDedaleAgent) this.myAgent).pick());
+					System.out.println(" --> " + this.myAgent.getLocalName()+" - the remaining backpack capacity is: "+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
+					b = true;
+					break;
+				default:
+					break;
+				}
+			}
+			
 			
 			if (!this.myMap.hasOpenNode()) {
 				terminated = true;
@@ -119,10 +139,10 @@ public class ExploreBehaviour extends SimpleBehaviour {
 		}
 	}
 
-	@Override
-	public boolean done() {
-		return false;
-	}
+//	@Override
+//	public boolean done() {
+//		return false;
+//	}
 
 //	@Override
 //	public boolean done() {

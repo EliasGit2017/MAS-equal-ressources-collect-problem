@@ -23,7 +23,8 @@ public class BoopedBehaviour extends SimpleBehaviour {
 	
 	@Override
 	public void action() {
-		final MessageTemplate msgTemplate = MessageTemplate.and(MessageTemplate.MatchProtocol("ProtocoleBoop")
+		final MessageTemplate msgTemplate = MessageTemplate.and(
+				MessageTemplate.MatchProtocol("ProtocoleBoop")
 				,MessageTemplate.MatchPerformative(ACLMessage.INFORM));
 		
 		final ACLMessage msg = this.myAgent.receive(msgTemplate);

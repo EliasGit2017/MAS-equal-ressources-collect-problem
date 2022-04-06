@@ -32,7 +32,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 
 	private static final int PokeTime = 3000;
 	
-	public final int waitTime=300;
+	public final int speed=300;
 	
 	public final int sensi=20;
 	
