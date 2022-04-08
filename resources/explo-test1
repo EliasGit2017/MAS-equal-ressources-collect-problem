@@ -6,3 +6,5 @@ agentExplo:4ndAgent:3:free:-1:-1:0:1:1
 wumpus:Golem1:3:free:-1:-1:1:1:1
 wumpus:Golem2:3:free:-1:-1:1:1:1
 HumanControlled:Imhere:3:free:-1:-1:1:1:1
+agentExplo:James:3:free:-1:-1:0:1:1
+agentExplo:Henry:3:free:-1:-1:0:1:1
