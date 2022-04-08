@@ -9,7 +9,7 @@ import jade.core.behaviours.OneShotBehaviour;
 
 public class Navigation extends OneShotBehaviour {
 
-	private boolean joined_destination = false;
+	private boolean joined_destination;
 	
 	public Navigation(Agent a) {
 		super(a);
@@ -18,8 +18,9 @@ public class Navigation extends OneShotBehaviour {
 	@Override
 	public void action() {
 		System.out.println("---- On rentre dans Navigation ----");
-		
-		
+	    this.joined_destination = false;
+		System.out.println("Value of joined_dest " + this.joined_destination);
+		System.out.println("Should ALWAYS be false !");
 		String nextNode = ((MainAgent)this.myAgent).getNextUnblockPath();
 		System.out.println("Next node to reach " + nextNode);
 		System.out.println("Rest of the path " + ((MainAgent)this.myAgent).getUnblockPath());
@@ -31,8 +32,10 @@ public class Navigation extends OneShotBehaviour {
 		
 		if (!this.joined_destination) {
 			System.out.println("Moving !");
-		((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
+			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 		}
+		
+		this.myAgent.doWait(10);
 	}
 
 	

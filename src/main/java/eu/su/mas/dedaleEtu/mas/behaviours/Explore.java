@@ -29,7 +29,7 @@ public class Explore extends OneShotBehaviour {
 	
 	private MapRepresentation map;
 	
-	private boolean blocked = false;
+	private boolean blocked;
 	
 	private boolean explo_done = false;
 	
@@ -46,11 +46,10 @@ public class Explore extends OneShotBehaviour {
 		open = ((MainAgent)this.myAgent).getOpenNodes();
 		closed = ((MainAgent)this.myAgent).getClosedNodes();
 		map = ((MainAgent)this.myAgent).getMap();
+		
+		this.blocked = false;
 
-		if (open.size() == 0 && closed.size() != 0) {
-			System.out.println("END OF EXPLORATION");
-			int a = 1/0;;
-		}
+		
 				
 		if (currentPosition!=null){
 			if(!(open.size() == 0)) {
@@ -62,6 +61,7 @@ public class Explore extends OneShotBehaviour {
 			}
 			
 			
+			
 			List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
 			System.out.println("Observations: " + obs);
 			
@@ -69,16 +69,27 @@ public class Explore extends OneShotBehaviour {
 			String nextNode = null;
 			for (int i = 1 ; i < size ; i ++ ) {
 				String node = obs.get(i).getLeft() ;
-				if (!closed.contains(node)) {
+				
+				boolean isNew = map.addNewNode(node);
+				if (isNew) {
 					open.add(node);
 				}
-				boolean isNew = map.addNewNode(node);
 				map.addEdge(currentPosition, node);
-				if (isNew) {
+				if (!closed.contains(node)) {
 					nextNode = node;
 				}
 			}
-				
+			
+			System.out.println("Open list " + open.size());
+			System.out.println(open);
+			System.out.println("Closed list " + closed.size());
+			if (open.size() == 0 && closed.size() != 0) {
+				System.out.println("END OF EXPLORATION");
+				int a = 1/0;;
+			}
+			
+			System.out.println("Le prochain noeud a visiter est " + nextNode);
+			
 			if ( (nextNode == null) && (open.size() != 0) ) {
 				//On est dans une impasse
 				nextNode = open.get(open.size() - 1); //Le dernier ajouté est le + proche, mais attention pas adjacent a position actuelle
@@ -106,9 +117,9 @@ public class Explore extends OneShotBehaviour {
 		}
 		
 		System.out.println("New opened nodes: " + open);
-		System.out.println("New close nodes:  " + closed);
-		
-		this.myAgent.doWait(1000);
+		System.out.println("New closed nodes:  " + closed);
+		System.out.println("La valeur de blocage est " + this.blocked);
+		this.myAgent.doWait(10);
 	}
 	
 	public int onEnd() {
