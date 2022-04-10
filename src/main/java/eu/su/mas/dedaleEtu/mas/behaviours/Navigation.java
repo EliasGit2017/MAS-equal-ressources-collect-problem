@@ -11,6 +11,8 @@ public class Navigation extends OneShotBehaviour {
 
 	private boolean joined_destination;
 	
+	private boolean communicate;
+	
 	public Navigation(Agent a) {
 		super(a);
 	}
@@ -18,9 +20,28 @@ public class Navigation extends OneShotBehaviour {
 	@Override
 	public void action() {
 		System.out.println("---- On rentre dans Navigation ----");
+		String currentPos = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 	    this.joined_destination = false;
-		System.out.println("Value of joined_dest " + this.joined_destination);
-		System.out.println("Should ALWAYS be false !");
+		
+		
+		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate() ;
+		if (this.communicate) {
+			return;
+		}
+		
+		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("HELLO");
+		if (newMsg) {
+			String protocol = ((MainAgent)this.myAgent).getCurrentMsgProtocol();
+			if (protocol == "HELLO-SM") {
+				((MainAgent)this.myAgent).incrementShareStep();
+			}
+			//...
+			return;
+		}
+		
+		
+		
+		
 		String nextNode = ((MainAgent)this.myAgent).getNextUnblockPath();
 		System.out.println("Next node to reach " + nextNode);
 		System.out.println("Rest of the path " + ((MainAgent)this.myAgent).getUnblockPath());
@@ -31,23 +52,32 @@ public class Navigation extends OneShotBehaviour {
 		}
 		
 		if (!this.joined_destination) {
-			System.out.println("Moving !");
+			System.out.println("Moving from "+ currentPos + " to " + nextNode + " !");
 			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
+			((MainAgent)this.myAgent).setLastPosition(currentPos);
 		}
 		
-		this.myAgent.doWait(10);
+//		((MainAgent)this.myAgent).pause();
+		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
 	}
 
 	
 	public int onEnd() {
-		if (!this.joined_destination) {
-			System.out.println("Continuing to NAV");
-			return 0;
+		// To ensure standards respect, follow protocol above FSM behaviour declaration
+		
+		if (this.communicate) {
+			System.out.println("Changing to SEND_POS");
+			return 3;
 		}
-		else {
+		
+		if (this.joined_destination) {
 			System.out.println("Changing to EXPLO");
 			return 1;
 		}
+
+		System.out.println("Staying in NAV");
+		return 0;
+
 	}
 
 }

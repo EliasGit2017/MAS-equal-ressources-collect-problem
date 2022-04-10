@@ -1,33 +1,32 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import java.io.IOException;
+import java.util.Random;
 
 import eu.su.mas.dedale.mas.agent.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.agents.MainAgent;
 import jade.core.behaviours.OneShotBehaviour;
 
-public class DefaultBehaviour extends OneShotBehaviour {
+public class InitializeBehaviour extends OneShotBehaviour {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 6050645637314154343L;
 
-	public DefaultBehaviour() {
+	public InitializeBehaviour() {
 		super();
 	}
 	
 	public void action() {
-		System.out.println("Default behaviour");
+		System.out.println("Getting agent " + this.myAgent.getLocalName() + " ready for departure.");
 		
 		MapRepresentation map = new MapRepresentation();
 		((MainAgent)this.myAgent).setMap(map);
 		
-//		try {
-//			System.out.println("Press enter in the console to allow the agent "+this.myAgent.getLocalName() +" to execute its next move");
-//			System.in.read();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
+		
+		Random r = new Random();
+		int val = r.nextInt(2147483647);
+		((MainAgent)this.myAgent).setId(val);
 	}
 }

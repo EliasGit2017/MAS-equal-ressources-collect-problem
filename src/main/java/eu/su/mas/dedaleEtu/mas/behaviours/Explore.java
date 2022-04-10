@@ -1,15 +1,15 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
-import java.util.Iterator;
+
 import java.util.List;
-import java.util.Random;
+
 
 import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.knowledge.MapRepresentation;
+import eu.su.mas.dedale.mas.agent.knowledge.MapRepresentation.MapAttribute;
 import eu.su.mas.dedaleEtu.mas.agents.MainAgent;
-import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 
 public class Explore extends OneShotBehaviour {
@@ -19,8 +19,9 @@ public class Explore extends OneShotBehaviour {
 	 */
 	private static final long serialVersionUID = 6914003289245431988L;
 
-	private String lastPosition;
+
 	private String currentPosition;
+	private String lastPosition;
 	
 	private List<String> agentsNames;
 	
@@ -31,15 +32,18 @@ public class Explore extends OneShotBehaviour {
 	
 	private boolean blocked;
 	
-	private boolean explo_done = false;
+	private boolean explo_done;
+	
+	private boolean communicate;
+
 	
 	public Explore(final AbstractDedaleAgent agent) {
 		super(agent); 
 		}
 		
 	public void action() {
-		System.out.println("----- On rentre dans Explore -----");
-		Random r = new Random();
+//		System.out.println("----- On rentre dans Explore -----");
+
 		lastPosition = ((MainAgent)this.myAgent).getLastPosition();
 		currentPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 		agentsNames = ((MainAgent)this.myAgent).getAgenda();
@@ -47,8 +51,26 @@ public class Explore extends OneShotBehaviour {
 		closed = ((MainAgent)this.myAgent).getClosedNodes();
 		map = ((MainAgent)this.myAgent).getMap();
 		
-		this.blocked = false;
+		this.blocked = false; //Keep those with "this." because useful in onEnd() function
+		this.explo_done = false;
+		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate() ;
+		
+		
+		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("HELLO");
 
+		if (newMsg) {
+			String protocol = ((MainAgent)this.myAgent).getCurrentMsgProtocol();
+			if (protocol == "HELLO-SM") {
+				((MainAgent)this.myAgent).incrementShareStep();
+			}
+			//...
+			return;
+		}
+		
+		
+		if (this.communicate) {
+			return;
+		}
 		
 				
 		if (currentPosition!=null){
@@ -58,12 +80,13 @@ public class Explore extends OneShotBehaviour {
 			
 			if (!closed.contains(currentPosition)) {
 				closed.add(currentPosition);
+				map.addNode(currentPosition, MapAttribute.closed);
 			}
 			
 			
 			
 			List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
-			System.out.println("Observations: " + obs);
+//			System.out.println("Observations: " + obs);
 			
 			int size = obs.size() ;
 			String nextNode = null;
@@ -71,8 +94,10 @@ public class Explore extends OneShotBehaviour {
 				String node = obs.get(i).getLeft() ;
 				
 				boolean isNew = map.addNewNode(node);
+				
 				if (isNew) {
 					open.add(node);
+					map.addNode(node, MapAttribute.open);
 				}
 				map.addEdge(currentPosition, node);
 				if (!closed.contains(node)) {
@@ -80,15 +105,16 @@ public class Explore extends OneShotBehaviour {
 				}
 			}
 			
-			System.out.println("Open list " + open.size());
-			System.out.println(open);
-			System.out.println("Closed list " + closed.size());
+//			System.out.println("Open list " + open.size());
+//			System.out.println(open);
+//			System.out.println("Closed list " + closed.size());
 			if (open.size() == 0 && closed.size() != 0) {
-				System.out.println("END OF EXPLORATION");
-				int a = 1/0;;
+//				System.out.println("END OF EXPLORATION -- stopping agent");
+				this.explo_done = true;
+				return;
 			}
 			
-			System.out.println("Le prochain noeud a visiter est " + nextNode);
+//			System.out.println("Le prochain noeud a visiter est " + nextNode);
 			
 			if ( (nextNode == null) && (open.size() != 0) ) {
 				//On est dans une impasse
@@ -116,17 +142,26 @@ public class Explore extends OneShotBehaviour {
 			
 		}
 		
-		System.out.println("New opened nodes: " + open);
-		System.out.println("New closed nodes:  " + closed);
-		System.out.println("La valeur de blocage est " + this.blocked);
-		this.myAgent.doWait(10);
+//		System.out.println("New opened nodes: " + open);
+//		System.out.println("New closed nodes:  " + closed);
+//		System.out.println("La valeur de blocage est " + this.blocked);
+		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
 	}
 	
 	public int onEnd() {
-		if (!this.blocked) 	{
-			return 0; }
-		else {
-			return 1; }
+		// To ensure standards respect, follow protocol above FSM behaviour declaration
+		
+		if (this.explo_done) {
+			return 99;
+		}
+		if (this.blocked) {
+			return 2;
+		}
+		if (this.communicate) {
+			return 3;
+		}
+		
+		return 0;
 		
 		}
 	
