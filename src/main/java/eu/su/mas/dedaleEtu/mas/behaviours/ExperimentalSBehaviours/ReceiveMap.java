@@ -18,7 +18,7 @@ public class ReceiveMap extends OneShotBehaviour {
 	
 	private boolean msg_holder=true;
 	
-	private int exitCode;
+	//private int exitCode;
 
 	public ReceiveMap(final Agent cur_a) {
 		super(cur_a);
@@ -28,7 +28,6 @@ public class ReceiveMap extends OneShotBehaviour {
 	@Override
 	public void action() {
 		// Receive a Map
-		this.exitCode = 0;
 		
 		System.out.println(" ---> ReceiveMap running for ---> " + this.myAgent.getLocalName() + " <---");
 		
@@ -75,9 +74,5 @@ public class ReceiveMap extends OneShotBehaviour {
 		
 	}
 
-	@Override
-	public int onEnd() {
-		return exitCode;
-	}
 		
 }

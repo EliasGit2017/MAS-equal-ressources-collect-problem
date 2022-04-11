@@ -2,6 +2,7 @@ package eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import dataStructures.serializableGraph.SerializableSimpleGraph;
 import dataStructures.tuple.Couple;
@@ -26,71 +27,64 @@ import jade.lang.acl.UnreadableException;
 public class ExploreBehaviour extends OneShotBehaviour {
 
 	private static final long serialVersionUID = -5775943961809349356L;
-	
+
 	private MapRepresentation myMap;
-	
+
 	private List<String> agenda;
-	
-	private int exitCode;
-	
-	//private String nNode = "";
-	
-	//private int timer;
-	
+
+	private int exitCode; // used to fire specific transitions
+
+	// private String nNode = "";
+
+	// private int timer;
+
 	public boolean terminated = false;
-	
-	public ExploreBehaviour(final AbstractDedaleAgent cur_a, MapRepresentation myMap, int timer, List<String> contacts) {
+
+	public ExploreBehaviour(final AbstractDedaleAgent cur_a, MapRepresentation myMap, int timer,
+			List<String> contacts) {
 		super(cur_a);
-		this.myMap = ((fsmAgent)this.myAgent).getMyMap();
+		this.myMap = ((fsmAgent) this.myAgent).getMyMap();
 		this.agenda = contacts;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public void action() {
-		
+
 		System.out.println(" ---> ExploreBehaviour running for " + this.myAgent.getLocalName() + " <---");
-		
+
 		// Might be useless due to how the fsmAgent's first state is defined
-		if(this.myMap==null) {
-			this.myMap= new MapRepresentation();
-			this.myAgent.addBehaviour(new ShareMapB(this.myAgent, this.myMap, agenda));
+		if (this.myMap == null) {
+			this.myMap = new MapRepresentation();
 		}
-		
-		//System.out.println(" --> Exploration Begins for : " + this.myAgent.getLocalName());
-		
-		String cur_pos = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
-		
+
+		// System.out.println(" --> Exploration Begins for : " +
+		// this.myAgent.getLocalName());
+
+		String cur_pos = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
+
 		if (cur_pos != null) {
-			
-			List<Couple<String,List<Couple<Observation,Integer>>>> lobs = ((AbstractDedaleAgent)this.myAgent).observe();
-			
-			/**
-			 * Just added here to let you see what the agent is doing, otherwise he will be too quick
-			 */
-			try {
-				this.myAgent.doWait(((fsmAgent)this.myAgent).speed); // wait : 300ms default
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			
-			//1) remove the current node from openlist and add it to closedNodes.
+
+			List<Couple<String, List<Couple<Observation, Integer>>>> lobs = ((AbstractDedaleAgent) this.myAgent)
+					.observe();
+
+			// 1) remove the current node from openlist and add it to closedNodes.
 			this.myMap.addNode(cur_pos, MapAttribute.closed);
-			
-			String nextNode=null;
-			Iterator<Couple<String, List<Couple<Observation, Integer>>>> iter=lobs.iterator();
-			while(iter.hasNext()){
-				String nodeId=iter.next().getLeft();
-				boolean isNewNode=this.myMap.addNewNode(nodeId);
-				//the node may exist, but not necessarily the edge
-				if (cur_pos!=nodeId) {
+
+			String nextNode = null;
+			Iterator<Couple<String, List<Couple<Observation, Integer>>>> iter = lobs.iterator();
+			while (iter.hasNext()) {
+				String nodeId = iter.next().getLeft();
+				boolean isNewNode = this.myMap.addNewNode(nodeId); // the node may exist, but not necessarily the edge
+				if (cur_pos != nodeId) {
 					this.myMap.addEdge(cur_pos, nodeId);
-					if (nextNode==null && isNewNode) nextNode=nodeId;
+					if (nextNode == null && isNewNode)
+						nextNode = nodeId;
 				}
 			}
-			
-//			List<Couple<Observation, Integer>> lObservations = lobs.get(0).getRight();
-//			
+
+			List<Couple<Observation, Integer>> lObservations = lobs.get(0).getRight();
+
 //			Boolean b = false;
 //			for(Couple<Observation, Integer> o:lObservations) {
 //				switch (o.getLeft()) {
@@ -107,47 +101,76 @@ public class ExploreBehaviour extends OneShotBehaviour {
 //					break;
 //				}
 //			}
-			
+
 			if (!this.myMap.hasOpenNode()) {
 				terminated = true;
-				System.out.println(" ---> Exploration done for : " + this.myAgent.getLocalName());
+				// this.exitCode = 1;
+				// this.exitCode = 100; // -> StopAg behaviour
+				System.out.println(" ---> No open nodes on the map for : " + this.myAgent.getLocalName());
 			} else {
 				if (nextNode == null) {
-					nextNode = this.myMap.getShortestPathToClosestOpenNode(cur_pos).get(0);
-					this.exitCode = 2;
+					nextNode = this.myMap.getShortestPathToClosestOpenNode(cur_pos).get(0); // decide next Node
+					this.exitCode = 1;
 				} else {
 					// Define Sub behaviour here
-					this.exitCode = 2;
+					this.exitCode = 1;
 				}
-				// Receive Map and merge
-//				MessageTemplate msgTemplate=MessageTemplate.and(
-//						MessageTemplate.MatchProtocol("ProtocoleShareMap"),
-//						MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-//				ACLMessage msgReceived=this.myAgent.receive(msgTemplate);
-//				if (msgReceived!=null) {
-//					SerializableSimpleGraph<String, MapAttribute> sgreceived=null;
-//					try {
-//						sgreceived = (SerializableSimpleGraph<String, MapAttribute>)msgReceived.getContentObject();
-//					} catch (UnreadableException e) {
-//						e.printStackTrace();
-//					}
-//					this.myMap.mergeMap(sgreceived);
-//				}
 
-				((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
-				
+				try {
+					this.myAgent.doWait(((fsmAgent) this.myAgent).speed); // wait : 300ms default (agent speed)
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+				((AbstractDedaleAgent) this.myAgent).moveTo(nextNode);
 
 			}
-			
+
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public boolean checkInbox() {
+		// refine according to exploration steps
+		while (true) {
+			MessageTemplate msgT = MessageTemplate.and(MessageTemplate.MatchProtocol("ProtocoleShareMap"),
+					MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+
+			MessageTemplate msgTBooped = MessageTemplate.and(MessageTemplate.MatchProtocol("ProtocoleBoop"),
+					MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+
+//			MessageTemplate msgT = MessageTemplate.and(
+//					MessageTemplate.MatchProtocol("ProtocoleShareMap"),
+//					MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+
+			ACLMessage msgSM = this.myAgent.receive(msgT);
+			ACLMessage msgTB = this.myAgent.receive(msgTBooped);
+
+			if (msgSM != null) {
+				this.exitCode = 5;
+//				SerializableSimpleGraph<String, MapAttribute> sgR = null;
+//				try {
+//					sgR = (SerializableSimpleGraph<String, MapRepresentation.MapAttribute>)msgSM.getContentObject();
+//				} catch (UnreadableException e) {
+//					e.printStackTrace();
+//				}
+//				this.myMap.mergeMap(sgR);
+				return true;
+			} else {
+				if (msgTB != null) {
+					this.exitCode = 3;
+				} else {
+					this.exitCode = 1;
+				}
+				break;
+			}
+		}
+		return false;
 	}
 
 	@Override
 	public int onEnd() {
 		return exitCode;
 	}
-
-
-
 
 }

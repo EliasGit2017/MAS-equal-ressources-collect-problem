@@ -94,13 +94,16 @@ public class fsmAgent extends AbstractDedaleAgent {
 		fsmb.registerDefaultTransition(Init, Explo);
 		fsmb.registerDefaultTransition(Explo, Explo);
 		fsmb.registerTransition(Explo, Boop, 1);
-		fsmb.registerTransition(Explo, ShareMap, 2);
 		fsmb.registerDefaultTransition(Boop, Explo);
-		fsmb.registerDefaultTransition(ShareMap, R_Map);
-		fsmb.registerDefaultTransition(R_Map, R_Map);
-		fsmb.registerTransition(R_Map, Explo, 1);
+		fsmb.registerTransition(Boop, Booped, 2);
+		fsmb.registerDefaultTransition(Booped, Explo);
+		fsmb.registerTransition(Explo, ShareMap, 3); // change to basic transition
+		fsmb.registerTransition(ShareMap, R_Map, 4);
+		fsmb.registerTransition(Explo, R_Map, 5);
+		//fsmb.registerDefaultTransition(R_Map, R_Map);
+		fsmb.registerDefaultTransition(R_Map, Explo);
 		
-		fsmb.registerTransition(Explo, StopAg, 100);
+		fsmb.registerTransition(Explo, StopAg, 100); // Last State when agent needs to die / stop
 		/*
 		 * Start Behaviours and print in console
 		 */
