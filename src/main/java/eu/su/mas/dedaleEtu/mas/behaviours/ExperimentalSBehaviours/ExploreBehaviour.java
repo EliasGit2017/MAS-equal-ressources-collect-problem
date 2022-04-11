@@ -52,7 +52,9 @@ public class ExploreBehaviour extends OneShotBehaviour {
 	public void action() {
 
 		System.out.println(" ---> ExploreBehaviour running for " + this.myAgent.getLocalName() + " <---");
-
+		
+		checkInbox();
+		
 		// Might be useless due to how the fsmAgent's first state is defined
 		if (this.myMap == null) {
 			this.myMap = new MapRepresentation();
@@ -84,7 +86,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 			}
 
 			List<Couple<Observation, Integer>> lObservations = lobs.get(0).getRight();
-
+			
 //			Boolean b = false;
 //			for(Couple<Observation, Integer> o:lObservations) {
 //				switch (o.getLeft()) {
@@ -157,8 +159,11 @@ public class ExploreBehaviour extends OneShotBehaviour {
 //				this.myMap.mergeMap(sgR);
 				return true;
 			} else {
-				if (msgTB != null) {
-					this.exitCode = 3;
+				if (msgTB != null) { //got booped
+					String sender_name = msgTB.getSender().getLocalName();
+					String sender_pos = msgTB.getContent();
+					System.out.println(" ~~~ ExpBehav ---> " + sender_name + " booped " + sender_pos + " to " + this.myAgent.getLocalName());
+					this.exitCode = 3;					
 				} else {
 					this.exitCode = 1;
 				}
