@@ -1,0 +1,45 @@
+ ---> ExploreBehaviour running for 2ndAgent <---
+ ---> ExploreBehaviour running for 3ndAgent <---
+---> 1stAgent is trying to boop its friends <---
+ ---> ExploreBehaviour running for 1stAgent <---
+---> 2ndAgent is trying to boop its friends <---
+ ---> ExploreBehaviour running for 2ndAgent <---
+---> 3ndAgent is trying to boop its friends <---
+ ---> ExploreBehaviour running for 3ndAgent <---
+---> 1stAgent is trying to boop its friends <---
+ ---> ExploreBehaviour running for 1stAgent <---
+---> 2ndAgent is trying to boop its friends <---
+ ---> ExploreBehaviour running for 2ndAgent <---
+---> 3ndAgent is trying to boop its friends <---
+ ---> ExploreBehaviour running for 3ndAgent <---
+---> 1stAgent is trying to boop its friends <---
+ ---> ExploreBehaviour running for 1stAgent <---
+ ~~~ ExpBehav ---> 1stAgent booped  ---> Hello 3ndAgent, I'm at 124 to 3ndAgent
+ ---> ShareMapB running for ---> 3ndAgent <---
+ ---> 3ndAgent just sent its map
+***  Uncaught Exception for agent 3ndAgent  ***
+ERROR: Agent 3ndAgent died without being properly terminated !!!
+State was 2
+java.lang.RuntimeException: Inconsistent FSM. State: ShareMap event: 0
+	at jade.core.behaviours.FSMBehaviour.handleInconsistentFSM(FSMBehaviour.java:376)
+	at jade.core.behaviours.FSMBehaviour.scheduleNext(FSMBehaviour.java:368)
+	at jade.core.behaviours.CompositeBehaviour.action(CompositeBehaviour.java:93)
+	at jade.core.behaviours.Behaviour.actionWrapper(Behaviour.java:343)
+	at jade.core.Agent$ActiveLifeCycle.execute(Agent.java:1642)
+	at jade.core.Agent.run(Agent.java:1581)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+
+ ############## On Tue Apr 12 02:34:24 CEST 2022 : 
+
+3ndAgent: I'm diying, that's life; "Blow, wind! Come, wrack! At least I’ll die with harness on my back." (MB)
+---> 2ndAgent is trying to boop its friends <---
+ ---> ExploreBehaviour running for 2ndAgent <---
+---> 1stAgent is trying to boop its friends <---
+ ---> ExploreBehaviour running for 1stAgent <---
+---> 2ndAgent is trying to boop its friends <---
+ ---> ExploreBehaviour running for 2ndAgent <---
+---> 1stAgent is trying to boop its friends <---
+ ---> ExploreBehaviour running for 1stAgent <---
+---> 2ndAgent is trying to boop its friends <---
+ ---> ExploreBehaviour running for 2ndAgent <---
+---> 1stAgent is trying to boop its friends <---

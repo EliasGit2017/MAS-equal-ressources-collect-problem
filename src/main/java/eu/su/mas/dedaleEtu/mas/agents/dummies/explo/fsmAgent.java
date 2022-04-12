@@ -32,7 +32,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 
 	private static final int PokeTime = 3000;
 	
-	public final int speed=300;
+	public final int speed=1000;
 	
 	public final int sensi=20;
 	
@@ -84,28 +84,28 @@ public class fsmAgent extends AbstractDedaleAgent {
 		fsmb.registerFirstState(new InitialiazeMap(), Init); // Initialize Agent Map
 		fsmb.registerState(new PingBoopBehaviour(this, agenda), Boop); // Send Poke
 		fsmb.registerState(new BoopedBehaviour(this, this.agenda), Booped); // Receive Poke
-		fsmb.registerState(new ShareMapB(this, this.myMap, agenda), ShareMap); // ShareMap Behaviour
+		fsmb.registerState(new ShareMapB(this, this.myMap, this.agenda), ShareMap); // ShareMap Behaviour
 		fsmb.registerState(new ReceiveMap(this), R_Map); // ReceiveMap Behaviour
 		fsmb.registerState(new ExploreBehaviour(this, this.myMap, PokeTime, this.agenda), Explo); // Exploration
 		fsmb.registerLastState(new StopBehaviour(), StopAg); // Ending
 		
 		// Define transitions :
 		
-		fsmb.registerDefaultTransition(Init, Explo);
-		fsmb.registerDefaultTransition(Explo, Explo);
-		fsmb.registerTransition(Explo, Boop, 1);
-		fsmb.registerDefaultTransition(Boop, Explo);
-		fsmb.registerTransition(Boop, Booped, 2);
-		fsmb.registerDefaultTransition(Booped, Explo);
-		fsmb.registerTransition(Explo, ShareMap, 3); // change to basic transition
-		fsmb.registerTransition(ShareMap, R_Map, 4);
-		fsmb.registerTransition(Explo, R_Map, 5);
-		//fsmb.registerDefaultTransition(R_Map, R_Map);
-		fsmb.registerDefaultTransition(R_Map, Explo);
+		fsmb.registerDefaultTransition(Init, Explo); // init map + go to explo
+		fsmb.registerDefaultTransition(Explo, Explo); // explo loop
+		fsmb.registerTransition(Explo, Boop, 1); // send ping
+		fsmb.registerDefaultTransition(Boop, Explo); // get back to explo
+		fsmb.registerTransition(Boop, Booped, 2); // receive ping
+		fsmb.registerDefaultTransition(Booped, Explo); // receive ping -> go back to explo
+		fsmb.registerTransition(Explo, ShareMap, 3); // send map
+		fsmb.registerTransition(ShareMap, R_Map, 4); // receive map
+		fsmb.registerTransition(Explo, R_Map, 5); // explo -> receive map
+		fsmb.registerDefaultTransition(R_Map, Explo); // receive map -> explo
 		
 		fsmb.registerTransition(Explo, StopAg, 100); // Last State when agent needs to die / stop
+		
 		/*
-		 * Start Behaviours and print in console
+		 * Start FSM and print in console
 		 */
 		
 		this.lb = new ArrayList<Behaviour>();

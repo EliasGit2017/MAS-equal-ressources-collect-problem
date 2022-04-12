@@ -32,10 +32,13 @@ public class PingBoopBehaviour extends OneShotBehaviour {
 		msg.setProtocol("ProtocoleBoop");
 		msg.setSender(this.myAgent.getAID());
 		
-		msg.setContent(this.myAgent.getLocalName() + " ---> Hello Friend, I'm at " + cur_pos);
+//		msg.setContent(" ---> Hello Friend, I'm at " + cur_pos);
 		
 		for (String sendTo : AgentsToSendTo) {
-			msg.addReceiver(new AID(sendTo, AID.ISLOCALNAME));
+			if (sendTo != this.myAgent.getLocalName()) {
+				msg.setContent(" ---> Hello " + sendTo + ", I'm at " + cur_pos);
+				msg.addReceiver(new AID(sendTo, AID.ISLOCALNAME));
+			}
 		}
 		
 		((AbstractDedaleAgent)this.myAgent).sendMessage(msg);

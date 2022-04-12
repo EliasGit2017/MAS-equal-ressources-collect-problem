@@ -53,8 +53,6 @@ public class ExploreBehaviour extends OneShotBehaviour {
 
 		System.out.println(" ---> ExploreBehaviour running for " + this.myAgent.getLocalName() + " <---");
 		
-		checkInbox();
-		
 		// Might be useless due to how the fsmAgent's first state is defined
 		if (this.myMap == null) {
 			this.myMap = new MapRepresentation();
@@ -85,8 +83,8 @@ public class ExploreBehaviour extends OneShotBehaviour {
 				}
 			}
 
-			List<Couple<Observation, Integer>> lObservations = lobs.get(0).getRight();
-			
+//			List<Couple<Observation, Integer>> lObservations = lobs.get(0).getRight();
+//			
 //			Boolean b = false;
 //			for(Couple<Observation, Integer> o:lObservations) {
 //				switch (o.getLeft()) {
@@ -123,6 +121,8 @@ public class ExploreBehaviour extends OneShotBehaviour {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+				
+				checkInbox();
 
 				((AbstractDedaleAgent) this.myAgent).moveTo(nextNode);
 
@@ -135,40 +135,31 @@ public class ExploreBehaviour extends OneShotBehaviour {
 	public boolean checkInbox() {
 		// refine according to exploration steps
 		while (true) {
-			MessageTemplate msgT = MessageTemplate.and(MessageTemplate.MatchProtocol("ProtocoleShareMap"),
+			MessageTemplate msgT = MessageTemplate.and(
+					MessageTemplate.MatchProtocol("ProtocoleShareMap"),
 					MessageTemplate.MatchPerformative(ACLMessage.INFORM));
 
-			MessageTemplate msgTBooped = MessageTemplate.and(MessageTemplate.MatchProtocol("ProtocoleBoop"),
+			MessageTemplate msgTBooped = MessageTemplate.and(
+					MessageTemplate.MatchProtocol("ProtocoleBoop"),
 					MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-
-//			MessageTemplate msgT = MessageTemplate.and(
-//					MessageTemplate.MatchProtocol("ProtocoleShareMap"),
-//					MessageTemplate.MatchPerformative(ACLMessage.INFORM));
 
 			ACLMessage msgSM = this.myAgent.receive(msgT);
 			ACLMessage msgTB = this.myAgent.receive(msgTBooped);
 
 			if (msgSM != null) {
 				this.exitCode = 5;
-//				SerializableSimpleGraph<String, MapAttribute> sgR = null;
-//				try {
-//					sgR = (SerializableSimpleGraph<String, MapRepresentation.MapAttribute>)msgSM.getContentObject();
-//				} catch (UnreadableException e) {
-//					e.printStackTrace();
-//				}
-//				this.myMap.mergeMap(sgR);
 				return true;
 			} else {
 				if (msgTB != null) { //got booped
 					String sender_name = msgTB.getSender().getLocalName();
 					String sender_pos = msgTB.getContent();
 					System.out.println(" ~~~ ExpBehav ---> " + sender_name + " booped " + sender_pos + " to " + this.myAgent.getLocalName());
-					this.exitCode = 3;					
+					this.exitCode = 3;
 				} else {
 					this.exitCode = 1;
 				}
-				break;
 			}
+			break;
 		}
 		return false;
 	}
