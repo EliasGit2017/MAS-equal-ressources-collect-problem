@@ -13,13 +13,15 @@ public class Navigation extends OneShotBehaviour {
 	
 	private boolean communicate;
 	
+	private boolean shareInit;
+	
 	public Navigation(Agent a) {
 		super(a);
 	}
 
 	@Override
 	public void action() {
-		System.out.println("---- On rentre dans Navigation ----");
+//		System.out.println("---- On rentre dans Navigation ----");
 		String currentPos = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 	    this.joined_destination = false;
 		
@@ -29,13 +31,19 @@ public class Navigation extends OneShotBehaviour {
 			return;
 		}
 		
-		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("HELLO");
+		
+		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
 		if (newMsg) {
-			String protocol = ((MainAgent)this.myAgent).getCurrentMsgProtocol();
-			if (protocol == "HELLO-SM") {
-				((MainAgent)this.myAgent).incrementShareStep();
-			}
-			//...
+			((MainAgent)this.myAgent).incrementShareStep();
+			((MainAgent)this.myAgent).incrementShareStep();
+			this.shareInit = true;
+			return;
+		}
+		
+		newMsg = ((MainAgent)this.myAgent).checkInbox("SM-HELLO");
+		if (newMsg) {
+			((MainAgent)this.myAgent).incrementShareStep();
+			this.shareInit = true;
 			return;
 		}
 		
@@ -43,16 +51,16 @@ public class Navigation extends OneShotBehaviour {
 		
 		
 		String nextNode = ((MainAgent)this.myAgent).getNextUnblockPath();
-		System.out.println("Next node to reach " + nextNode);
-		System.out.println("Rest of the path " + ((MainAgent)this.myAgent).getUnblockPath());
+//		System.out.println("Next node to reach " + nextNode);
+//		System.out.println("Rest of the path " + ((MainAgent)this.myAgent).getUnblockPath());
 		
 		if (nextNode == "") {
 			this.joined_destination = true;
-			System.out.println("We have reached destination !");
+//			System.out.println("We have reached destination !");
 		}
 		
 		if (!this.joined_destination) {
-			System.out.println("Moving from "+ currentPos + " to " + nextNode + " !");
+//			System.out.println("Moving from "+ currentPos + " to " + nextNode + " !");
 			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 			((MainAgent)this.myAgent).setLastPosition(currentPos);
 		}
@@ -65,17 +73,17 @@ public class Navigation extends OneShotBehaviour {
 	public int onEnd() {
 		// To ensure standards respect, follow protocol above FSM behaviour declaration
 		
-		if (this.communicate) {
-			System.out.println("Changing to SEND_POS");
+		if (this.communicate || this.shareInit) {
+//			System.out.println("Changing to SEND_POS");
 			return 3;
 		}
 		
 		if (this.joined_destination) {
-			System.out.println("Changing to EXPLO");
+//			System.out.println("Changing to EXPLO");
 			return 1;
 		}
 
-		System.out.println("Staying in NAV");
+//		System.out.println("Staying in NAV");
 		return 0;
 
 	}

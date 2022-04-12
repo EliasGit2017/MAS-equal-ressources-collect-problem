@@ -2,7 +2,10 @@ package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import java.util.List;
 
+import org.graphstream.graph.Node;
+
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
+import eu.su.mas.dedale.mas.agent.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.agents.MainAgent;
 import jade.core.AID;
 import jade.core.Agent;
@@ -16,18 +19,29 @@ public class ShareMap extends OneShotBehaviour {
 	private List<String> open;
 	private List<String> closed;
 	
-	private List<String> open2;
+	private int tries = 0;
 
+	private String[] open2 = null;
 
-	public ShareMap(Agent a, List<String> othersOpen) {
+	public ShareMap(Agent a) {
 		super(a);
-		this.open2 = othersOpen;
-
+	}
+	
+	private String encode(List<String> list) {
+		String separator = ",";
+		String newS = String.join(separator, list);
+		return newS;
+	}
+	
+	private String[] decode(String code) {
+		String separator = ",";
+		String[] newL = code.split(separator);
+		return newL;
 	}
 
 	@Override
 	public void action() {
-		
+		System.out.println(this.myAgent.getLocalName() + " entered communication behaviour ! ");
 		step = ((MainAgent)this.myAgent).getShareStep();
 
 		
@@ -37,21 +51,36 @@ public class ShareMap extends OneShotBehaviour {
 			
 			
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-			msg.setProtocol("SM-Hello");
+			msg.setProtocol("SM-HELLO");
 			msg.setSender( this.myAgent.getAID() );
 			msg.setContent(String.valueOf(myId));
 			for (String teammate : agentsNames) {
 				msg.addReceiver(new AID(teammate, AID.ISLOCALNAME ));
 			}
 			((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-			//System.out.println("Agent " + this.myAgent.getLocalName() + " sends ID.");
+			System.out.println("Agent " + this.myAgent.getLocalName() + " sends ID.");
 		}
 		
 		
 		
 		
 		else if (step == 1) { //When receives a SM-Hello from other agent,
-			assert true;
+			int MAX = 5;
+			if (this.tries > MAX)
+			{
+				System.out.println("Agent " + this.myAgent.getLocalName() + " abandons communication");
+				((MainAgent)this.myAgent).resetShareStep();
+				return;
+			}
+			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+			msg.setProtocol("SM-ACK");
+			msg.setSender( this.myAgent.getAID() );
+			msg.setContent(String.valueOf(1));
+			msg.addReceiver( ((MainAgent)this.myAgent).getCurrentMsgSender() );
+			((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+			System.out.println("Agent " + this.myAgent.getLocalName() + " sends ACK to " + ((MainAgent)this.myAgent).getCurrentMsgSender().getLocalName() );
+			
+			((MainAgent)this.myAgent).incrementShareStep();
 		}
 		
 		
@@ -59,27 +88,70 @@ public class ShareMap extends OneShotBehaviour {
 		
 		
 		else if (step == 2) {
-			ACLMessage msg = ((MainAgent)this.myAgent).getMessage();
-			open = ((MainAgent)this.myAgent).getOpenNodes();
-			closed = ((MainAgent)this.myAgent).getClosedNodes();
+			System.out.println("Agent " + this.myAgent.getLocalName() + " has confirmed link !");
+			List<String> open  = ((MainAgent)this.myAgent).getOpenNodes();
+			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+			msg.setProtocol("SM-OPEN");
+			msg.setSender( this.myAgent.getAID() );
+			String encoded = this.encode(open);
+			msg.setContent(encoded);
+			msg.addReceiver( ((MainAgent)this.myAgent).getCurrentMsgSender() );
+			((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+			System.out.println("Agent " + this.myAgent.getLocalName() + " sends his list.");
+			System.out.println(open);
+			boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-OPEN");
 			
-			String intersect = "";
-			
-			for (String node : this.open2 ) {
-				if ( !this.open.contains(node) && !this.closed.contains(node) ) {
-					intersect = node;
-					break;
-				}
+			if (newMsg) {
+				System.out.println("Agent " + this.myAgent.getLocalName() + " checks other's open nodes list !");
+				((MainAgent)this.myAgent).incrementShareStep();
 			}
 		}
 		
+		else if (step == 3) {
+			String encoded =  ((MainAgent)this.myAgent).getCurrentMsgContent();
+			System.out.println("Agent " + this.myAgent.getLocalName() + " receives other's open nodes list !");
+			System.out.println(encoded);
+			String[] othersOpenList = this.decode(encoded);
+			this.open2 = othersOpenList;
+			
+			List<String> open = ((MainAgent)this.myAgent).getOpenNodes();
+			List<String> closed = ((MainAgent)this.myAgent).getClosedNodes();
+			String choice = "null";
+			for (String node : othersOpenList) {
+				if ( (!open.contains(node) &&  (!closed.contains(node)) ) ) {
+					choice = node;
+					break;
+				}
+			}
+			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+			msg.setProtocol("SM-NODE");
+			msg.setSender( this.myAgent.getAID() );
+			msg.setContent(choice);
+			msg.addReceiver( ((MainAgent)this.myAgent).getCurrentMsgSender() );
+			((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+			System.out.println("Agent " + this.myAgent.getLocalName() + " sent the node he chose :" + choice + "!");
+			boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-NODE");
+			if (newMsg) {
+				((MainAgent)this.myAgent).incrementShareStep();
+			}
+		}
+		
+		else if (step == 4) {
+			String usefulNode = ((MainAgent)this.myAgent).getCurrentMsgContent();
+			System.out.println("Agent " + this.myAgent.getLocalName() + " received the node: " + usefulNode + " !");
+			((MainAgent)this.myAgent).incrementShareStep();
+			MapRepresentation G = ((MainAgent)this.myAgent).getMap();
+			
+			
+		}
 		
 		
+		// Don't forget reset step !!!
 		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
 	}
 	
 	public int onEnd() {
-		if ((this.step == 0) || (this.step == 4)) // have not received a reply or ended comm scheme
+		if ((this.step == 0) || (this.step == 3)) // have not received a reply or ended comm scheme
 		{
 			List<String> path = ((MainAgent)this.myAgent).getUnblockPath();
 			if (path.size() != 0) {

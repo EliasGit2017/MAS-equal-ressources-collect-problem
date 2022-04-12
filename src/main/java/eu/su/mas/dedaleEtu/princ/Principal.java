@@ -12,8 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import eu.su.mas.dedaleEtu.mas.agents.MainAgent;
-import eu.su.mas.dedaleEtu.mas.agents.TestReceiveAgent;
-import eu.su.mas.dedaleEtu.mas.agents.TestSendAgent;
 import eu.su.mas.dedaleEtu.mas.agents.dummies.DummyMovingAgent;
 import eu.su.mas.dedaleEtu.mas.agents.dummies.DummyTankerAgent;
 import eu.su.mas.dedaleEtu.mas.agents.dummies.ExploreSoloAgent;
@@ -423,28 +421,9 @@ public class Principal {
 //		agentList.add(ag);
 
 
-		c = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
-		Assert.assertNotNull("This container does not exist", c);
-		
-		String agentIdName = "Sender";
-		Object[] entityParams = { "My parameters" };
-		
-		// 4) Give the class name of your agent to let the system instantiate it
-		ag = createNewDedaleAgent(c, agentIdName, TestSendAgent.class.getName(), entityParams);
-		agentList.add(ag);
-		
-		
-		c = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
-		Assert.assertNotNull("This container does not exist", c);
-		
-		agentIdName = "Receiver";
-		
-		// 4) Give the class name of your agent to let the system instantiate it
-		ag = createNewDedaleAgent(c, agentIdName, TestReceiveAgent.class.getName(), entityParams);
-		agentList.add(ag);
 
-		
-		List<String> agentsToInit = List.of( "James");
+		// Agents pre-initialized: James, Henry, Drake, Luke
+		List<String> agentsToInit = List.of( "James", "Henry");
 		for (String agentId : agentsToInit) {
 			// 1) Get the container where the agent will appear
 			c = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);

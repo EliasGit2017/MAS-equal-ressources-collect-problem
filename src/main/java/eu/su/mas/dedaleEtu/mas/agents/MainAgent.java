@@ -10,8 +10,9 @@ import eu.su.mas.dedale.mas.agent.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.behaviours.InitializeBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.Explore;
 import eu.su.mas.dedaleEtu.mas.behaviours.Navigation;
-import eu.su.mas.dedaleEtu.mas.behaviours.SendPosition;
+import eu.su.mas.dedaleEtu.mas.behaviours.ShareMap;
 import eu.su.mas.dedaleEtu.mas.behaviours.StopAgent;
+import jade.core.AID;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.FSMBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -57,7 +58,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	final int REPLY_TIMEOUT = 5; //Interrupt a protocol after 5 unsuccessful tries
 	
 	
-	final int WAIT_TIME = 20; //Standard time to wait between each action
+	final int WAIT_TIME = 1000; //Standard time to wait between each action
 	
 	public int getTries() {
 		return this.tries;
@@ -71,12 +72,24 @@ public class MainAgent extends AbstractDedaleAgent {
 		this.tries = 0;
 	}
 	
-	public ACLMessage getMessage() {
+	public AID getCurrentMsgSender() {
+		return this.currentMessage.getSender();
+	}
+	
+	public ACLMessage getCurrentMsg() {
 		return this.currentMessage;
 	}
 	
 	public String getCurrentMsgProtocol() {
 		return this.currentMessage.getProtocol();
+	}
+	
+	public String getCurrentMsgContent() {
+		return this.currentMessage.getContent();
+	}
+	
+	public void resetCurrentMsg() {
+		this.currentMessage = null;
 	}
 	
 	public int getShareStep() {
@@ -115,7 +128,8 @@ public class MainAgent extends AbstractDedaleAgent {
 		ACLMessage msgReceived = this.receive(msgTemplate);
 
 		if (msgReceived != null) {
-			System.out.println("Agent " + this.getLocalName() + " has received a message from " + msgReceived.getSender().getLocalName() + "!");			
+			System.out.println("Agent " + this.getLocalName() + " has received a message from " + msgReceived.getSender().getLocalName() + "!");
+			this.currentMessage = msgReceived;
 			return true;
 		}
 		return false;
@@ -217,7 +231,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	private static final String Start      = "A";
 	private static final String Explo	   = "B";
 	private static final String Nav 	   = "C";
-	private static final String InitComm   = "D";
+	private static final String Share   = "D";
 
 	
 	private static final String End		   = "Z";
@@ -265,7 +279,7 @@ public class MainAgent extends AbstractDedaleAgent {
 		fsm.registerFirstState(new InitializeBehaviour(), Start);
 		fsm.registerState(new Explore(this), Explo);
 		fsm.registerState(new Navigation(this), Nav);
-		fsm.registerState(new SendPosition(this), InitComm);
+		fsm.registerState(new ShareMap(this), Share);
 		fsm.registerLastState(new StopAgent(), End);
 		
 		
@@ -276,12 +290,14 @@ public class MainAgent extends AbstractDedaleAgent {
 		fsm.registerDefaultTransition(Explo, Explo);
 		fsm.registerTransition(Explo, Nav, 2);
 		fsm.registerTransition(Explo, End, 99);
-		fsm.registerTransition(Explo, InitComm, 3);
+		fsm.registerTransition(Explo, Share, 3);
 		
 		fsm.registerDefaultTransition(Nav, Nav);
 		fsm.registerTransition(Nav, Explo, 1);
 		
-		fsm.registerDefaultTransition(InitComm, Explo);
+		fsm.registerDefaultTransition(Share, Share);
+		fsm.registerTransition(Share, Explo, 1);
+		fsm.registerTransition(Share, Nav, 2);
 		
 		
 		

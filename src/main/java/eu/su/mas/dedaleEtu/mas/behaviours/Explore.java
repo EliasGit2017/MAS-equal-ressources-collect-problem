@@ -36,6 +36,7 @@ public class Explore extends OneShotBehaviour {
 	
 	private boolean communicate;
 
+	private boolean shareInit;
 	
 	public Explore(final AbstractDedaleAgent agent) {
 		super(agent); 
@@ -55,15 +56,18 @@ public class Explore extends OneShotBehaviour {
 		this.explo_done = false;
 		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate() ;
 		
-		
-		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("HELLO");
-
+		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
 		if (newMsg) {
-			String protocol = ((MainAgent)this.myAgent).getCurrentMsgProtocol();
-			if (protocol == "HELLO-SM") {
-				((MainAgent)this.myAgent).incrementShareStep();
-			}
-			//...
+			((MainAgent)this.myAgent).incrementShareStep();
+			((MainAgent)this.myAgent).incrementShareStep();
+			this.shareInit = true;
+			return;
+		}
+		
+		newMsg = ((MainAgent)this.myAgent).checkInbox("SM-HELLO");
+		if (newMsg) {
+			((MainAgent)this.myAgent).incrementShareStep();
+			this.shareInit = true;
 			return;
 		}
 		
@@ -157,7 +161,7 @@ public class Explore extends OneShotBehaviour {
 		if (this.blocked) {
 			return 2;
 		}
-		if (this.communicate) {
+		if (this.communicate || this.shareInit) {
 			return 3;
 		}
 		
