@@ -21,7 +21,7 @@ public class Navigation extends OneShotBehaviour {
 
 	@Override
 	public void action() {
-//		System.out.println("---- On rentre dans Navigation ----");
+		System.out.println("---- On rentre dans Navigation ----");
 		String currentPos = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 	    this.joined_destination = false;
 		

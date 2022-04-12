@@ -6,7 +6,7 @@ import java.util.List;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.startMyBehaviours;
-import eu.su.mas.dedale.mas.agent.knowledge.MapRepresentation;
+import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.behaviours.InitializeBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.Explore;
 import eu.su.mas.dedaleEtu.mas.behaviours.Navigation;
@@ -33,8 +33,8 @@ public class MainAgent extends AbstractDedaleAgent {
 	private List<String> agenda;							// Names  of other teammates on the map
 	
 	private MapRepresentation myMap;						// Know map
-	private List<String> openNodes = new ArrayList<>();		// List of unvisited but known nodes
-	private List<String> closedNodes = new ArrayList<>();	// List of visited nodes
+//	private List<String> openNodes = new ArrayList<>();		// List of unvisited but known nodes
+//	private List<String> closedNodes = new ArrayList<>();	// List of visited nodes
 	private List<String> unblockPath = new ArrayList<>();	// Path that would lead to unblock a bad situation while exploring
 	
 	private String lastBehaviour = "Init";
@@ -58,7 +58,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	final int REPLY_TIMEOUT = 5; //Interrupt a protocol after 5 unsuccessful tries
 	
 	
-	final int WAIT_TIME = 1000; //Standard time to wait between each action
+	final int WAIT_TIME = 10; //Standard time to wait between each action
 	
 	public int getTries() {
 		return this.tries;
@@ -185,21 +185,25 @@ public class MainAgent extends AbstractDedaleAgent {
 		this.myMap = newMap;
 	}
 	
+	
+	
 	public List<String> getClosedNodes() {
-		return this.closedNodes;
+		return this.myMap.getClosedNodes();
+//		return this.closedNodes;
 	}
 	
 	public List<String> getOpenNodes() {
-		return this.openNodes;
+		return this.myMap.getOpenNodes();
+//		return this.openNodes;
 	}
 	
-	public void updateOpenNodes(List<String> newNodes) {
-		this.openNodes = newNodes;
-	}
-	
-	public void updateClosedNodes(List<String> newNodes) {
-		this.closedNodes = newNodes;
-	}
+//	public void updateOpenNodes(List<String> newNodes) {
+//		this.openNodes = newNodes;
+//	}
+//	
+//	public void updateClosedNodes(List<String> newNodes) {
+//		this.closedNodes = newNodes;
+//	}
 	
 	public int getBlockCount() {
 		return this.blockCount;

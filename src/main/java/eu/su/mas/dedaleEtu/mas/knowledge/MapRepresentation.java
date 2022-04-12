@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.graphstream.algorithm.Dijkstra;
 import org.graphstream.graph.Edge;
@@ -62,6 +63,18 @@ public class MapRepresentation implements Serializable {
 
 	private SerializableSimpleGraph<String, MapAttribute> sg;//used as a temporary dataStructure during migration
 
+	public List<String> getNeighbors(String id_node) { //Retrieve neighnors of a node
+		Node n = this.g.getNode(id_node);
+		Stream<String> neighboring = n.neighborNodes().map(node -> node.getId());
+		List<String> neighbor_nodes = neighboring.collect(Collectors.toList());
+		return neighbor_nodes;		
+	}
+	
+	public Object getAttr(String id_node) {
+		Node n = this.g.getNode(id_node);
+		Object t = n.getAttribute("ui.class");
+		return t;
+	}
 
 	public MapRepresentation() {
 		//System.setProperty("org.graphstream.ui.renderer","org.graphstream.ui.j2dviewer.J2DGraphRenderer");
@@ -181,6 +194,12 @@ public class MapRepresentation implements Serializable {
 				.collect(Collectors.toList());
 	}
 
+	public List<String> getClosedNodes(){
+		return this.g.nodes()
+				.filter(x ->x .getAttribute("ui.class")==MapAttribute.closed.toString()) 
+				.map(Node::getId)
+				.collect(Collectors.toList());
+	}
 
 	/**
 	 * Before the migration we kill all non serializable components and store their data in a serializable form

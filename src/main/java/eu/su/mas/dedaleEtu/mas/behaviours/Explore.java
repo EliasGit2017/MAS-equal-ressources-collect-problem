@@ -7,8 +7,8 @@ import java.util.List;
 import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
-import eu.su.mas.dedale.mas.agent.knowledge.MapRepresentation;
-import eu.su.mas.dedale.mas.agent.knowledge.MapRepresentation.MapAttribute;
+import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
+import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import eu.su.mas.dedaleEtu.mas.agents.MainAgent;
 import jade.core.behaviours.OneShotBehaviour;
 
@@ -43,7 +43,7 @@ public class Explore extends OneShotBehaviour {
 		}
 		
 	public void action() {
-//		System.out.println("----- On rentre dans Explore -----");
+		System.out.println("----- On rentre dans Explore -----");
 
 		lastPosition = ((MainAgent)this.myAgent).getLastPosition();
 		currentPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
@@ -54,7 +54,9 @@ public class Explore extends OneShotBehaviour {
 		
 		this.blocked = false; //Keep those with "this." because useful in onEnd() function
 		this.explo_done = false;
+		this.shareInit = false;
 		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate() ;
+
 		
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
 		if (newMsg) {
@@ -79,12 +81,14 @@ public class Explore extends OneShotBehaviour {
 				
 		if (currentPosition!=null){
 			if(!(open.size() == 0)) {
+				map.addNode(currentPosition, MapAttribute.closed);
 				open.remove(currentPosition);
 				 }
 			
 			if (!closed.contains(currentPosition)) {
-				closed.add(currentPosition);
 				map.addNode(currentPosition, MapAttribute.closed);
+				closed.add(currentPosition);
+				
 			}
 			
 			
@@ -100,8 +104,8 @@ public class Explore extends OneShotBehaviour {
 				boolean isNew = map.addNewNode(node);
 				
 				if (isNew) {
-					open.add(node);
 					map.addNode(node, MapAttribute.open);
+					open.add(node);
 				}
 				map.addEdge(currentPosition, node);
 				if (!closed.contains(node)) {
@@ -113,8 +117,9 @@ public class Explore extends OneShotBehaviour {
 //			System.out.println(open);
 //			System.out.println("Closed list " + closed.size());
 			if (open.size() == 0 && closed.size() != 0) {
-//				System.out.println("END OF EXPLORATION -- stopping agent");
+				System.out.println("END OF EXPLORATION -- stopping agent");
 				this.explo_done = true;
+				((MainAgent)this.myAgent).pause();
 				return;
 			}
 			
@@ -128,6 +133,7 @@ public class Explore extends OneShotBehaviour {
 				this.blocked = true;
 				System.out.println("Blocked ! Computed escape path from " + currentPosition + " to " + nextNode);
 				System.out.println(path);
+				return;
 				
 			}
 			
@@ -137,12 +143,12 @@ public class Explore extends OneShotBehaviour {
 			
 			((MainAgent)this.myAgent).setLastPosition(currentPosition);
 			((MainAgent)this.myAgent).setMap(map);
-			((MainAgent)this.myAgent).updateOpenNodes(open);
-			((MainAgent)this.myAgent).updateClosedNodes(closed);
+//			((MainAgent)this.myAgent).updateOpenNodes(open);
+//			((MainAgent)this.myAgent).updateClosedNodes(closed);
 			
-			if (!this.blocked) {
-				((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
-			}
+
+			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
+			System.out.println(this.myAgent.getLocalName() + " moving from " + currentPosition + " to " +  nextNode);
 			
 		}
 		
@@ -154,6 +160,9 @@ public class Explore extends OneShotBehaviour {
 	
 	public int onEnd() {
 		// To ensure standards respect, follow protocol above FSM behaviour declaration
+		
+		this.open = null;
+		this.closed = null;
 		
 		if (this.explo_done) {
 			return 99;
