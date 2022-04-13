@@ -30,7 +30,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 
 	private MapRepresentation myMap;
 
-	private List<String> agenda;
+	//private List<String> agenda;
 
 	private int exitCode; // used to fire specific transitions
 
@@ -38,13 +38,13 @@ public class ExploreBehaviour extends OneShotBehaviour {
 
 	// private int timer;
 
-	public boolean terminated = false;
+	//public boolean terminated = false;
 
 	public ExploreBehaviour(final AbstractDedaleAgent cur_a, MapRepresentation myMap, int timer,
 			List<String> contacts) {
 		super(cur_a);
 		this.myMap = ((fsmAgent) this.myAgent).getMyMap();
-		this.agenda = contacts;
+		//this.agenda = contacts;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -56,10 +56,10 @@ public class ExploreBehaviour extends OneShotBehaviour {
 		// Might be useless due to how the fsmAgent's first state is defined
 		if (this.myMap == null) {
 			this.myMap = new MapRepresentation();
+			//System.err.println("  No map for " + this.myAgent.getLocalName());
 		}
 
-		// System.out.println(" --> Exploration Begins for : " +
-		// this.myAgent.getLocalName());
+		// System.out.println(" --> Exploration Begins for : " + this.myAgent.getLocalName());
 
 		String cur_pos = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
 
@@ -103,27 +103,27 @@ public class ExploreBehaviour extends OneShotBehaviour {
 //			}
 
 			if (!this.myMap.hasOpenNode()) {
-				terminated = true;
+				//terminated = true;
 				// this.exitCode = 1;
 				// this.exitCode = 100; // -> StopAg behaviour
 				System.out.println(" ---> No open nodes on the map for : " + this.myAgent.getLocalName());
 			} else {
 				if (nextNode == null) {
 					nextNode = this.myMap.getShortestPathToClosestOpenNode(cur_pos).get(0); // decide next Node
-					this.exitCode = 1;
+					checkInbox();
+					//this.exitCode = 1;
 				} else {
 					// Define Sub behaviour here
-					this.exitCode = 1;
+					checkInbox();
+					//this.exitCode = 1;
 				}
-
+				// wait : 300ms default (agent speed)
 				try {
-					this.myAgent.doWait(((fsmAgent) this.myAgent).speed); // wait : 300ms default (agent speed)
+					this.myAgent.doWait(((fsmAgent) this.myAgent).speed);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				
-				checkInbox();
-
 				((AbstractDedaleAgent) this.myAgent).moveTo(nextNode);
 
 			}
@@ -147,13 +147,22 @@ public class ExploreBehaviour extends OneShotBehaviour {
 			ACLMessage msgTB = this.myAgent.receive(msgTBooped);
 
 			if (msgSM != null) {
-				this.exitCode = 5;
+				
+				SerializableSimpleGraph<String, MapAttribute> sgR = null;
+				try {
+					sgR = (SerializableSimpleGraph<String, MapRepresentation.MapAttribute>)msgSM.getContentObject();
+				} catch (UnreadableException e) {
+					e.printStackTrace();
+				}
+				this.myMap.mergeMap(sgR);
+				System.out.println(" ---> " + this.myAgent.getLocalName() + "just merged map from " + msgSM.getSender().getLocalName());;
+				this.exitCode = 4;
 				return true;
 			} else {
 				if (msgTB != null) { //got booped
 					String sender_name = msgTB.getSender().getLocalName();
 					String sender_pos = msgTB.getContent();
-					System.out.println(" ~~~ ExpBehav ---> " + sender_name + " booped " + sender_pos + " to " + this.myAgent.getLocalName());
+					System.out.println(" ~~~ ExpBehav ---> " + sender_name + " booped " + sender_pos);
 					this.exitCode = 3;
 				} else {
 					this.exitCode = 1;

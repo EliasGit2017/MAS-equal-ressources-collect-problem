@@ -10,6 +10,7 @@ public class InitialiazeMap extends OneShotBehaviour {
 
 	@Override
 	public void action() {
+		
 		MapRepresentation myMap = new MapRepresentation();
 		
 		((fsmAgent)this.myAgent).setMyMap(myMap);

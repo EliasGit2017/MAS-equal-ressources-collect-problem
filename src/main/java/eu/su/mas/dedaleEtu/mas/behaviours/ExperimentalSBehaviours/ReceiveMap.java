@@ -16,7 +16,7 @@ public class ReceiveMap extends OneShotBehaviour {
 
 	private MapRepresentation myMap;
 	
-	private boolean msg_holder=true;
+	//private boolean msg_holder=true;
 	
 	//private int exitCode;
 
@@ -63,13 +63,8 @@ public class ReceiveMap extends OneShotBehaviour {
 					+ msg.getSender().getLocalName());
 			
 		}else {
-			if(!msg_holder) {
-				msg_holder = true;
-				((fsmAgent)this.myAgent).successMerge = false;
-				System.out.println("--><-- Problem in Map exchange (ReceiveMap behaviour) for : " + this.myAgent.getLocalName());
-			}
-			this.msg_holder = false;
-			block(300);
+			
+			//block(300);
 		}
 		
 	}
