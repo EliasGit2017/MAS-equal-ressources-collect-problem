@@ -1,8 +1,9 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
 
+import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Random;
 
 import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Observation;
@@ -57,6 +58,17 @@ public class Explore extends OneShotBehaviour {
 		this.shareInit = false;
 		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate() ;
 
+		if (currentPosition == lastPosition) {
+			((MainAgent)this.myAgent).incrementBlockCount();
+			if ( ((MainAgent)this.myAgent).isBlocked() ) {
+				this.blocked = true;
+				return;
+			}
+		}
+		else {
+			((MainAgent)this.myAgent).resetBlockCount();
+		}
+		
 		
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
 		if (newMsg) {
@@ -73,31 +85,27 @@ public class Explore extends OneShotBehaviour {
 			return;
 		}
 		
-		
 		if (this.communicate) {
 			return;
 		}
 		
-				
 		if (currentPosition!=null){
+			
 			if(!(open.size() == 0)) {
 				map.addNode(currentPosition, MapAttribute.closed);
 				open.remove(currentPosition);
-				 }
+			}
 			
 			if (!closed.contains(currentPosition)) {
 				map.addNode(currentPosition, MapAttribute.closed);
 				closed.add(currentPosition);
-				
 			}
-			
-			
-			
+						
 			List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
-//			System.out.println("Observations: " + obs);
-			
+
 			int size = obs.size() ;
 			String nextNode = null;
+			List<String> nextNodesChoice = new ArrayList<>();
 			for (int i = 1 ; i < size ; i ++ ) {
 				String node = obs.get(i).getLeft() ;
 				
@@ -109,47 +117,34 @@ public class Explore extends OneShotBehaviour {
 				}
 				map.addEdge(currentPosition, node);
 				if (!closed.contains(node)) {
-					nextNode = node;
+					nextNodesChoice.add(node);
 				}
 			}
+
+			if ( nextNodesChoice.size() != 0 ) {
+				Random r = new Random();
+				int choice = r.nextInt(nextNodesChoice.size() - 1);
+				nextNode = nextNodesChoice.get(choice);
+			}
 			
-//			System.out.println("Open list " + open.size());
-//			System.out.println(open);
-//			System.out.println("Closed list " + closed.size());
 			if (open.size() == 0 && closed.size() != 0) {
 				System.out.println("END OF EXPLORATION -- stopping agent");
 				this.explo_done = true;
-				((MainAgent)this.myAgent).pause();
 				return;
 			}
-			
-//			System.out.println("Le prochain noeud a visiter est " + nextNode);
 			
 			if ( (nextNode == null) && (open.size() != 0) ) {
 				//On est dans une impasse
-				nextNode = open.get(open.size() - 1); //Le dernier ajouté est le + proche, mais attention pas adjacent a position actuelle
-				List<String> path = map.getShortestPath(currentPosition, nextNode);
+				List<String> path = map.getShortestPathToClosestOpenNode(currentPosition);
 				((MainAgent)this.myAgent).setUnblockPath(path);
 				this.blocked = true;
-				System.out.println("Blocked ! Computed escape path from " + currentPosition + " to " + nextNode);
-				System.out.println(path);
-				return;
-				
+//				System.out.println("Blocked ! Computed escape path from " + currentPosition + " to " + nextNode);
+//				System.out.println(path);
+				return;	
 			}
 			
-			
-
-			
-			
-			((MainAgent)this.myAgent).setLastPosition(currentPosition);
-			((MainAgent)this.myAgent).setMap(map);
-//			((MainAgent)this.myAgent).updateOpenNodes(open);
-//			((MainAgent)this.myAgent).updateClosedNodes(closed);
-			
-
 			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 			System.out.println(this.myAgent.getLocalName() + " moving from " + currentPosition + " to " +  nextNode);
-			
 		}
 		
 //		System.out.println("New opened nodes: " + open);
@@ -163,6 +158,9 @@ public class Explore extends OneShotBehaviour {
 		
 		this.open = null;
 		this.closed = null;
+		
+		((MainAgent)this.myAgent).setLastPosition(currentPosition);
+		((MainAgent)this.myAgent).setMap(map);
 		
 		if (this.explo_done) {
 			return 99;

@@ -240,13 +240,10 @@ public class ShareMap extends OneShotBehaviour {
 		
 		else if (step == 6) { //Reset all variables step and resume normal activity
 			System.out.println("---------- Agent " + this.myAgent.getLocalName() + " enters Step 6 (last) ----------" );
-			((MainAgent)this.myAgent).pause();
 			List<String> path = ((MainAgent)this.myAgent).getUnblockPath();
-			MapRepresentation map = ((MainAgent)this.myAgent).getMap();
 			if (path.size() != 0) {
-				List<String> open = ((MainAgent)this.myAgent).getOpenNodes();
-				String nextNode = open.get(open.size() - 1); //Le dernier ajouté est le + proche, mais attention pas adjacent a position actuelle
-				path = map.getShortestPath(((MainAgent)this.myAgent).getCurrentPosition(), nextNode);
+				MapRepresentation map = ((MainAgent)this.myAgent).getMap();
+				path = map.getShortestPathToClosestOpenNode( ((MainAgent)this.myAgent).getCurrentPosition() );
 				((MainAgent)this.myAgent).setUnblockPath(path);
 			}
 		}
