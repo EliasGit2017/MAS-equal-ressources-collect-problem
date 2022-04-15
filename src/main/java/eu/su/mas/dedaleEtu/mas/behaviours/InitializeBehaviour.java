@@ -27,14 +27,17 @@ public class InitializeBehaviour extends OneShotBehaviour {
 		MapRepresentation map = new MapRepresentation();
 		((MainAgent)this.myAgent).setMap(map);
 		
-		
 		Random r = new Random();
 		int val = r.nextInt(2147483647);
 		((MainAgent)this.myAgent).setId(val);
 		
+<<<<<<< HEAD
 		
 
 
 
+=======
+		((MainAgent)this.myAgent).initLastComm();
+>>>>>>> branch 'Francesco-newBranch' of https://gitlab.com/Elias2049/fosyma-dedaleetu
 	}
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.agents.MainAgent;
+import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
 
@@ -15,6 +16,11 @@ public class Navigation extends OneShotBehaviour {
 	
 	private boolean shareInit;
 	
+	private String currentPosition;
+	private String lastPosition;
+	
+	private boolean blocked;
+	
 	public Navigation(Agent a) {
 		super(a);
 	}
@@ -22,15 +28,15 @@ public class Navigation extends OneShotBehaviour {
 	@Override
 	public void action() {
 		System.out.println("---- On rentre dans Navigation ----");
-		String currentPos = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
+		this.currentPosition = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
+		this.lastPosition = ((MainAgent)this.myAgent).getLastPosition();
 	    this.joined_destination = false;
+		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate();
+		this.blocked = false;
 		
-		
-		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate() ;
 		if (this.communicate) {
 			return;
 		}
-		
 		
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
 		if (newMsg) {
@@ -62,7 +68,20 @@ public class Navigation extends OneShotBehaviour {
 		if (!this.joined_destination) {
 //			System.out.println("Moving from "+ currentPos + " to " + nextNode + " !");
 			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
-			((MainAgent)this.myAgent).setLastPosition(currentPos);
+			
+			if ( ((AbstractDedaleAgent)this.myAgent).getCurrentPosition() != nextNode ) {
+				List<String> path = ((MainAgent)this.myAgent).getUnblockPath();
+				path.add(0, nextNode);
+				((MainAgent)this.myAgent).setUnblockPath(path);
+				((MainAgent)this.myAgent).incrementBlockCount();
+				if ( ((MainAgent)this.myAgent).isBlocked() ) {
+					this.blocked = true;
+					return;
+				}
+			}
+			else {
+				((MainAgent)this.myAgent).resetBlockCount();
+			}
 		}
 		
 //		((MainAgent)this.myAgent).pause();
@@ -72,6 +91,9 @@ public class Navigation extends OneShotBehaviour {
 	
 	public int onEnd() {
 		// To ensure standards respect, follow protocol above FSM behaviour declaration
+		
+		((MainAgent)this.myAgent).setLastPosition(currentPosition);
+		
 		
 		if (this.communicate || this.shareInit) {
 //			System.out.println("Changing to SEND_POS");

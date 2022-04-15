@@ -2,6 +2,7 @@ package eu.su.mas.dedaleEtu.mas.agents;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
@@ -26,22 +27,23 @@ public class MainAgent extends AbstractDedaleAgent {
 	 */
 	private static final long serialVersionUID = -8163984991000007321L;
 	
-	private int uniqueId;
+	private int uniqueId;									// Unique ID of the agent (useful for interlocking), determined during InitializeBehaviour
 	
 	private String lastPosition ;							// Store the previous position of agent
 	private int blockCount = 0;								// Number of consecutive failed tries to move position
+	private final int BLOCK_LIMIT = 5;						// Max number of ^ before considering agent is blocked
 	private List<String> agenda;							// Names  of other teammates on the map
 	
 	private MapRepresentation myMap;						// Know map
-//	private List<String> openNodes = new ArrayList<>();		// List of unvisited but known nodes
-//	private List<String> closedNodes = new ArrayList<>();	// List of visited nodes
+
 	private List<String> unblockPath = new ArrayList<>();	// Path that would lead to unblock a bad situation while exploring
 	
-	private String lastBehaviour = "Init";
+	private String lastBehaviour = "Init";					// The last behaviour
 	
-	private ACLMessage currentMessage;
+	private ACLMessage currentMessage;						// The current message the agent is processing
 	
-	private int shareStep = 0;
+	private int shareStep = 0;								// The current step of the communication process the agent is in
+	
 	/***********
 	 * STEPS
 	 *  0	->	Introduce yourself, no reply received
@@ -51,16 +53,44 @@ public class MainAgent extends AbstractDedaleAgent {
 	 *  4	-> 	End of the protocol	
 	 **********/
 	
-	private int communicate = 0;
-	final int COMM_STEP = 3; //Communicate every COMM_STEP times
+	private int communicate = 0;	 		// Stores the number of steps since last communication
+	private final int COMM_STEP = 3; 		// Communicate every COMM_STEP times
 	
-	private int tries = 0;
-	final int REPLY_TIMEOUT = 5; //Interrupt a protocol after 5 unsuccessful tries
+	private int tries = 0;					// Number of consecutive failed tries
+	private final int REPLY_TIMEOUT = 5; 	// Interrupt a protocol after REPLY_TIMEOUT unsuccessful tries
+	
+	private final int WAIT_TIME = 10; 		// Standard time (in ms) to wait between each action
+	
+	Hashtable<String, Integer> lastComm = new Hashtable<>();
+	private final int COMM_TIMEOUT = 10;	//Refuse communication (other than collision solver) with an agent if they communicated less than COMM_TIMEOUT steps earlier.
 	
 	
-	final int WAIT_TIME = 10; //Standard time to wait between each action
+	public boolean canCommunicateWith(String agent) {
+		return this.getLastCommValue(agent) <= COMM_TIMEOUT;
+	}
 	
-	public int getTries() {
+	public void initLastComm() {
+		for(String agent : this.agenda) {
+			this.lastComm.put(agent, 0);
+		}
+	}
+
+	public void incrementLastCommValues() {
+		for (String agent : this.agenda) {
+			int val = this.lastComm.get(agent);
+			this.lastComm.put(agent, val + 1);
+		}
+	}
+	
+	public void resetLastCommValue(String agent) {
+		this.lastComm.put(agent, 0);
+	}
+	
+	public int getLastCommValue(String agent) {
+		return this.lastComm.get(agent);
+	}
+
+	public int getTries() {					
 		return this.tries;
 	}
 	
@@ -104,7 +134,7 @@ public class MainAgent extends AbstractDedaleAgent {
 		this.shareStep = 0;
 	}
 	
-	public void pause() {
+	public void pause() {	// Pauses the agent execution (useful for debugging)
 		try {
 			System.out.println("Press enter in the console to allow the agent " + this.getLocalName() +" to execute its next move");
 			System.in.read();
@@ -128,6 +158,10 @@ public class MainAgent extends AbstractDedaleAgent {
 		ACLMessage msgReceived = this.receive(msgTemplate);
 
 		if (msgReceived != null) {
+			if ( ProtocolName.contains("SM") && !this.canCommunicateWith( msgReceived.getSender().getLocalName() ) ) {
+				System.out.println("IGNORED MSG");
+				return false;
+			}
 			System.out.println("Agent " + this.getLocalName() + " has received a message from " + msgReceived.getSender().getLocalName() + "!");
 			this.currentMessage = msgReceived;
 			return true;
@@ -160,6 +194,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	public List<String> getUnblockPath() {
 		return this.unblockPath;
 	}
+	
 	public void resetUnblockPath() {
 		this.unblockPath = new ArrayList<>();
 	}
@@ -185,28 +220,17 @@ public class MainAgent extends AbstractDedaleAgent {
 		this.myMap = newMap;
 	}
 	
-	
-	
 	public List<String> getClosedNodes() {
 		return this.myMap.getClosedNodes();
-//		return this.closedNodes;
 	}
 	
 	public List<String> getOpenNodes() {
 		return this.myMap.getOpenNodes();
-//		return this.openNodes;
 	}
 	
-//	public void updateOpenNodes(List<String> newNodes) {
-//		this.openNodes = newNodes;
-//	}
-//	
-//	public void updateClosedNodes(List<String> newNodes) {
-//		this.closedNodes = newNodes;
-//	}
-	
-	public int getBlockCount() {
-		return this.blockCount;
+	public boolean isBlocked() {
+		System.out.println("EUSSOUUU");
+		return this.blockCount >= this.BLOCK_LIMIT;
 	}
 	
 	public void incrementBlockCount() {
@@ -223,7 +247,6 @@ public class MainAgent extends AbstractDedaleAgent {
 	
 	public void setLastPosition(String update_pos) {
 		this.lastPosition = update_pos;
-
 	}
 	
 	public List<String> getAgenda() {
@@ -231,20 +254,13 @@ public class MainAgent extends AbstractDedaleAgent {
 	}
 	
 	
-	
 	private static final String Start      = "A";
 	private static final String Explo	   = "B";
 	private static final String Nav 	   = "C";
 	private static final String Share   = "D";
-
 	
 	private static final String End		   = "Z";
  
-	
-	
-	//TODO: Integrate communication into FSM behaviour
-	//TODO: Elaborate communication protocol : each comm has its ID
-	//TODO: Share maps: start exploring from node1 not in (closed2 and open2) (send such node to the other)
 	//TODO: Collision avoidance + unblock on corridors
 	
 	protected void setup() {
@@ -258,15 +274,16 @@ public class MainAgent extends AbstractDedaleAgent {
 		if(args.length==0){
 			System.err.println("Error while creating the agent, names of agent to contact expected");
 			System.exit(-1);
-		}else{
+		}
+		else{
 			int i=2;// WARNING YOU SHOULD ALWAYS START AT 2. This will be corrected in the next release.
 			while (i<args.length) {
 				agentNames.add((String)args[i]);
 				i++;
 			}
-			}
-		this.agenda = agentNames;
+		}
 		
+		this.agenda = agentNames;
 		
 		/*************
 		 * Return codes
@@ -287,8 +304,6 @@ public class MainAgent extends AbstractDedaleAgent {
 		fsm.registerLastState(new StopAgent(), End);
 		
 		
-		
-		
 		fsm.registerDefaultTransition(Start, Explo);
 		
 		fsm.registerDefaultTransition(Explo, Explo);
@@ -304,12 +319,9 @@ public class MainAgent extends AbstractDedaleAgent {
 		fsm.registerTransition(Share, Nav, 2);
 		
 		
-		
 		List<Behaviour> lb=new ArrayList<Behaviour>();
 		lb.add(fsm);
 		
 		addBehaviour(new startMyBehaviours(this,lb));
-		
 	}
-
 }
