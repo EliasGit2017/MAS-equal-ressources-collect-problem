@@ -62,7 +62,7 @@ public class MapRepresentation implements Serializable {
 	private Integer nbEdges;//used to generate the edges ids
 
 	private SerializableSimpleGraph<String, MapAttribute> sg;//used as a temporary dataStructure during migration
-
+	
 	public List<String> getNeighbors(String id_node) { //Retrieve neighnors of a node
 		Node n = this.g.getNode(id_node);
 		Stream<String> neighboring = n.neighborNodes().map(node -> node.getId());
@@ -76,15 +76,17 @@ public class MapRepresentation implements Serializable {
 		return t;
 	}
 
-	public MapRepresentation() {
+	public MapRepresentation(boolean openIt) {
 		//System.setProperty("org.graphstream.ui.renderer","org.graphstream.ui.j2dviewer.J2DGraphRenderer");
 		System.setProperty("org.graphstream.ui", "javafx");
 		this.g= new SingleGraph("My world vision");
 		this.g.setAttribute("ui.stylesheet",nodeStyle);
 
-		Platform.runLater(() -> {
-			openGui();
-		});
+		if (openIt) {
+			Platform.runLater(() -> {
+				openGui();
+			});
+		}
 		//this.viewer = this.g.display();
 
 		this.nbEdges=0;
@@ -261,6 +263,10 @@ public class MapRepresentation implements Serializable {
 	/**
 	 * Method called before migration to kill all non serializable graphStream components
 	 */
+	public void closeWin() {
+		this.closeGui();
+	}
+	
 	private synchronized void closeGui() {
 		//once the graph is saved, clear non serializable components
 		if (this.viewer!=null){

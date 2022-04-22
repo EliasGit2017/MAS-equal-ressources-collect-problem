@@ -24,7 +24,7 @@ public class InitializeBehaviour extends OneShotBehaviour {
 	public void action() {
 		System.out.println("Getting agent " + this.myAgent.getLocalName() + " ready for departure.");
 		
-		MapRepresentation map = new MapRepresentation();
+		MapRepresentation map = new MapRepresentation(true);
 		((MainAgent)this.myAgent).setMap(map);
 		
 		Random r = new Random();
@@ -32,5 +32,6 @@ public class InitializeBehaviour extends OneShotBehaviour {
 		((MainAgent)this.myAgent).setId(val);
 		
 		((MainAgent)this.myAgent).initLastComm();
+
 	}
 }

@@ -31,13 +31,15 @@ public class Explore extends OneShotBehaviour {
 	
 	private MapRepresentation map;
 	
-	private boolean blocked;
+	private boolean blocked; //No open nodes nearby
 	
 	private boolean explo_done;
 	
 	private boolean communicate;
 
 	private boolean shareInit;
+	
+	private boolean stuck;
 	
 	public Explore(final AbstractDedaleAgent agent) {
 		super(agent); 
@@ -57,18 +59,7 @@ public class Explore extends OneShotBehaviour {
 		this.explo_done = false;
 		this.shareInit = false;
 		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate() ;
-
-		if (currentPosition == lastPosition) {
-			((MainAgent)this.myAgent).incrementBlockCount();
-			if ( ((MainAgent)this.myAgent).isBlocked() ) {
-				this.blocked = true;
-				return;
-			}
-		}
-		else {
-			((MainAgent)this.myAgent).resetBlockCount();
-		}
-		
+		this.stuck = ((MainAgent)this.myAgent).isBlocked();
 		
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
 		if (newMsg) {
@@ -86,6 +77,10 @@ public class Explore extends OneShotBehaviour {
 		}
 		
 		if (this.communicate) {
+			return;
+		}
+		
+		if (this.stuck) {
 			return;
 		}
 		
@@ -123,7 +118,7 @@ public class Explore extends OneShotBehaviour {
 
 			if ( nextNodesChoice.size() != 0 ) {
 				Random r = new Random();
-				int choice = r.nextInt(nextNodesChoice.size() - 1);
+				int choice = r.nextInt( nextNodesChoice.size() );
 				nextNode = nextNodesChoice.get(choice);
 			}
 			
@@ -143,13 +138,13 @@ public class Explore extends OneShotBehaviour {
 				return;	
 			}
 			
-			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
-			System.out.println(this.myAgent.getLocalName() + " moving from " + currentPosition + " to " +  nextNode);
+			boolean success = ((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
+			if (success) { ((MainAgent)this.myAgent).resetBlockCount();     }
+			else		 { ((MainAgent)this.myAgent).incrementBlockCount(); }
+			
+
 		}
 		
-//		System.out.println("New opened nodes: " + open);
-//		System.out.println("New closed nodes:  " + closed);
-//		System.out.println("La valeur de blocage est " + this.blocked);
 		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
 	}
 	
@@ -161,10 +156,17 @@ public class Explore extends OneShotBehaviour {
 		
 		((MainAgent)this.myAgent).setLastPosition(currentPosition);
 		((MainAgent)this.myAgent).setMap(map);
+		((MainAgent)this.myAgent).incrementLastCommValues();
+		((MainAgent)this.myAgent).updateLastBehaviour("Explore");
 		
 		if (this.explo_done) {
 			return 99;
 		}
+		
+		if (this.stuck) {
+			return 4;
+		}
+		
 		if (this.blocked) {
 			return 2;
 		}

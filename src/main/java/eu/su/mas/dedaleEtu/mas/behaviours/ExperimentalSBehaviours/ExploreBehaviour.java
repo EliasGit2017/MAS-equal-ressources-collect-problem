@@ -52,7 +52,7 @@ public class ExploreBehaviour extends SimpleBehaviour {
 		
 		// Might be useless due to how the fsmAgent's first state is defined
 		if(this.myMap==null) {
-			this.myMap= new MapRepresentation();
+			this.myMap= new MapRepresentation(true);
 			this.myAgent.addBehaviour(new ShareMapB(this.myAgent, this.myMap, agenda));
 		}
 		

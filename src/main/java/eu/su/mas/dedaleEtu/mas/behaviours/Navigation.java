@@ -21,6 +21,7 @@ public class Navigation extends OneShotBehaviour {
 	
 	private boolean blocked;
 	
+	private boolean stuck;
 	public Navigation(Agent a) {
 		super(a);
 	}
@@ -33,10 +34,9 @@ public class Navigation extends OneShotBehaviour {
 	    this.joined_destination = false;
 		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate();
 		this.blocked = false;
+		this.stuck  = ((MainAgent)this.myAgent).isBlocked();
 		
-		if (this.communicate) {
-			return;
-		}
+
 		
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
 		if (newMsg) {
@@ -53,7 +53,13 @@ public class Navigation extends OneShotBehaviour {
 			return;
 		}
 		
+		if (this.communicate) {
+			return;
+		}
 		
+		if (this.stuck) {
+			return;
+		}
 		
 		
 		String nextNode = ((MainAgent)this.myAgent).getNextUnblockPath();
@@ -67,17 +73,13 @@ public class Navigation extends OneShotBehaviour {
 		
 		if (!this.joined_destination) {
 //			System.out.println("Moving from "+ currentPos + " to " + nextNode + " !");
-			((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
+			boolean success = ((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
 			
-			if ( ((AbstractDedaleAgent)this.myAgent).getCurrentPosition() != nextNode ) {
+			if ( !success ) {
 				List<String> path = ((MainAgent)this.myAgent).getUnblockPath();
 				path.add(0, nextNode);
 				((MainAgent)this.myAgent).setUnblockPath(path);
 				((MainAgent)this.myAgent).incrementBlockCount();
-				if ( ((MainAgent)this.myAgent).isBlocked() ) {
-					this.blocked = true;
-					return;
-				}
 			}
 			else {
 				((MainAgent)this.myAgent).resetBlockCount();
@@ -93,7 +95,8 @@ public class Navigation extends OneShotBehaviour {
 		// To ensure standards respect, follow protocol above FSM behaviour declaration
 		
 		((MainAgent)this.myAgent).setLastPosition(currentPosition);
-		
+		((MainAgent)this.myAgent).incrementLastCommValues();
+		((MainAgent)this.myAgent).updateLastBehaviour("Navigation");
 		
 		if (this.communicate || this.shareInit) {
 //			System.out.println("Changing to SEND_POS");
@@ -103,6 +106,10 @@ public class Navigation extends OneShotBehaviour {
 		if (this.joined_destination) {
 //			System.out.println("Changing to EXPLO");
 			return 1;
+		}
+		
+		if (this.stuck) {
+			return 4;
 		}
 
 //		System.out.println("Staying in NAV");

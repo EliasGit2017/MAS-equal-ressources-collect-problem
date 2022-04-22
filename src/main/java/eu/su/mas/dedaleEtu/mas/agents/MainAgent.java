@@ -56,22 +56,53 @@ public class MainAgent extends AbstractDedaleAgent {
 	private int communicate = 0;	 		// Stores the number of steps since last communication
 	private final int COMM_STEP = 3; 		// Communicate every COMM_STEP times
 	
-	private int tries = 0;					// Number of consecutive failed tries
-	private final int REPLY_TIMEOUT = 5; 	// Interrupt a protocol after REPLY_TIMEOUT unsuccessful tries
+	private int lastStepMsg = 0;		    // Useful for ShareMap behaviour - last step when agent sent a message on shareMap
 	
-	private final int WAIT_TIME = 10; 		// Standard time (in ms) to wait between each action
+	private int tries = 0;					// Number of times a step was checked
+	private final int MAX_SM_FAIL = 5; 		// If check same step more than MAX_SM_FAIL times, stop map sharing
 	
 	Hashtable<String, Integer> lastComm = new Hashtable<>();
 	private final int COMM_TIMEOUT = 10;	//Refuse communication (other than collision solver) with an agent if they communicated less than COMM_TIMEOUT steps earlier.
 	
+	private final int WAIT_TIME = 10; 		// Standard time (in ms) to wait between each action
+	
+	public void incrementCurrentShareTries() {
+		this.tries += 1;
+	}
+	
+	public void resetCurrentShareTries() {
+		this.tries = 0;
+	}
+	
+	public int getCurrentShareTries() {
+		return this.tries;
+	}
+	
+	public int getMaxShareFail() {
+		return this.MAX_SM_FAIL;
+	}
+	
+	public void resetLastStepSent() {
+		this.lastStepMsg = 0;
+	}
+	
+	public void incrementLastStepSent() {
+		System.out.println("Old last step " + this.lastStepMsg);
+		this.lastStepMsg += 1;
+		System.out.println("New last step " + this.lastStepMsg);
+	}
+	
+	public int getLastStepSent() {
+		return this.lastStepMsg;
+	}
 	
 	public boolean canCommunicateWith(String agent) {
-		return this.getLastCommValue(agent) <= COMM_TIMEOUT;
+		return this.getLastCommValue(agent) >= COMM_TIMEOUT;
 	}
 	
 	public void initLastComm() {
 		for(String agent : this.agenda) {
-			this.lastComm.put(agent, 0);
+			this.lastComm.put(agent, this.COMM_TIMEOUT + 1);
 		}
 	}
 
@@ -88,18 +119,6 @@ public class MainAgent extends AbstractDedaleAgent {
 	
 	public int getLastCommValue(String agent) {
 		return this.lastComm.get(agent);
-	}
-
-	public int getTries() {					
-		return this.tries;
-	}
-	
-	public void incrementTries() {
-		this.tries += 1;
-	}
-	
-	public void resetTries() {
-		this.tries = 0;
 	}
 	
 	public AID getCurrentMsgSender() {
@@ -176,7 +195,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	
 	public boolean shouldCommunicate() {
 		this.communicate += 1;
-		if (this.communicate == this.COMM_STEP) {
+		if (this.communicate > this.COMM_STEP) {
 			this.communicate = 0;
 			return true;
 		}
@@ -229,7 +248,8 @@ public class MainAgent extends AbstractDedaleAgent {
 	}
 	
 	public boolean isBlocked() {
-		System.out.println("EUSSOUUU");
+		if (this.blockCount >= this.BLOCK_LIMIT) {
+			System.out.println("EUSSOUUU"); }
 		return this.blockCount >= this.BLOCK_LIMIT;
 	}
 	
@@ -291,7 +311,7 @@ public class MainAgent extends AbstractDedaleAgent {
 		 *   1     -> switch to Explore 
 		 *   2     -> switch to Navigation 
 		 *   3	   -> switch to InitComm 
-		 *   
+		 *   4	   -> switch to Unblock
 		 *   99	   -> switch to End
 		*************/
 		
