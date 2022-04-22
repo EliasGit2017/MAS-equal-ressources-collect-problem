@@ -30,7 +30,7 @@ public class InitializeBehaviour extends OneShotBehaviour {
 		Random r = new Random();
 		int val = r.nextInt(2147483647);
 		((MainAgent)this.myAgent).setId(val);
-		
+
 		((MainAgent)this.myAgent).initLastComm();
 
 	}
