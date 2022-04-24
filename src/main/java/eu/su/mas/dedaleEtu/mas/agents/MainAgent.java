@@ -13,12 +13,12 @@ import eu.su.mas.dedaleEtu.mas.behaviours.Explore;
 import eu.su.mas.dedaleEtu.mas.behaviours.Navigation;
 import eu.su.mas.dedaleEtu.mas.behaviours.ShareMap;
 import eu.su.mas.dedaleEtu.mas.behaviours.StopAgent;
+import eu.su.mas.dedaleEtu.mas.behaviours.Unblock;
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.FSMBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.lang.acl.UnreadableException;
 
 public class MainAgent extends AbstractDedaleAgent {
 
@@ -64,7 +64,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	Hashtable<String, Integer> lastComm = new Hashtable<>();
 	private final int COMM_TIMEOUT = 10;	//Refuse communication (other than collision solver) with an agent if they communicated less than COMM_TIMEOUT steps earlier.
 	
-	private final int WAIT_TIME = 10; 		// Standard time (in ms) to wait between each action
+	private final int WAIT_TIME = 500; 		// Standard time (in ms) to wait between each action
 	
 	public void incrementCurrentShareTries() {
 		this.tries += 1;
@@ -277,8 +277,8 @@ public class MainAgent extends AbstractDedaleAgent {
 	private static final String Start      = "A";
 	private static final String Explo	   = "B";
 	private static final String Nav 	   = "C";
-	private static final String Share   = "D";
-	
+	private static final String Share      = "D";
+	private static final String Unblock	   = "E";
 	private static final String End		   = "Z";
  
 	//TODO: Collision avoidance + unblock on corridors
@@ -321,6 +321,7 @@ public class MainAgent extends AbstractDedaleAgent {
 		fsm.registerState(new Explore(this), Explo);
 		fsm.registerState(new Navigation(this), Nav);
 		fsm.registerState(new ShareMap(this), Share);
+		fsm.registerState(new Unblock(this), Unblock);
 		fsm.registerLastState(new StopAgent(), End);
 		
 		
@@ -328,15 +329,20 @@ public class MainAgent extends AbstractDedaleAgent {
 		
 		fsm.registerDefaultTransition(Explo, Explo);
 		fsm.registerTransition(Explo, Nav, 2);
-		fsm.registerTransition(Explo, End, 99);
 		fsm.registerTransition(Explo, Share, 3);
+		fsm.registerTransition(Explo, Unblock, 4);
+		fsm.registerTransition(Explo, End, 99);
 		
 		fsm.registerDefaultTransition(Nav, Nav);
 		fsm.registerTransition(Nav, Explo, 1);
+		fsm.registerTransition(Explo, Unblock, 4);
 		
 		fsm.registerDefaultTransition(Share, Share);
 		fsm.registerTransition(Share, Explo, 1);
 		fsm.registerTransition(Share, Nav, 2);
+		
+		fsm.registerDefaultTransition(Unblock, Unblock);
+		fsm.registerTransition(Unblock, Nav, 2);
 		
 		
 		List<Behaviour> lb=new ArrayList<Behaviour>();

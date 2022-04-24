@@ -390,7 +390,7 @@ public class Principal {
 		/*********
 		 * GOLEM(s)
 		 *********/
-		// 1) Get the container where the agent will appear
+//		// 1) Get the container where the agent will appear
 //		c = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
 //		Assert.assertNotNull("This container does not exist", c);
 //
@@ -399,12 +399,15 @@ public class Principal {
 //		agentName = "Golem1";
 //
 //		// 3) If you want to give specific parameters to your agent, add them here
-//		Object[] entityParameters = { "My parameters" };
+//		Object[] entityParameterss = { "My parameters" };
 //
 //		// 4) Give the class name of your agent to let the system instantiate it
-//		ag = createNewDedaleAgent(c, agentName, DummyWumpusShift.class.getName(), entityParameters);
+//		ag = createNewDedaleAgent(c, agentName, DummyWumpusShift.class.getName(), entityParameterss);
 //		agentList.add(ag);
-//
+
+		
+		
+		
 //		// 1) Get the container where the agent will appear
 //		c = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
 //		Assert.assertNotNull("This container does not exist", c);

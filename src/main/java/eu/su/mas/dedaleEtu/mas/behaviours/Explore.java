@@ -31,7 +31,7 @@ public class Explore extends OneShotBehaviour {
 	
 	private MapRepresentation map;
 	
-	private boolean blocked; //No open nodes nearby
+	private boolean noOpenNearby; //No open nodes nearby
 	
 	private boolean explo_done;
 	
@@ -39,14 +39,14 @@ public class Explore extends OneShotBehaviour {
 
 	private boolean shareInit;
 	
-	private boolean stuck;
+	private boolean blocked;
 	
 	public Explore(final AbstractDedaleAgent agent) {
 		super(agent); 
 		}
 		
 	public void action() {
-		System.out.println("----- On rentre dans Explore -----");
+		System.out.println("----- " + this.myAgent.getLocalName() + " rentre dans Explore -----");
 
 		lastPosition = ((MainAgent)this.myAgent).getLastPosition();
 		currentPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
@@ -55,11 +55,11 @@ public class Explore extends OneShotBehaviour {
 		closed = ((MainAgent)this.myAgent).getClosedNodes();
 		map = ((MainAgent)this.myAgent).getMap();
 		
-		this.blocked = false; //Keep those with "this." because useful in onEnd() function
+		this.noOpenNearby = false; //Keep those with "this." because useful in onEnd() function
 		this.explo_done = false;
 		this.shareInit = false;
 		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate() ;
-		this.stuck = ((MainAgent)this.myAgent).isBlocked();
+		this.blocked = ((MainAgent)this.myAgent).isBlocked();
 		
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
 		if (newMsg) {
@@ -80,7 +80,7 @@ public class Explore extends OneShotBehaviour {
 			return;
 		}
 		
-		if (this.stuck) {
+		if (this.blocked) {
 			return;
 		}
 		
@@ -97,6 +97,7 @@ public class Explore extends OneShotBehaviour {
 			}
 						
 			List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
+//			System.out.println(obs);
 
 			int size = obs.size() ;
 			String nextNode = null;
@@ -130,9 +131,7 @@ public class Explore extends OneShotBehaviour {
 			
 			if ( (nextNode == null) && (open.size() != 0) ) {
 				//On est dans une impasse
-				List<String> path = map.getShortestPathToClosestOpenNode(currentPosition);
-				((MainAgent)this.myAgent).setUnblockPath(path);
-				this.blocked = true;
+				this.noOpenNearby = true;
 //				System.out.println("Blocked ! Computed escape path from " + currentPosition + " to " + nextNode);
 //				System.out.println(path);
 				return;	
@@ -145,11 +144,13 @@ public class Explore extends OneShotBehaviour {
 
 		}
 		
-		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
+		
 	}
 	
 	public int onEnd() {
 		// To ensure standards respect, follow protocol above FSM behaviour declaration
+		
+		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
 		
 		this.open = null;
 		this.closed = null;
@@ -163,11 +164,11 @@ public class Explore extends OneShotBehaviour {
 			return 99;
 		}
 		
-		if (this.stuck) {
+		if (this.blocked) {
 			return 4;
 		}
 		
-		if (this.blocked) {
+		if (this.noOpenNearby) {
 			return 2;
 		}
 		if (this.communicate || this.shareInit) {

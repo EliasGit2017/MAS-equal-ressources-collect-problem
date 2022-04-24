@@ -54,6 +54,8 @@ public class ShareMap extends OneShotBehaviour {
 		this.lastSent = ((MainAgent)this.myAgent).getLastStepSent();
 		this.tries = ((MainAgent)this.myAgent).getCurrentShareTries();
 		
+		
+		
 
 		if (step == 0) { //Haven't received any message from other agents yet
 			int myId = ((MainAgent)this.myAgent).getId() ; 
@@ -67,14 +69,14 @@ public class ShareMap extends OneShotBehaviour {
 				msg.addReceiver(new AID(teammate, AID.ISLOCALNAME ));
 			}
 			((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-			System.out.println("Agent " + this.myAgent.getLocalName() + " sends ID.");
+//			System.out.println("Agent " + this.myAgent.getLocalName() + " sends ID.");
 		}
 		
 		
 		
 		
 		else if (step == 1) { //When receives a SM-Hello from other agent,
-			System.out.println("---------- Agent " + this.myAgent.getLocalName() + " enters Step 1 ----------" );
+//			System.out.println("---------- Agent " + this.myAgent.getLocalName() + " enters Step 1 ----------" );
 			
 			if (this.tries >= MAX_FAIL) {
 				System.out.println("Agent " + this.myAgent.getLocalName() + " abandons communication");
@@ -91,17 +93,19 @@ public class ShareMap extends OneShotBehaviour {
 				msg.setContent(String.valueOf(1));
 				msg.addReceiver( ((MainAgent)this.myAgent).getCurrentMsgSender() );
 				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-				System.out.println("Agent " + this.myAgent.getLocalName() + " sends ACK to " + ((MainAgent)this.myAgent).getCurrentMsgSender().getLocalName() );
+//				System.out.println("Agent " + this.myAgent.getLocalName() + " sends ACK to " + ((MainAgent)this.myAgent).getCurrentMsgSender().getLocalName() );
 				((MainAgent)this.myAgent).incrementLastStepSent();
 			}
 			
 			((MainAgent)this.myAgent).incrementShareStep();
-			System.out.println(" Agent " + this.myAgent.getLocalName() + " completes Step 1 ----------" );
+//			System.out.println(" Agent " + this.myAgent.getLocalName() + " completes Step 1 ----------" );
 		}
 		
 		
+		
+		
 		else if (step == 2) {
-			System.out.println("---------- Agent " + this.myAgent.getLocalName() + " enters Step 2 ----------" );
+//			System.out.println("---------- Agent " + this.myAgent.getLocalName() + " enters Step 2 ----------" );
 			
 			if (this.tries >= MAX_FAIL) {
 				System.out.println("Agent " + this.myAgent.getLocalName() + " abandons communication");
@@ -111,7 +115,7 @@ public class ShareMap extends OneShotBehaviour {
 				return;
 			}
 			
-			System.out.println("Agent " + this.myAgent.getLocalName() + " has confirmed link !");
+//			System.out.println("Agent " + this.myAgent.getLocalName() + " has confirmed link !");
 			
 			List<String> open  = ((MainAgent)this.myAgent).getOpenNodes();
 			
@@ -123,27 +127,30 @@ public class ShareMap extends OneShotBehaviour {
 				msg.setContent(encoded);
 				msg.addReceiver( ((MainAgent)this.myAgent).getCurrentMsgSender() );
 				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-				System.out.println("Agent " + this.myAgent.getLocalName() + " sends his list.");
-				System.out.println(open);
+//				System.out.println("Agent " + this.myAgent.getLocalName() + " sends his list.");
+//				System.out.println(open);
 				((MainAgent)this.myAgent).incrementLastStepSent();
 			}
 			
 			MapRepresentation test = ((MainAgent)this.myAgent).getMap();
 			SerializableSimpleGraph<String, MapAttribute> g = test.getSerializableGraph();
-			System.out.println("Graphe de " + this.myAgent.getLocalName());
-			System.out.println(g);
+//			System.out.println("Graphe de " + this.myAgent.getLocalName());
+//			System.out.println(g);
 			
 			boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-OPEN");
 			if (newMsg) {
 				((MainAgent)this.myAgent).incrementShareStep();
 				((MainAgent)this.myAgent).resetCurrentShareTries();
-				System.out.println(" Agent " + this.myAgent.getLocalName() + " completes Step 2 ----------" );
+//				System.out.println(" Agent " + this.myAgent.getLocalName() + " completes Step 2 ----------" );
 			}
+			((MainAgent)this.myAgent).incrementCurrentShareTries();
 		}
 		
 		
+		
+		
 		else if (step == 3) {
-			System.out.println("---------- Agent " + this.myAgent.getLocalName() + " enters Step 3 ----------" );
+//			System.out.println("---------- Agent " + this.myAgent.getLocalName() + " enters Step 3 ----------" );
 			
 			if (this.tries >= MAX_FAIL) {
 				System.out.println("Agent " + this.myAgent.getLocalName() + " abandons communication");
@@ -153,13 +160,11 @@ public class ShareMap extends OneShotBehaviour {
 				return;
 			}
 			
-			System.out.println("Agent " + this.myAgent.getLocalName() + " receives open nodes list from " + ((MainAgent)this.myAgent).getCurrentMsgSender().getLocalName() +  "!");
+//			System.out.println("Agent " + this.myAgent.getLocalName() + " receives open nodes list from " + ((MainAgent)this.myAgent).getCurrentMsgSender().getLocalName() +  "!");
 			String encoded =  ((MainAgent)this.myAgent).getCurrentMsgContent();
-			System.out.println(encoded);
+//			System.out.println(encoded);
 			
 			String[] othersOpenList = this.decode(encoded);
-			
-
 			
 			this.open2 = othersOpenList;
 			
@@ -181,7 +186,7 @@ public class ShareMap extends OneShotBehaviour {
 				msg.setContent(choice);
 				msg.addReceiver( ((MainAgent)this.myAgent).getCurrentMsgSender() );
 				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-				System.out.println("Agent " + this.myAgent.getLocalName() + " sent the node he chose to " + ((MainAgent)this.myAgent).getCurrentMsgSender().getLocalName()  +" : " + choice + "!");
+//				System.out.println("Agent " + this.myAgent.getLocalName() + " sent the node he chose to " + ((MainAgent)this.myAgent).getCurrentMsgSender().getLocalName()  +" : " + choice + "!");
 				((MainAgent)this.myAgent).incrementLastStepSent();
 			}
 				
@@ -189,13 +194,16 @@ public class ShareMap extends OneShotBehaviour {
 			if (newMsg) {
 				((MainAgent)this.myAgent).incrementShareStep();
 				((MainAgent)this.myAgent).resetCurrentShareTries();
-				System.out.println(" Agent " + this.myAgent.getLocalName() + " completes Step 3 ----------" );
+//				System.out.println(" Agent " + this.myAgent.getLocalName() + " completes Step 3 ----------" );
 			}
+			((MainAgent)this.myAgent).incrementCurrentShareTries();
 		}
 		
 		
+		
+		
 		else if (step == 4) {
-			System.out.println("---------- Agent " + this.myAgent.getLocalName() + " enters Step 4 ----------" );
+//			System.out.println("---------- Agent " + this.myAgent.getLocalName() + " enters Step 4 ----------" );
 			
 			if (this.tries >= MAX_FAIL) {
 				System.out.println("Agent " + this.myAgent.getLocalName() + " abandons communication");
@@ -204,54 +212,58 @@ public class ShareMap extends OneShotBehaviour {
 				}
 				return;
 			}
-			String usefulNode = ((MainAgent)this.myAgent).getCurrentMsgContent();
-			System.out.println("Agent " + this.myAgent.getLocalName() + " received the node from " + ((MainAgent)this.myAgent).getCurrentMsgSender().getLocalName()  + " : " + usefulNode + " !");
+			String usefulNode = ((MainAgent)this.myAgent).getCurrentMsgContent().toString();
+//			System.out.println("Agent " + this.myAgent.getLocalName() + " received the node from " + ((MainAgent)this.myAgent).getCurrentMsgSender().getLocalName()  + " : " + usefulNode + " !");
 
-			MapRepresentation G = ((MainAgent)this.myAgent).getMap();
-			List<String> othersOpen = Arrays.asList(this.open2);
-			List<String> nodesToParse = new ArrayList<>();
-			nodesToParse.add(usefulNode);
-
-			MapRepresentation mapToShare = new MapRepresentation(true);
+			MapRepresentation mapToShare = new MapRepresentation(false);
 			
-			while ( !nodesToParse.isEmpty() ) {
-				System.out.println("In the loop");
-				String newNode = nodesToParse.get(0) ;
-				boolean isNew = mapToShare.addNewNode(newNode);
+			if (!usefulNode.equals("null")) {
+			
+				MapRepresentation G = ((MainAgent)this.myAgent).getMap();
+				List<String> othersOpen = Arrays.asList(this.open2);
+				List<String> nodesToParse = new ArrayList<>();
+				nodesToParse.add(usefulNode);
 				
-				String attr = G.getAttr(newNode).toString();
-				if (attr == "closed") {	
-					mapToShare.addNode(newNode, MapAttribute.closed);
-				} else {
-					mapToShare.addNode(newNode, MapAttribute.open);
-				}
-				
-				nodesToParse.remove(0);
-				
-				if (!isNew) { continue; }
-				
-				List<String> neighbors = G.getNeighbors(newNode);
-				for (String node : neighbors) {
-					attr = G.getAttr(node).toString();
-					if (attr == "closed") {
-						mapToShare.addNode(node, MapAttribute.closed);
-					} else {
-						mapToShare.addNode(node, MapAttribute.open);
-					}
-					mapToShare.addEdge(newNode, node);
+				while ( !nodesToParse.isEmpty() ) {
+					System.out.println("In the loop");
+					String newNode = nodesToParse.get(0) ;
+					boolean isNew = mapToShare.addNewNode(newNode);
 					
-					if (!othersOpen.contains(node)) {
-						nodesToParse.add(node); 
+					String attr = G.getAttr(newNode).toString();
+					if (attr == "closed") {	
+						mapToShare.addNode(newNode, MapAttribute.closed);
+					} else {
+						mapToShare.addNode(newNode, MapAttribute.open);
 					}
-					else if (attr == "closed") { //So we can close one node that was open eg. one node less to visit
-						List<String> neigh = G.getNeighbors(newNode);
-						for (String node2 : neigh) {
-							mapToShare.addNode(node2, MapAttribute.open);
-							mapToShare.addEdge(node, node2);
+					
+					nodesToParse.remove(0);
+					
+					if (!isNew) { continue; }
+					
+					List<String> neighbors = G.getNeighbors(newNode);
+					for (String node : neighbors) {
+						attr = G.getAttr(node).toString();
+						if (attr == "closed") {
+							mapToShare.addNode(node, MapAttribute.closed);
+						} else {
+							mapToShare.addNode(node, MapAttribute.open);
 						}
-					}		
+						mapToShare.addEdge(newNode, node);
+						
+						if (!othersOpen.contains(node)) {
+							nodesToParse.add(node); 
+						}
+						else if (attr == "closed") { //So we can close one node that was open eg. one node less to visit
+							List<String> neigh = G.getNeighbors(newNode);
+							for (String node2 : neigh) {
+								mapToShare.addNode(node2, MapAttribute.open);
+								mapToShare.addEdge(node, node2);
+							}
+						}		
+					}
 				}
 			}
+
 			
 			if (this.lastSent < 4) {
 				//TODO: Change getSerializableGraph pour avoir juste String + changer MapRepresentation pour avoir direct attributs a closed et utiliser open2
@@ -266,10 +278,8 @@ public class ShareMap extends OneShotBehaviour {
 				}
 				msg.addReceiver( ((MainAgent)this.myAgent).getCurrentMsgSender() );
 				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-				System.out.println("Agent " + this.myAgent.getLocalName() + " sent his map to " + ((MainAgent)this.myAgent).getCurrentMsgSender().getLocalName() + " !");
-				System.out.println(sg);
-				System.out.println("Ici map de base");
-				System.out.println(G.getSerializableGraph());
+//				System.out.println("Agent " + this.myAgent.getLocalName() + " sent his map to " + ((MainAgent)this.myAgent).getCurrentMsgSender().getLocalName() + " !");
+//				System.out.println(sg);
 				((MainAgent)this.myAgent).incrementLastStepSent();
 			}
 			
@@ -277,12 +287,16 @@ public class ShareMap extends OneShotBehaviour {
 			if (newMsg) {
 				((MainAgent)this.myAgent).incrementShareStep();
 				((MainAgent)this.myAgent).resetCurrentShareTries();
-				System.out.println(" Agent " + this.myAgent.getLocalName() + " completes Step 4 ----------" );
+//				System.out.println(" Agent " + this.myAgent.getLocalName() + " completes Step 4 ----------" );
 			}		
+			((MainAgent)this.myAgent).incrementCurrentShareTries();
 		}
 		
+		
+		
+		
 		else if (step == 5) {
-			System.out.println("---------- Agent " + this.myAgent.getLocalName() + " enters Step 5 ----------" );
+//			System.out.println("---------- Agent " + this.myAgent.getLocalName() + " enters Step 5 ----------" );
 			
 			if (this.tries >= MAX_FAIL) {
 				System.out.println("Agent " + this.myAgent.getLocalName() + " abandons communication");
@@ -290,7 +304,7 @@ public class ShareMap extends OneShotBehaviour {
 				return;
 			}
 			
-			System.out.println("Agent " + this.myAgent.getLocalName() + " received the graph from " + ((MainAgent)this.myAgent).getCurrentMsgSender().getLocalName() + " !");
+//			System.out.println("Agent " + this.myAgent.getLocalName() + " received the graph from " + ((MainAgent)this.myAgent).getCurrentMsgSender().getLocalName() + " !");
 
 			ACLMessage msgReceived= ((MainAgent)this.myAgent).getCurrentMsg();
 
@@ -302,15 +316,18 @@ public class ShareMap extends OneShotBehaviour {
 			}
 			
 			MapRepresentation myMap = ((MainAgent)this.myAgent).getMap();
-			System.out.println("###### Before merge");
-			System.out.println(((MainAgent)this.myAgent).getMap().getSerializableGraph());
+//			System.out.println("###### Before merge");
+//			System.out.println(((MainAgent)this.myAgent).getMap().getSerializableGraph());
 			myMap.mergeMap(sgreceived);
-			System.out.println("###### After merge");
-			System.out.println(((MainAgent)this.myAgent).getMap().getSerializableGraph());
-			System.out.println(" Agent " + this.myAgent.getLocalName() + " completes Step 5 ----------" );
+//			System.out.println("###### After merge");
+//			System.out.println(((MainAgent)this.myAgent).getMap().getSerializableGraph());
+//			System.out.println(" Agent " + this.myAgent.getLocalName() + " completes Step 5 ----------" );
 			((MainAgent)this.myAgent).incrementShareStep();
 				
 		}
+		
+		
+		
 		
 		else if (step == 6) { //Reset all variables step and resume normal activity
 			System.out.println("---------- Agent " + this.myAgent.getLocalName() + " enters Step 6 (last) ----------" );
@@ -320,33 +337,24 @@ public class ShareMap extends OneShotBehaviour {
 			((MainAgent)this.myAgent).resetCurrentShareTries();
 			((MainAgent)this.myAgent).resetLastCommValue( ((MainAgent)this.myAgent).getCurrentMsgSender().getLocalName() );
 			
-			List<String> path = ((MainAgent)this.myAgent).getUnblockPath();
-			if (path.size() != 0) {
-				MapRepresentation map = ((MainAgent)this.myAgent).getMap();
-				path = map.getShortestPathToClosestOpenNode( ((MainAgent)this.myAgent).getCurrentPosition() );
-				((MainAgent)this.myAgent).setUnblockPath(path);
-			}
 		}
 		
 		
 		// Don't forget reset step !!!
-		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
+		
 	}
 	
 	public int onEnd() {
 //		if (this.lastSent > 1) {
 //			((MainAgent)this.myAgent).pause(); }
 		
+		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
 		
 		((MainAgent)this.myAgent).updateLastBehaviour("ShareMap");
 		
 		if ((this.step == 0) || (this.step == 6)) // have not received a reply or ended comm scheme
 		{
-			List<String> path = ((MainAgent)this.myAgent).getUnblockPath();
-			if (path.size() != 0) {
-				return 2;
-			}
-			return 1;
+			return 2;
 		}
 		
 		return 0;

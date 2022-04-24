@@ -8,6 +8,7 @@ import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedaleEtu.mas.agents.MainAgent;
+import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import jade.core.behaviours.OneShotBehaviour;
 
 public class Unblock extends OneShotBehaviour {
@@ -22,6 +23,8 @@ public class Unblock extends OneShotBehaviour {
 
 	@Override
 	public void action() {
+		System.out.println("---- " + this.myAgent.getLocalName() + " rentre dans Unblock ----");
+		
 		List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
 		int size = obs.size();
 		
@@ -30,20 +33,20 @@ public class Unblock extends OneShotBehaviour {
 			this.success = ((AbstractDedaleAgent)this.myAgent).moveTo(node);
 			if (this.success) { 
 				((MainAgent)this.myAgent).resetBlockCount();
+				System.out.println("Successfully unblocked !");
 				break;
 			}
 		}
 	}
 
 	public int onEnd() {
+		
+		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
+		
 		if (!this.success) {
 			return 0;
 		} else {
-			List<String> path = ((MainAgent)this.myAgent).getUnblockPath();
-			if (path.size() != 0) {
-				return 2;
-			}
-			return 1;		
+			return 2;	
 		}
 	}
 }

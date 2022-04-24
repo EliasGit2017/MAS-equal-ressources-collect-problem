@@ -32,6 +32,5 @@ public class InitializeBehaviour extends OneShotBehaviour {
 		((MainAgent)this.myAgent).setId(val);
 
 		((MainAgent)this.myAgent).initLastComm();
-
 	}
 }
