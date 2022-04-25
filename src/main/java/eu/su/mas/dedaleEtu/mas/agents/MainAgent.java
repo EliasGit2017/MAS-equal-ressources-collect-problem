@@ -1,6 +1,7 @@
 package eu.su.mas.dedaleEtu.mas.agents;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -19,6 +20,7 @@ import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.FSMBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 
 public class MainAgent extends AbstractDedaleAgent {
 
@@ -64,7 +66,17 @@ public class MainAgent extends AbstractDedaleAgent {
 	Hashtable<String, Integer> lastComm = new Hashtable<>();
 	private final int COMM_TIMEOUT = 10;	//Refuse communication (other than collision solver) with an agent if they communicated less than COMM_TIMEOUT steps earlier.
 	
-	private final int WAIT_TIME = 500; 		// Standard time (in ms) to wait between each action
+	private final int WAIT_TIME = 100; 		// Standard time (in ms) to wait between each action
+	
+	private AID communicatingWith = null;
+	
+	public void resetCommWith() {
+		this.communicatingWith = null;
+	}
+	
+	public void setCommWith(AID newComm) {
+		this.communicatingWith = newComm;
+	}
 	
 	public void incrementCurrentShareTries() {
 		this.tries += 1;
@@ -87,9 +99,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	}
 	
 	public void incrementLastStepSent() {
-		System.out.println("Old last step " + this.lastStepMsg);
 		this.lastStepMsg += 1;
-		System.out.println("New last step " + this.lastStepMsg);
 	}
 	
 	public int getLastStepSent() {
@@ -133,8 +143,13 @@ public class MainAgent extends AbstractDedaleAgent {
 		return this.currentMessage.getProtocol();
 	}
 	
-	public String getCurrentMsgContent() {
-		return this.currentMessage.getContent();
+	public Serializable getCurrentMsgContent() {
+		try {
+			return this.currentMessage.getContentObject();
+		} catch (UnreadableException e) {
+			e.printStackTrace();
+			return "null";
+		}
 	}
 	
 	public void resetCurrentMsg() {
@@ -162,6 +177,7 @@ public class MainAgent extends AbstractDedaleAgent {
 		}
 	}
 	
+
 	public String getLastBehaviour() {
 		return this.lastBehaviour;
 	}
@@ -171,13 +187,16 @@ public class MainAgent extends AbstractDedaleAgent {
 	}
 	
 	public boolean checkInbox(String ProtocolName) {
+
 		MessageTemplate msgTemplate = MessageTemplate.and(
 				MessageTemplate.MatchProtocol(ProtocolName),
 				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+
+		
 		ACLMessage msgReceived = this.receive(msgTemplate);
 
 		if (msgReceived != null) {
-			if ( ProtocolName.contains("SM") && !this.canCommunicateWith( msgReceived.getSender().getLocalName() ) ) {
+			if ( ProtocolName.contains("SM") && (!this.canCommunicateWith( msgReceived.getSender().getLocalName() ) || !msgReceived.getSender().equals(this.communicatingWith) ) ) {
 				System.out.println("IGNORED MSG");
 				return false;
 			}
@@ -335,7 +354,7 @@ public class MainAgent extends AbstractDedaleAgent {
 		
 		fsm.registerDefaultTransition(Nav, Nav);
 		fsm.registerTransition(Nav, Explo, 1);
-		fsm.registerTransition(Explo, Unblock, 4);
+		fsm.registerTransition(Nav, Unblock, 4);
 		
 		fsm.registerDefaultTransition(Share, Share);
 		fsm.registerTransition(Share, Explo, 1);

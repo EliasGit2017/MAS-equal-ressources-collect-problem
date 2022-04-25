@@ -63,6 +63,7 @@ public class Explore extends OneShotBehaviour {
 		
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
 		if (newMsg) {
+			((MainAgent)this.myAgent).setCommWith( ((MainAgent)this.myAgent).getCurrentMsgSender() );
 			((MainAgent)this.myAgent).incrementShareStep();
 			((MainAgent)this.myAgent).incrementShareStep();
 			this.shareInit = true;
@@ -71,6 +72,7 @@ public class Explore extends OneShotBehaviour {
 		
 		newMsg = ((MainAgent)this.myAgent).checkInbox("SM-HELLO");
 		if (newMsg) {
+			((MainAgent)this.myAgent).setCommWith( ((MainAgent)this.myAgent).getCurrentMsgSender() );
 			((MainAgent)this.myAgent).incrementShareStep();
 			this.shareInit = true;
 			return;
@@ -86,7 +88,7 @@ public class Explore extends OneShotBehaviour {
 		
 		if (currentPosition!=null){
 			
-			if(!(open.size() == 0)) {
+			if(!(open.isEmpty())) {
 				map.addNode(currentPosition, MapAttribute.closed);
 				open.remove(currentPosition);
 			}

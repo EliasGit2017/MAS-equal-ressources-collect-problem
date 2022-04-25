@@ -25,7 +25,7 @@ public class Navigation extends OneShotBehaviour {
 	
 	private List<String> open;
 	
-	private boolean existsOpen;
+	private boolean onOpen;
 	
 	public Navigation(Agent a) {
 		super(a);
@@ -40,10 +40,13 @@ public class Navigation extends OneShotBehaviour {
 		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate();
 		this.blocked = ((MainAgent)this.myAgent).isBlocked();
 		this.open = ((MainAgent)this.myAgent).getOpenNodes();
+		this.onOpen = false;
 		
 		this.shareInit = false;
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
+		
 		if (newMsg) {
+			((MainAgent)this.myAgent).setCommWith( ((MainAgent)this.myAgent).getCurrentMsgSender() );
 			((MainAgent)this.myAgent).incrementShareStep();
 			((MainAgent)this.myAgent).incrementShareStep();
 			this.shareInit = true;
@@ -52,6 +55,7 @@ public class Navigation extends OneShotBehaviour {
 		
 		newMsg = ((MainAgent)this.myAgent).checkInbox("SM-HELLO");
 		if (newMsg) {
+			((MainAgent)this.myAgent).setCommWith( ((MainAgent)this.myAgent).getCurrentMsgSender() );
 			((MainAgent)this.myAgent).incrementShareStep();
 			this.shareInit = true;
 			return;
@@ -66,30 +70,37 @@ public class Navigation extends OneShotBehaviour {
 		}
 
 		
-		List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
-		existsOpen = false;
-		int size = obs.size() ;
-		for (int i = 0 ; i < size ; i++) {
-			String node = obs.get(i).getLeft();
-			if ( open.contains(node) ) {
-				existsOpen = true;
-				System.out.println("on se casse");
-				return;
-			}
+		if (open.contains(currentPosition)) {
+			onOpen = true;
+			return;
 		}
 		
 		List<String> upath = ((MainAgent)this.myAgent).getUnblockPath();
 		if (upath.isEmpty()) {
+			System.out.println(this.myAgent.getLocalName() + "path is empty");
 			MapRepresentation map = ((MainAgent)this.myAgent).getMap();
-			List<String> path = map.getShortestPathToClosestOpenNode( ((MainAgent)this.myAgent).getCurrentPosition() );
-			System.out.println(this.myAgent.getLocalName() + " computed path " + path);
+			List<String> path = map.getShortestPathToClosestOpenNode( currentPosition );
+//			for (int i = 0 ; i < 20 ; i++) { System.out.println(this.myAgent.getLocalName() + " computed path " + path); }
+//			((MainAgent)this.myAgent).pause();
+			
 			((MainAgent)this.myAgent).setUnblockPath(path);
 
+		} else {										// If we come from unblock, we might not be near the first node
+			System.out.println(this.myAgent.getLocalName() + "path is not empty");
+			String firstNode = upath.get(0);
+			MapRepresentation map = ((MainAgent)this.myAgent).getMap();
+			if(!map.getNeighbors(currentPosition).contains(firstNode)) {
+				List<String> path = map.getShortestPathToRandomOpenNode( currentPosition ); //Recompute in case a node is considered as blocked
+//				for (int i = 0 ; i < 20 ; i++) { System.out.println(this.myAgent.getLocalName() + " computed path " + path); }
+//				((MainAgent)this.myAgent).pause();
+				
+				((MainAgent)this.myAgent).setUnblockPath(path);
+			}
 		}
 		
 		String nextNode = ((MainAgent)this.myAgent).getNextUnblockPath();
-		System.out.println("Next node to reach " + nextNode);
-		System.out.println("Rest of the path " + ((MainAgent)this.myAgent).getUnblockPath());
+		System.out.println(this.myAgent.getLocalName()  + " Next node to reach " + nextNode);
+		System.out.println(this.myAgent.getLocalName() + "Rest of the path " + ((MainAgent)this.myAgent).getUnblockPath());
 		
 		if (nextNode == "") {
 			this.joined_destination = true;
@@ -131,7 +142,7 @@ public class Navigation extends OneShotBehaviour {
 			return 3;
 		}
 		
-		if (this.joined_destination || this.existsOpen) {
+		if (this.joined_destination || this.onOpen) {
 			System.out.println(this.myAgent.getLocalName() +" changing to EXPLO");
 			return 1;
 		}

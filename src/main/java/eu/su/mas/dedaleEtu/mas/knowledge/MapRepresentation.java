@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -42,7 +43,7 @@ public class MapRepresentation implements Serializable {
 	 */
 
 	public enum MapAttribute {	
-		agent,open,closed;
+		agent,open,closed,blocked;
 
 	}
 
@@ -63,7 +64,8 @@ public class MapRepresentation implements Serializable {
 
 	private SerializableSimpleGraph<String, MapAttribute> sg;//used as a temporary dataStructure during migration
 	
-	public List<String> getNeighbors(String id_node) { //Retrieve neighnors of a node
+	
+	public List<String> getNeighbors(String id_node) { //Retrieve neighbors of a node
 		Node n = this.g.getNode(id_node);
 		Stream<String> neighboring = n.neighborNodes().map(node -> node.getId());
 		List<String> neighbor_nodes = neighboring.collect(Collectors.toList());
@@ -187,7 +189,16 @@ public class MapRepresentation implements Serializable {
 		return getShortestPath(myPosition,closest.get().getLeft());
 	}
 
-
+	public List<String> getShortestPathToRandomOpenNode(String myPosition) {
+		//1) Get all openNodes
+		List<String> opennodes=getOpenNodes();
+		Random r = new Random();
+		//2) select a random one
+		int i = r.nextInt(opennodes.size());
+		String node = opennodes.get(i);
+		//3) Compute shorterPath
+		return getShortestPath(myPosition,node);
+	}
 
 	public List<String> getOpenNodes(){
 		return this.g.nodes()

@@ -1,6 +1,7 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Random;
 
 import dataStructures.serializableGraph.SerializableSimpleGraph;
@@ -20,7 +21,7 @@ public class InitializeBehaviour extends OneShotBehaviour {
 	public InitializeBehaviour() {
 		super();
 	}
-	
+		
 	public void action() {
 		System.out.println("Getting agent " + this.myAgent.getLocalName() + " ready for departure.");
 		
