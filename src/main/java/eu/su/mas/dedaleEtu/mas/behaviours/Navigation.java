@@ -25,7 +25,9 @@ public class Navigation extends OneShotBehaviour {
 	
 	private List<String> open;
 	
-	private boolean onOpen;
+	private boolean onOpenNode;
+	
+	private boolean explo_done;
 	
 	public Navigation(Agent a) {
 		super(a);
@@ -40,7 +42,8 @@ public class Navigation extends OneShotBehaviour {
 		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate();
 		this.blocked = ((MainAgent)this.myAgent).isBlocked();
 		this.open = ((MainAgent)this.myAgent).getOpenNodes();
-		this.onOpen = false;
+		this.onOpenNode = false;
+		this.explo_done = open.isEmpty();
 		
 		this.shareInit = false;
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
@@ -65,13 +68,16 @@ public class Navigation extends OneShotBehaviour {
 			return;
 		}
 		
+		if (this.explo_done) {
+			return;
+		}
+		
 		if (this.blocked) {
 			return;
 		}
-
 		
 		if (open.contains(currentPosition)) {
-			onOpen = true;
+			onOpenNode = true;
 			return;
 		}
 		
@@ -142,7 +148,12 @@ public class Navigation extends OneShotBehaviour {
 			return 3;
 		}
 		
-		if (this.joined_destination || this.onOpen) {
+		if (this.explo_done) {
+			System.out.println(this.myAgent.getLocalName() +" changing to EXPLO_ENDED");
+			return 5;
+		}
+		
+		if (this.joined_destination || this.onOpenNode) {
 			System.out.println(this.myAgent.getLocalName() +" changing to EXPLO");
 			return 1;
 		}

@@ -15,6 +15,8 @@ public class Unblock extends OneShotBehaviour {
 
 	private boolean success;
 	
+	private boolean triedComm;
+	
 	public Unblock(Agent a) {
 		super(a);
 		// TODO Auto-generated constructor stub
@@ -23,6 +25,7 @@ public class Unblock extends OneShotBehaviour {
 
 	@Override
 	public void action() {
+		this.triedComm  = ((MainAgent)this.myAgent).hasTriedComm();
 		System.out.println("---- " + this.myAgent.getLocalName() + " rentre dans Unblock ----");
 		
 		List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();

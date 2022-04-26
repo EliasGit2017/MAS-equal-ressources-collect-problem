@@ -11,8 +11,9 @@ public class StopAgent extends OneShotBehaviour {
 	}
 	
 	public void action() {
-		System.out.println("Agent " + this.myAgent.getLocalName() + " is now prohibited of movement." );
-
+		while (true) {
+			System.out.println("Agent " + this.myAgent.getLocalName() + " is now prohibited of movement." );
+			this.myAgent.doWait(1000); }
 //		System.out.println("Unique Id " + ((MainAgent)this.myAgent).getId());
 //		System.out.println("AID: " + this.myAgent.getAID());
 	}

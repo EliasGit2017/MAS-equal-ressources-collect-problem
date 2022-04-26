@@ -163,7 +163,7 @@ public class Explore extends OneShotBehaviour {
 		((MainAgent)this.myAgent).updateLastBehaviour("Explore");
 		
 		if (this.explo_done) {
-			return 99;
+			return 5;
 		}
 		
 		if (this.blocked) {

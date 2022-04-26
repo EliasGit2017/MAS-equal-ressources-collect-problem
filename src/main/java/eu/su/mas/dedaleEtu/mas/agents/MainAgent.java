@@ -15,6 +15,7 @@ import eu.su.mas.dedaleEtu.mas.behaviours.Navigation;
 import eu.su.mas.dedaleEtu.mas.behaviours.ShareMap;
 import eu.su.mas.dedaleEtu.mas.behaviours.StopAgent;
 import eu.su.mas.dedaleEtu.mas.behaviours.Unblock;
+import eu.su.mas.dedaleEtu.mas.behaviours.Standby;
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.FSMBehaviour;
@@ -66,10 +67,19 @@ public class MainAgent extends AbstractDedaleAgent {
 	Hashtable<String, Integer> lastComm = new Hashtable<>();
 	private final int COMM_TIMEOUT = 10;	//Refuse communication (other than collision solver) with an agent if they communicated less than COMM_TIMEOUT steps earlier.
 	
-	private final int WAIT_TIME = 100; 		// Standard time (in ms) to wait between each action
+	private final int WAIT_TIME = 50; 		// Standard time (in ms) to wait between each action
 	
 	private AID communicatingWith = null;
 	
+	private boolean triedComm = false; //If tried to communicate before unblocking
+	
+	public void updateTriedComm() {
+		this.triedComm = !this.triedComm;
+	}
+	
+	public boolean hasTriedComm() {
+		return this.triedComm;
+	}
 	public void resetCommWith() {
 		this.communicatingWith = null;
 	}
@@ -298,6 +308,8 @@ public class MainAgent extends AbstractDedaleAgent {
 	private static final String Nav 	   = "C";
 	private static final String Share      = "D";
 	private static final String Unblock	   = "E";
+	private static final String Standby	   = "F";
+	
 	private static final String End		   = "Z";
  
 	//TODO: Collision avoidance + unblock on corridors
@@ -326,22 +338,24 @@ public class MainAgent extends AbstractDedaleAgent {
 		
 		/*************
 		 * Return codes
-		 * Default -> stay in the same state
+		 *   0     -> stay in the same state (default)
 		 *   1     -> switch to Explore 
 		 *   2     -> switch to Navigation 
 		 *   3	   -> switch to InitComm 
 		 *   4	   -> switch to Unblock
+		 *   5	   -> switch to Stanbdy 
 		 *   99	   -> switch to End
 		*************/
 		
 		FSMBehaviour fsm = new FSMBehaviour(this);
 		
 		fsm.registerFirstState(new InitializeBehaviour(), Start);
-		fsm.registerState(new Explore(this), Explo);
+		fsm.registerState(new Explore(this),    Explo);
 		fsm.registerState(new Navigation(this), Nav);
-		fsm.registerState(new ShareMap(this), Share);
-		fsm.registerState(new Unblock(this), Unblock);
-		fsm.registerLastState(new StopAgent(), End);
+		fsm.registerState(new ShareMap(this),   Share);
+		fsm.registerState(new Unblock(this),    Unblock);
+		fsm.registerState(new Standby(this),    Standby);
+		fsm.registerLastState(new StopAgent(),  End);
 		
 		
 		fsm.registerDefaultTransition(Start, Explo);
@@ -350,11 +364,12 @@ public class MainAgent extends AbstractDedaleAgent {
 		fsm.registerTransition(Explo, Nav, 2);
 		fsm.registerTransition(Explo, Share, 3);
 		fsm.registerTransition(Explo, Unblock, 4);
-		fsm.registerTransition(Explo, End, 99);
+		fsm.registerTransition(Explo, Standby, 5);
 		
 		fsm.registerDefaultTransition(Nav, Nav);
 		fsm.registerTransition(Nav, Explo, 1);
 		fsm.registerTransition(Nav, Unblock, 4);
+		fsm.registerTransition(Nav, Standby, 5);
 		
 		fsm.registerDefaultTransition(Share, Share);
 		fsm.registerTransition(Share, Explo, 1);
@@ -362,6 +377,10 @@ public class MainAgent extends AbstractDedaleAgent {
 		
 		fsm.registerDefaultTransition(Unblock, Unblock);
 		fsm.registerTransition(Unblock, Nav, 2);
+		
+		fsm.registerDefaultTransition(Standby, Standby);
+		fsm.registerTransition(Standby, Share, 3);
+		fsm.registerTransition(Standby, End, 99);
 		
 		
 		List<Behaviour> lb=new ArrayList<Behaviour>();
