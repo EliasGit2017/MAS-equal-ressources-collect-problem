@@ -1,5 +1,8 @@
 package eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -89,15 +92,21 @@ public class ExploreBehaviour extends OneShotBehaviour {
 					// Print observations :
 					//System.out.println(" --> at  " + cur_pos + " " + this.myAgent.getLocalName()+" - My treasure type is : "+((AbstractDedaleAgent) this.myAgent).getMyTreasureType());
 					String treasureType = ((AbstractDedaleAgent) this.myAgent).getMyTreasureType().toString();
-					((fsmAgent) this.myAgent).setCollectorType(treasureType);
+					((fsmAgent) this.myAgent).setCollectorType(treasureType); // first pick initialize type
 					
 					System.out.println(" --> " + this.myAgent.getLocalName()+" - My current backpack capacity is:"+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
 
 					((fsmAgent) this.myAgent).setBackBackcpcty(((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
 					
-					System.out.println(" --> " + this.myAgent.getLocalName()+" - Value of the treasure on the current position: "+o.getLeft() +": "+ o.getRight());
+					System.out.println(" --> " + this.myAgent.getLocalName()+" - Value of the treasure on the current position: " + o.getLeft() + ": " + o.getRight());
 					//System.out.println(" --> " + this.myAgent.getLocalName()+" - The agent grabbed :"+((AbstractDedaleAgent) this.myAgent).pick());
 					//System.out.println(" --> " + this.myAgent.getLocalName()+" - the remaining backpack capacity is: "+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
+					
+					// Prepare Data :
+					Date dt = new Date();
+					Timestamp ts = new Timestamp(dt.getTime());
+					
+					
 					b = true;
 					break;
 					
@@ -105,7 +114,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 					// Print observations :
 					//System.out.println(" --> at  " + cur_pos + " " + this.myAgent.getLocalName()+" - My treasure type is : "+((AbstractDedaleAgent) this.myAgent).getMyTreasureType());
 					String treasureType2 = ((AbstractDedaleAgent) this.myAgent).getMyTreasureType().toString();
-					((fsmAgent) this.myAgent).setCollectorType(treasureType2);
+					((fsmAgent) this.myAgent).setCollectorType(treasureType2); // first pick initialize type
 					
 					System.out.println(" --> " + this.myAgent.getLocalName()+" - My current backpack capacity is:"+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
 
