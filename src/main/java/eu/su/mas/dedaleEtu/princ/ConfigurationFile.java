@@ -88,6 +88,7 @@ public final class ConfigurationFile {
 	/**
 	 * Give the elements available on the map, if any
 	 */
+	
 	// If the environment is loaded but you do not want to define elements on the map
 	//public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/distributedExploration/emptyMap";
 	

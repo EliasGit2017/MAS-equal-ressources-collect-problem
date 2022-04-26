@@ -3,6 +3,8 @@ package eu.su.mas.dedaleEtu.mas.agents.dummies.explo;
 import java.util.ArrayList;
 import java.util.List;
 
+import dataStructures.tuple.Couple;
+import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.startMyBehaviours;
 import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.BoopedBehaviour;
@@ -23,22 +25,20 @@ public class fsmAgent extends AbstractDedaleAgent {
 	private MapRepresentation myMap;
 	
 	public boolean move=true, successMerge=false, stopExploration=false, changeNode=false;
-	
-	public List<String> GolemScent= new ArrayList<String>();
-	
-	public String nNode, agentReceiver, moveTo, GolemLoc;
-	
+	// private static final int PokeTime = 3000; // might be usefull to reduce # of msgs sent
+	// public final int sensi=20;
+
 	public String CollectorType;
 
-	private static final int PokeTime = 3000;
-	
 	public final int speed=1000;
-	
-	public final int sensi=20;
-	
+		
 	private int cptAgents;
 	
-	private int BackpackCapacity, CollectedQty = 0;
+	private int CollectedQty = 0;
+	
+	private List<Couple<Observation, Integer>> BackpackCapacity;
+	
+	private List<Couple<Float, Couple<Integer, Couple<String, Integer>>>> ressources_knowledge; // <timestamp : < node : <type : value>>> type = ressource type : gold, diamond, wumpus ...3
 	
 	private List<String> agenda;
 	
@@ -52,7 +52,6 @@ public class fsmAgent extends AbstractDedaleAgent {
 	private static final String R_Map = "ReceiveMap";
 	private static final String Explo = "Exploration";
 	private static final String Booped = "Booped";
-	//private static final String Move = "MoveTo";
 	private static final String StopAg = "Stop";
 	
 	protected void setup() {
@@ -78,6 +77,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 		this.cptAgents = agentNames.size();
 		this.agenda = agentNames;
 		
+		
 		// Define states(behaviours) of the finite state machine :
 		this.fsmb = new FSMBehaviour(this);
 		
@@ -86,12 +86,13 @@ public class fsmAgent extends AbstractDedaleAgent {
 		fsmb.registerState(new BoopedBehaviour(this, this.agenda), Booped); // Receive Poke
 		fsmb.registerState(new ShareMapB(this, this.myMap, this.agenda), ShareMap); // ShareMap Behaviour
 		fsmb.registerState(new ReceiveMap(this), R_Map); // ReceiveMap Behaviour
-		fsmb.registerState(new ExploreBehaviour(this, this.myMap, PokeTime, this.agenda), Explo); // Exploration
+		fsmb.registerState(new ExploreBehaviour(this, this.myMap, this.agenda), Explo); // Exploration
 		fsmb.registerLastState(new StopBehaviour(), StopAg); // Ending
 		
 		// Define transitions :
 		
 		fsmb.registerDefaultTransition(Init, Explo); // init map + go to explo
+		
 		fsmb.registerDefaultTransition(Explo, Explo); // explo loop
 		fsmb.registerTransition(Explo, Boop, 1); // send ping
 		fsmb.registerDefaultTransition(Boop, Explo); // get back to explo
@@ -150,6 +151,30 @@ public class fsmAgent extends AbstractDedaleAgent {
 	
 	public String getCollectorType() {
 		return CollectorType;
+	}
+	
+	public void setCollectedQty (int qty) {
+		this.CollectedQty = qty;
+	}
+	
+	public void setBackBackcpcty (List<Couple<Observation, Integer>> b_qty) {
+		this.BackpackCapacity = b_qty;
+	}
+	
+	public int getCollectedQty () {
+		return this.CollectedQty;
+	}
+	
+	public List<Couple<Observation, Integer>> getBackBackcpcty () {
+		return this.BackpackCapacity;
+	}
+
+	public List<Couple<Float, Couple<Integer, Couple<String, Integer>>>> getRessources_knowledge() {
+		return ressources_knowledge;
+	}
+
+	public void setRessources_knowledge(List<Couple<Float, Couple<Integer, Couple<String, Integer>>>> ressources_knowledge) {
+		this.ressources_knowledge = ressources_knowledge;
 	}
 	
 }

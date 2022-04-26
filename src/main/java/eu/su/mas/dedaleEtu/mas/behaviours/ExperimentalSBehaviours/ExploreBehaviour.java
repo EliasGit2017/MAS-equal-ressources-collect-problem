@@ -28,20 +28,16 @@ public class ExploreBehaviour extends OneShotBehaviour {
 
 	private static final long serialVersionUID = -5775943961809349356L;
 
-	private MapRepresentation myMap;
-
 	//private List<String> agenda;
-
-	private int exitCode; // used to fire specific transitions
-
 	// private String nNode = "";
-
+	//public boolean terminated = false;
 	// private int timer;
 
-	//public boolean terminated = false;
+	private MapRepresentation myMap;
+	private int exitCode; // used to fire specific transitions
+	
 
-	public ExploreBehaviour(final AbstractDedaleAgent cur_a, MapRepresentation myMap, int timer,
-			List<String> contacts) {
+	public ExploreBehaviour(final AbstractDedaleAgent cur_a, MapRepresentation myMap, List<String> contacts) {
 		super(cur_a);
 		this.myMap = ((fsmAgent) this.myAgent).getMyMap();
 		//this.agenda = contacts;
@@ -59,14 +55,11 @@ public class ExploreBehaviour extends OneShotBehaviour {
 			//System.err.println("  No map for " + this.myAgent.getLocalName());
 		}
 
-		// System.out.println(" --> Exploration Begins for : " + this.myAgent.getLocalName());
-
 		String cur_pos = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
 
 		if (cur_pos != null) {
 
-			List<Couple<String, List<Couple<Observation, Integer>>>> lobs = ((AbstractDedaleAgent) this.myAgent)
-					.observe();
+			List<Couple<String, List<Couple<Observation, Integer>>>> lobs = ((AbstractDedaleAgent) this.myAgent).observe();
 
 			// 1) remove the current node from openlist and add it to closedNodes.
 			this.myMap.addNode(cur_pos, MapAttribute.closed);
@@ -82,49 +75,82 @@ public class ExploreBehaviour extends OneShotBehaviour {
 						nextNode = nodeId;
 				}
 			}
+			
+			// Random Walk : not optimized at all
+//			Random r = new Random();
+//			int moveId = 1 + r.nextInt(lobs.size() - 1);
+			
+			List<Couple<Observation, Integer>> lObservations = lobs.get(0).getRight();
+			
+			Boolean b = false;
+			for(Couple<Observation, Integer> o:lObservations) {
+				switch (o.getLeft()) {
+				case DIAMOND:
+					// Print observations :
+					//System.out.println(" --> at  " + cur_pos + " " + this.myAgent.getLocalName()+" - My treasure type is : "+((AbstractDedaleAgent) this.myAgent).getMyTreasureType());
+					String treasureType = ((AbstractDedaleAgent) this.myAgent).getMyTreasureType().toString();
+					((fsmAgent) this.myAgent).setCollectorType(treasureType);
+					
+					System.out.println(" --> " + this.myAgent.getLocalName()+" - My current backpack capacity is:"+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
 
-//			List<Couple<Observation, Integer>> lObservations = lobs.get(0).getRight();
-//			
-//			Boolean b = false;
-//			for(Couple<Observation, Integer> o:lObservations) {
-//				switch (o.getLeft()) {
-//				case DIAMOND: case GOLD:
-//					// Print observations :
-//					System.out.println(" --> at  " + cur_pos + " " + this.myAgent.getLocalName()+" - My treasure type is : "+((AbstractDedaleAgent) this.myAgent).getMyTreasureType());
-//					System.out.println(" --> " + this.myAgent.getLocalName()+" - My current backpack capacity is:"+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
-//					System.out.println(" --> " + this.myAgent.getLocalName()+" - Value of the treasure on the current position: "+o.getLeft() +": "+ o.getRight());
-//					System.out.println(" --> " + this.myAgent.getLocalName()+" - The agent grabbed :"+((AbstractDedaleAgent) this.myAgent).pick());
-//					System.out.println(" --> " + this.myAgent.getLocalName()+" - the remaining backpack capacity is: "+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
-//					b = true;
-//					break;
-//				default:
-//					break;
-//				}
-//			}
+					((fsmAgent) this.myAgent).setBackBackcpcty(((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
+					
+					System.out.println(" --> " + this.myAgent.getLocalName()+" - Value of the treasure on the current position: "+o.getLeft() +": "+ o.getRight());
+					//System.out.println(" --> " + this.myAgent.getLocalName()+" - The agent grabbed :"+((AbstractDedaleAgent) this.myAgent).pick());
+					//System.out.println(" --> " + this.myAgent.getLocalName()+" - the remaining backpack capacity is: "+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
+					b = true;
+					break;
+					
+				case GOLD:
+					// Print observations :
+					//System.out.println(" --> at  " + cur_pos + " " + this.myAgent.getLocalName()+" - My treasure type is : "+((AbstractDedaleAgent) this.myAgent).getMyTreasureType());
+					String treasureType2 = ((AbstractDedaleAgent) this.myAgent).getMyTreasureType().toString();
+					((fsmAgent) this.myAgent).setCollectorType(treasureType2);
+					
+					System.out.println(" --> " + this.myAgent.getLocalName()+" - My current backpack capacity is:"+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
+
+					((fsmAgent) this.myAgent).setBackBackcpcty(((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
+					
+					System.out.println(" --> " + this.myAgent.getLocalName()+" - Value of the treasure on the current position: "+o.getLeft() +": "+ o.getRight());
+					//System.out.println(" --> " + this.myAgent.getLocalName()+" - The agent grabbed :"+((AbstractDedaleAgent) this.myAgent).pick());
+					//System.out.println(" --> " + this.myAgent.getLocalName()+" - the remaining backpack capacity is: "+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
+					b = true;
+					break;
+					
+				case STENCH:
+					
+					break;
+					
+				default:
+					break;
+				}
+			}
+			
+			int moveId = -100;
 
 			if (!this.myMap.hasOpenNode()) {
-				//terminated = true;
-				// this.exitCode = 1;
-				// this.exitCode = 100; // -> StopAg behaviour
-				System.out.println(" ---> No open nodes on the map for : " + this.myAgent.getLocalName());
+				System.out.println(" ---> ExploreBehaviour : No open nodes on the map for : " + this.myAgent.getLocalName());
+				this.exitCode = 100; // -> StopAg behaviour
 			} else {
 				if (nextNode == null) {
-					nextNode = this.myMap.getShortestPathToClosestOpenNode(cur_pos).get(0); // decide next Node
+					//nextNode = this.myMap.getShortestPathToClosestOpenNode(cur_pos).get(0); // decide next Node
+					// Random Walk : not optimized at all
+					Random r = new Random();
+					moveId = 1 + r.nextInt(lobs.size() - 1);
+					nextNode = lobs.get(moveId).getLeft();
 					checkInbox();
-					//this.exitCode = 1;
 				} else {
-					// Define Sub behaviour here
 					checkInbox();
-					//this.exitCode = 1;
 				}
-				// wait : 300ms default (agent speed)
+				
 				try {
-					this.myAgent.doWait(((fsmAgent) this.myAgent).speed);
+					this.myAgent.doWait(((fsmAgent) this.myAgent).speed); // wait : 300ms default (agent speed)
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				
 				((AbstractDedaleAgent) this.myAgent).moveTo(nextNode);
+				//((AbstractDedaleAgent)this.myAgent).moveTo(lobs.get(moveId).getLeft());
 
 			}
 
@@ -155,7 +181,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 					e.printStackTrace();
 				}
 				this.myMap.mergeMap(sgR);
-				System.out.println(" ---> " + this.myAgent.getLocalName() + "just merged map from " + msgSM.getSender().getLocalName());;
+				System.out.println(" ---> " + this.myAgent.getLocalName() + " just merged map from " + msgSM.getSender().getLocalName());;
 				this.exitCode = 4;
 				return true;
 			} else {

@@ -59,8 +59,7 @@ public class ReceiveMap extends OneShotBehaviour {
 				((fsmAgent)this.myAgent).successMerge = true;
 			}
 			
-			System.out.println(" ---> " + this.myAgent.getLocalName() + " Merged its map with Map from "
-					+ msg.getSender().getLocalName());
+			System.out.println(" ---> " + this.myAgent.getLocalName() + " Merged its map with Map from " + msg.getSender().getLocalName());
 			
 		}else {
 			
