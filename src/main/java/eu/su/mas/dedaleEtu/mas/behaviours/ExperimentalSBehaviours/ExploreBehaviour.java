@@ -2,6 +2,7 @@ package eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -89,6 +90,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 			for(Couple<Observation, Integer> o:lObservations) {
 				switch (o.getLeft()) {
 				case DIAMOND:
+					System.out.println("I am " + this.myAgent.getLocalName() + "On the current node " + cur_pos);
 					// Print observations :
 					//System.out.println(" --> at  " + cur_pos + " " + this.myAgent.getLocalName()+" - My treasure type is : "+((AbstractDedaleAgent) this.myAgent).getMyTreasureType());
 					String treasureType = ((AbstractDedaleAgent) this.myAgent).getMyTreasureType().toString();
@@ -98,19 +100,23 @@ public class ExploreBehaviour extends OneShotBehaviour {
 
 					((fsmAgent) this.myAgent).setBackBackcpcty(((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
 					
-					System.out.println(" --> " + this.myAgent.getLocalName()+" - Value of the treasure on the current position: " + o.getLeft() + ": " + o.getRight());
+					System.out.println(" --> " + this.myAgent.getLocalName() + " - Value of the treasure on the current position: " + o.getLeft() + ": " + o.getRight());
 					//System.out.println(" --> " + this.myAgent.getLocalName()+" - The agent grabbed :"+((AbstractDedaleAgent) this.myAgent).pick());
 					//System.out.println(" --> " + this.myAgent.getLocalName()+" - the remaining backpack capacity is: "+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
 					
 					// Prepare Data :
-					Date dt = new Date();
-					Timestamp ts = new Timestamp(dt.getTime());
-					
+					// Date dt = new Date();
+					Timestamp ts = new Timestamp(System.currentTimeMillis());
+					Couple<String, Integer> i = new Couple<String, Integer>(o.getLeft().toString(), o.getRight());
+					Couple<Long, Couple<String, Integer>> ie = new Couple<Long, Couple<String, Integer>>( ts.getTime(), i);
+					Couple<String, Couple<Long, Couple<String, Integer>>> e = new Couple<String, Couple<Long, Couple<String, Integer>>>( cur_pos, ie);
+					((fsmAgent) this.myAgent).addRessources_knowledge(e);
 					
 					b = true;
 					break;
 					
 				case GOLD:
+					System.out.println("I am " + this.myAgent.getLocalName() + "On the current node " + cur_pos);
 					// Print observations :
 					//System.out.println(" --> at  " + cur_pos + " " + this.myAgent.getLocalName()+" - My treasure type is : "+((AbstractDedaleAgent) this.myAgent).getMyTreasureType());
 					String treasureType2 = ((AbstractDedaleAgent) this.myAgent).getMyTreasureType().toString();
@@ -123,11 +129,20 @@ public class ExploreBehaviour extends OneShotBehaviour {
 					System.out.println(" --> " + this.myAgent.getLocalName()+" - Value of the treasure on the current position: "+o.getLeft() +": "+ o.getRight());
 					//System.out.println(" --> " + this.myAgent.getLocalName()+" - The agent grabbed :"+((AbstractDedaleAgent) this.myAgent).pick());
 					//System.out.println(" --> " + this.myAgent.getLocalName()+" - the remaining backpack capacity is: "+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
+
+					// Prepare Data :
+					// Date dt = new Date();
+					Timestamp ts2 = new Timestamp(System.currentTimeMillis());
+					Couple<String, Integer> i2 = new Couple<String, Integer>(o.getLeft().toString(), o.getRight());
+					Couple<Long, Couple<String, Integer>> ie2 = new Couple<Long, Couple<String, Integer>>( ts2.getTime(), i2);
+					Couple<String, Couple<Long, Couple<String, Integer>>> e2 = new Couple<String, Couple<Long, Couple<String, Integer>>>( cur_pos, ie2);
+					((fsmAgent) this.myAgent).addRessources_knowledge(e2);
+					
 					b = true;
 					break;
-					
+				
 				case STENCH:
-					
+					b = true;
 					break;
 					
 				default:
@@ -148,8 +163,11 @@ public class ExploreBehaviour extends OneShotBehaviour {
 					moveId = 1 + r.nextInt(lobs.size() - 1);
 					nextNode = lobs.get(moveId).getLeft();
 					checkInbox();
+					
 				} else {
+					
 					checkInbox();
+					
 				}
 				
 				try {
@@ -157,6 +175,10 @@ public class ExploreBehaviour extends OneShotBehaviour {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+				
+				System.out.println("I am : " + this.myAgent.getLocalName() + " My current infos are : ");
+				
+				System.out.println(Arrays.toString(((fsmAgent) this.myAgent).getRessources_knowledge().toArray()));
 				
 				((AbstractDedaleAgent) this.myAgent).moveTo(nextNode);
 				//((AbstractDedaleAgent)this.myAgent).moveTo(lobs.get(moveId).getLeft());
