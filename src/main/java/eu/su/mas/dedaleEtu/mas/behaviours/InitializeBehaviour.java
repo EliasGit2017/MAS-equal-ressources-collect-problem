@@ -18,6 +18,10 @@ public class InitializeBehaviour extends OneShotBehaviour {
 	 */
 	private static final long serialVersionUID = 6050645637314154343L;
 
+	
+	public static final String START = "--------> ";
+	public static final String END =   " <--------";
+	
 	public InitializeBehaviour() {
 		super();
 	}
@@ -28,10 +32,6 @@ public class InitializeBehaviour extends OneShotBehaviour {
 		MapRepresentation map = new MapRepresentation(true);
 		((MainAgent)this.myAgent).setMap(map);
 		
-		Random r = new Random();
-		int val = r.nextInt(2147483647);
-		((MainAgent)this.myAgent).setId(val);
-
 		((MainAgent)this.myAgent).initLastComm();
 	}
 }

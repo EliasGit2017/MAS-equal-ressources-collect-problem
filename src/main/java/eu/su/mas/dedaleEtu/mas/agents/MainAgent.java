@@ -46,6 +46,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	private ACLMessage currentMessage;						// The current message the agent is processing
 	
 	private int shareStep = 0;								// The current step of the communication process the agent is in
+
 	
 	/***********
 	 * STEPS
@@ -67,25 +68,49 @@ public class MainAgent extends AbstractDedaleAgent {
 	Hashtable<String, Integer> lastComm = new Hashtable<>();
 	private final int COMM_TIMEOUT = 10;	//Refuse communication (other than collision solver) with an agent if they communicated less than COMM_TIMEOUT steps earlier.
 	
-	private final int WAIT_TIME = 50; 		// Standard time (in ms) to wait between each action
+	private final int WAIT_TIME = 1_00; 		// Standard time (in ms) to wait between each action
 	
-	private AID communicatingWith = null;
+	private String currentCommunicationID = "";
+	private String temporaryOtherID = ""; //When waiting for double ACK
 	
-	private boolean triedComm = false; //If tried to communicate before unblocking
+	private int globalTick = 0;
 	
-	public void updateTriedComm() {
-		this.triedComm = !this.triedComm;
+	private int knownNodes = 0;
+	private int learntNodes = 0;
+	
+	public void setKnownNodes(int nbNew) {
+		this.knownNodes = nbNew;
+	}
+	public int getLearnt() {
+		return this.learntNodes;
+	}
+	public void incrementLearnNodes(int nbNew) {
+		this.learntNodes += nbNew;
 	}
 	
-	public boolean hasTriedComm() {
-		return this.triedComm;
-	}
-	public void resetCommWith() {
-		this.communicatingWith = null;
+	public void incrementGlobalTick() {
+		this.globalTick += 1;
 	}
 	
-	public void setCommWith(AID newComm) {
-		this.communicatingWith = newComm;
+	public int getGlobalTick() {
+		return this.globalTick;
+	}
+	
+	public String getTemporaryOtherID() {
+		return this.temporaryOtherID;
+	}
+	
+	public void setTemporaryOtherID(String id) {
+		this.temporaryOtherID = id;
+	}
+	
+	public void resetCommID() {
+		this.currentCommunicationID = "";
+		this.temporaryOtherID = "";
+	}
+	
+	public void setCommID(String newID) {
+		this.currentCommunicationID = newID;
 	}
 	
 	public void incrementCurrentShareTries() {
@@ -141,8 +166,16 @@ public class MainAgent extends AbstractDedaleAgent {
 		return this.lastComm.get(agent);
 	}
 	
-	public AID getCurrentMsgSender() {
+	public AID getInterlocutor() {
 		return this.currentMessage.getSender();
+	}
+	
+	public boolean isCurrentInterlocutor(String test) {
+		return this.getInterlocutorName().equals(test);
+	}
+	
+	public String getInterlocutorName() {
+		return this.getInterlocutor().getLocalName();
 	}
 	
 	public ACLMessage getCurrentMsg() {
@@ -162,6 +195,9 @@ public class MainAgent extends AbstractDedaleAgent {
 		}
 	}
 	
+	public String getCurrentMsgStringContent() {
+		return this.currentMessage.getContent();
+	}
 	public void resetCurrentMsg() {
 		this.currentMessage = null;
 	}
@@ -197,20 +233,26 @@ public class MainAgent extends AbstractDedaleAgent {
 	}
 	
 	public boolean checkInbox(String ProtocolName) {
+		MessageTemplate msgTemplate = null;
+		if (this.currentCommunicationID.isEmpty()) {
+			msgTemplate = MessageTemplate.and(
+					MessageTemplate.MatchProtocol(ProtocolName),
+					MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+		} else {
+			msgTemplate = MessageTemplate.and(
+					MessageTemplate.MatchProtocol(ProtocolName),
+					MessageTemplate.MatchConversationId( String.valueOf(this.currentCommunicationID) ));
+		}
 
-		MessageTemplate msgTemplate = MessageTemplate.and(
-				MessageTemplate.MatchProtocol(ProtocolName),
-				MessageTemplate.MatchPerformative(ACLMessage.INFORM));
-
-		
 		ACLMessage msgReceived = this.receive(msgTemplate);
-
+				
 		if (msgReceived != null) {
-			if ( ProtocolName.contains("SM") && (!this.canCommunicateWith( msgReceived.getSender().getLocalName() ) || !msgReceived.getSender().equals(this.communicatingWith) ) ) {
-				System.out.println("IGNORED MSG");
+			
+			if ( ProtocolName.contains("SM") && !this.canCommunicateWith( msgReceived.getSender().getLocalName() ) ) {
+				System.out.println("Agent " + this.getLocalName() + " has IGNORED a message from " + msgReceived.getSender().getLocalName() + "!" + " Protocol: " + ProtocolName);
 				return false;
 			}
-			System.out.println("Agent " + this.getLocalName() + " has received a message from " + msgReceived.getSender().getLocalName() + "!");
+			System.out.println("Agent " + this.getLocalName() + " has received a message from " + msgReceived.getSender().getLocalName() + "!" + " Protocol: " + ProtocolName);
 			this.currentMessage = msgReceived;
 			return true;
 		}
@@ -224,7 +266,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	
 	public boolean shouldCommunicate() {
 		this.communicate += 1;
-		if (this.communicate > this.COMM_STEP) {
+		if (this.communicate > this.COMM_STEP) { //Behaviour will stop right after this function returns true
 			this.communicate = 0;
 			return true;
 		}
@@ -235,7 +277,7 @@ public class MainAgent extends AbstractDedaleAgent {
 		this.uniqueId = id;
 	}
 	
-	public int getId() {
+	public int getID() {
 		return this.uniqueId;
 	}
 
@@ -277,8 +319,8 @@ public class MainAgent extends AbstractDedaleAgent {
 	}
 	
 	public boolean isBlocked() {
-		if (this.blockCount >= this.BLOCK_LIMIT) {
-			System.out.println("EUSSOUUU"); }
+//		if (this.blockCount >= this.BLOCK_LIMIT) {
+//			System.out.println("EUSSOUUU"); }
 		return this.blockCount >= this.BLOCK_LIMIT;
 	}
 	
@@ -368,15 +410,18 @@ public class MainAgent extends AbstractDedaleAgent {
 		
 		fsm.registerDefaultTransition(Nav, Nav);
 		fsm.registerTransition(Nav, Explo, 1);
+		fsm.registerTransition(Nav, Share, 3);
 		fsm.registerTransition(Nav, Unblock, 4);
 		fsm.registerTransition(Nav, Standby, 5);
 		
 		fsm.registerDefaultTransition(Share, Share);
 		fsm.registerTransition(Share, Explo, 1);
 		fsm.registerTransition(Share, Nav, 2);
+		fsm.registerTransition(Share, Unblock, 4);
 		
 		fsm.registerDefaultTransition(Unblock, Unblock);
 		fsm.registerTransition(Unblock, Nav, 2);
+		fsm.registerTransition(Unblock, Share, 3);
 		
 		fsm.registerDefaultTransition(Standby, Standby);
 		fsm.registerTransition(Standby, Share, 3);

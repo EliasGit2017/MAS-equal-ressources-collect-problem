@@ -22,10 +22,7 @@ public class Explore extends OneShotBehaviour {
 
 
 	private String currentPosition;
-	private String lastPosition;
-	
-	private List<String> agentsNames;
-	
+
 	private List<String> open; // Open nodes
 	private List<String> closed;
 	
@@ -46,11 +43,9 @@ public class Explore extends OneShotBehaviour {
 		}
 		
 	public void action() {
-		System.out.println("----- " + this.myAgent.getLocalName() + " rentre dans Explore -----");
-
-		lastPosition = ((MainAgent)this.myAgent).getLastPosition();
+		System.out.println("-> " + this.myAgent.getLocalName() + " explore <-");
+		
 		currentPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
-		agentsNames = ((MainAgent)this.myAgent).getAgenda();
 		open = ((MainAgent)this.myAgent).getOpenNodes();
 		closed = ((MainAgent)this.myAgent).getClosedNodes();
 		map = ((MainAgent)this.myAgent).getMap();
@@ -63,16 +58,15 @@ public class Explore extends OneShotBehaviour {
 		
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
 		if (newMsg) {
-			((MainAgent)this.myAgent).setCommWith( ((MainAgent)this.myAgent).getCurrentMsgSender() );
 			((MainAgent)this.myAgent).incrementShareStep();
 			((MainAgent)this.myAgent).incrementShareStep();
+			((MainAgent)this.myAgent).incrementLastStepSent();
 			this.shareInit = true;
 			return;
 		}
 		
 		newMsg = ((MainAgent)this.myAgent).checkInbox("SM-HELLO");
 		if (newMsg) {
-			((MainAgent)this.myAgent).setCommWith( ((MainAgent)this.myAgent).getCurrentMsgSender() );
 			((MainAgent)this.myAgent).incrementShareStep();
 			this.shareInit = true;
 			return;
@@ -99,11 +93,10 @@ public class Explore extends OneShotBehaviour {
 			}
 						
 			List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
-//			System.out.println(obs);
-
+			
 			int size = obs.size() ;
-			String nextNode = null;
 			List<String> nextNodesChoice = new ArrayList<>();
+			
 			for (int i = 1 ; i < size ; i ++ ) {
 				String node = obs.get(i).getLeft() ;
 				
@@ -119,7 +112,8 @@ public class Explore extends OneShotBehaviour {
 				}
 			}
 
-			if ( nextNodesChoice.size() != 0 ) {
+			String nextNode = null;
+			if ( nextNodesChoice.size() != 0 ) { //Choosing an open node at random
 				Random r = new Random();
 				int choice = r.nextInt( nextNodesChoice.size() );
 				nextNode = nextNodesChoice.get(choice);
@@ -162,6 +156,10 @@ public class Explore extends OneShotBehaviour {
 		((MainAgent)this.myAgent).incrementLastCommValues();
 		((MainAgent)this.myAgent).updateLastBehaviour("Explore");
 		
+		if (this.communicate || this.shareInit) {
+			return 3;
+		}
+		
 		if (this.explo_done) {
 			return 5;
 		}
@@ -172,9 +170,6 @@ public class Explore extends OneShotBehaviour {
 		
 		if (this.noOpenNearby) {
 			return 2;
-		}
-		if (this.communicate || this.shareInit) {
-			return 3;
 		}
 		
 		return 0;

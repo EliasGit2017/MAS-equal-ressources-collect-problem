@@ -334,28 +334,6 @@ public class Principal {
 		 * its associated configuration available in the entities file
 		 * 
 		 *****************************************************/
-//		PrintWriter pw;
-//		String fichierResource = "../fosyma-dedaleetu/resources/explo-test1";
-//		BufferedWriter writer = null;
-//		if (writer == null) {
-//			System.out.println("Initialisation...");
-//		}
-//		
-//		
-//		try {
-//			pw = new PrintWriter(fichierResource);
-//			pw.close();
-//			writer = new BufferedWriter(new FileWriter(fichierResource));
-//			writer.write("mapname:map2018MultiTypes");
-//		} catch (FileNotFoundException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		
-//		if (writer != null) {
-//			System.out.println("Initialisation terminée !!");
-//		}
-		
 
 		
 		/*********
@@ -426,7 +404,7 @@ public class Principal {
 
 
 		// Agents pre-initialized: James, Henry, Drake, Luke
-		List<String> agentsToInit = List.of( "James", "Henry", "Drake", "Luke");
+		List<String> agentsToInit = List.of( "James", "Henry");
 		for (String agentId : agentsToInit) {
 			// 1) Get the container where the agent will appear
 			c = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);
@@ -461,7 +439,14 @@ public class Principal {
 	 * @param agentList
 	 */
 	private static void startAgents(List<AgentController> agentList) {
-
+		
+//		try { //TODO : Sniffing agents
+//			System.out.println("Press enter in the console to start the project");
+//			System.in.read();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+		
 		System.out.println("Starting agents...");
 
 		for (final AgentController ac : agentList) {

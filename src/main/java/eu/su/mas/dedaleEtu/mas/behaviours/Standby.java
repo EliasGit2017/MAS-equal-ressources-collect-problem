@@ -16,15 +16,18 @@ public class Standby extends OneShotBehaviour { //Called when ended explo and wa
 
 	@Override
 	public void action() {
+		System.out.println("-> " + this.myAgent.getLocalName() + " standby <-");
+		int known = ((MainAgent)this.myAgent).getOpenNodes().size() + ((MainAgent)this.myAgent).getClosedNodes().size() ;
+		System.out.println("learnt " + ((MainAgent)this.myAgent).getLearnt() +" out of " + known);
+		((MainAgent)this.myAgent).initLastComm(); // Let every communication happen
 		this.shareInit = false;
-		
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-HELLO");
 		if (newMsg) {
-			((MainAgent)this.myAgent).setCommWith( ((MainAgent)this.myAgent).getCurrentMsgSender() );
 			((MainAgent)this.myAgent).incrementShareStep();
 			this.shareInit = true;
 			return;
 		}
+		this.myAgent.doWait(1000);
 	}
 
 	
@@ -34,6 +37,7 @@ public class Standby extends OneShotBehaviour { //Called when ended explo and wa
 		
 		// this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
 		((MainAgent)this.myAgent).incrementLastCommValues();
+		((MainAgent)this.myAgent).updateLastBehaviour("Standby");
 		
 		if (this.shareInit) {
 			return 3;
