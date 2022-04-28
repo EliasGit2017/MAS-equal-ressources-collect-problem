@@ -104,8 +104,6 @@ public class ExploreBehaviour extends OneShotBehaviour {
 					//System.out.println(" --> " + this.myAgent.getLocalName()+" - The agent grabbed :"+((AbstractDedaleAgent) this.myAgent).pick());
 					//System.out.println(" --> " + this.myAgent.getLocalName()+" - the remaining backpack capacity is: "+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
 					
-					// Prepare Data :
-					// Date dt = new Date();
 					Timestamp ts = new Timestamp(System.currentTimeMillis());
 					Couple<String, Integer> i = new Couple<String, Integer>(o.getLeft().toString(), o.getRight());
 					Couple<Long, Couple<String, Integer>> ie = new Couple<Long, Couple<String, Integer>>( ts.getTime(), i);
@@ -130,8 +128,6 @@ public class ExploreBehaviour extends OneShotBehaviour {
 					//System.out.println(" --> " + this.myAgent.getLocalName()+" - The agent grabbed :"+((AbstractDedaleAgent) this.myAgent).pick());
 					//System.out.println(" --> " + this.myAgent.getLocalName()+" - the remaining backpack capacity is: "+ ((AbstractDedaleAgent) this.myAgent).getBackPackFreeSpace());
 
-					// Prepare Data :
-					// Date dt = new Date();
 					Timestamp ts2 = new Timestamp(System.currentTimeMillis());
 					Couple<String, Integer> i2 = new Couple<String, Integer>(o.getLeft().toString(), o.getRight());
 					Couple<Long, Couple<String, Integer>> ie2 = new Couple<Long, Couple<String, Integer>>( ts2.getTime(), i2);
@@ -142,6 +138,12 @@ public class ExploreBehaviour extends OneShotBehaviour {
 					break;
 				
 				case STENCH:
+					Timestamp ts3 = new Timestamp(System.currentTimeMillis());
+					Couple<String, Integer> i3 = new Couple<String, Integer>(o.getLeft().toString(), o.getRight());
+					Couple<Long, Couple<String, Integer>> ie3 = new Couple<Long, Couple<String, Integer>>( ts3.getTime(), i3);
+					Couple<String, Couple<Long, Couple<String, Integer>>> e3 = new Couple<String, Couple<Long, Couple<String, Integer>>>( cur_pos, ie3);
+					((fsmAgent) this.myAgent).addRessources_knowledge(e3);
+					
 					b = true;
 					break;
 					
@@ -150,18 +152,18 @@ public class ExploreBehaviour extends OneShotBehaviour {
 				}
 			}
 			
-			int moveId = -100;
+			//int moveId = -100;
 
 			if (!this.myMap.hasOpenNode()) {
 				System.out.println(" ---> ExploreBehaviour : No open nodes on the map for : " + this.myAgent.getLocalName());
 				this.exitCode = 100; // -> StopAg behaviour
 			} else {
 				if (nextNode == null) {
-					//nextNode = this.myMap.getShortestPathToClosestOpenNode(cur_pos).get(0); // decide next Node
+					nextNode = this.myMap.getShortestPathToClosestOpenNode(cur_pos).get(0); // decide next Node
 					// Random Walk : not optimized at all
-					Random r = new Random();
-					moveId = 1 + r.nextInt(lobs.size() - 1);
-					nextNode = lobs.get(moveId).getLeft();
+//					Random r = new Random();
+//					moveId = 1 + r.nextInt(lobs.size() - 1);
+//					nextNode = lobs.get(moveId).getLeft();
 					checkInbox();
 					
 				} else {
@@ -176,9 +178,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 					e.printStackTrace();
 				}
 				
-				System.out.println("I am : " + this.myAgent.getLocalName() + " My current infos are : ");
-				
-				System.out.println(Arrays.toString(((fsmAgent) this.myAgent).getRessources_knowledge().toArray()));
+				//System.out.println("I am : " + this.myAgent.getLocalName() + " My current infos are : " + Arrays.toString(((fsmAgent) this.myAgent).getRessources_knowledge().toArray()));
 				
 				((AbstractDedaleAgent) this.myAgent).moveTo(nextNode);
 				//((AbstractDedaleAgent)this.myAgent).moveTo(lobs.get(moveId).getLeft());
@@ -218,8 +218,8 @@ public class ExploreBehaviour extends OneShotBehaviour {
 			} else {
 				if (msgTB != null) { //got booped
 					String sender_name = msgTB.getSender().getLocalName();
-					String sender_pos = msgTB.getContent();
-					System.out.println(" ~~~ ExpBehav ---> " + sender_name + " booped " + sender_pos);
+					//String sender_pos = msgTB.getContent();
+					System.out.println(" ~~~ ExpBehav ---> " + sender_name + " booped " /*+ sender_pos*/);
 					this.exitCode = 3;
 				} else {
 					this.exitCode = 1;

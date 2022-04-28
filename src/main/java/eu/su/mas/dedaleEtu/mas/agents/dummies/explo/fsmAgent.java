@@ -30,6 +30,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 	// private static final int PokeTime = 3000; // might be usefull to reduce # of
 	// msgs sent
 	// public final int sensi=20;
+	public boolean successExch = false;
 
 	public String CollectorType;
 
@@ -41,7 +42,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 
 	private List<Couple<Observation, Integer>> BackpackCapacity;
 
-	private List<Couple<String, Couple<Long, Couple<String, Integer>>>> ressources_knowledge = new ArrayList<>(); // <timestamp
+	private List<Couple<String, Couple<Long, Couple<String, Integer>>>> ressources_knowledge = new ArrayList<Couple<String, Couple<Long, Couple<String, Integer>>>>(); // <timestamp
 																													// :
 																													// <
 																													// node
@@ -201,16 +202,15 @@ public class fsmAgent extends AbstractDedaleAgent {
 	public void addRessources_knowledge(Couple<String, Couple<Long, Couple<String, Integer>>> ressources_knowledge) {
 		String node = ressources_knowledge.getLeft();
 		//System.out.println("1997 - " + node);
-		Long ts = ressources_knowledge.getRight().getLeft();
+		Long ts = ressources_knowledge.getRight().getLeft(); // ressource timestamp
 		//String ress_type = ressources_knowledge.getRight().getRight().getLeft(); // 4 later
 		//int qty = ressources_knowledge.getRight().getRight().getRight();
 		//boolean b = false;
 		//Iterator<Couple<String, Couple<Double, Couple<String, Integer>>>> k_it = this.ressources_knowledge.iterator();
 		
-		for(Couple<String, Couple<Long, Couple<String, Integer>>> e : this.ressources_knowledge) {
-			if (e.getLeft() == node && e.getRight().getLeft() < ts) {
-				//System.out.println("deleting old node rn");
-				this.ressources_knowledge.remove(e);
+		for(int j = 0; j < this.ressources_knowledge.size(); j++) {
+			if (this.ressources_knowledge.get(j).getLeft() == node && this.ressources_knowledge.get(j).getRight().getLeft() < ts) {
+				this.ressources_knowledge.remove(j);
 				this.ressources_knowledge.add(ressources_knowledge);
 				return;
 			}
@@ -231,5 +231,31 @@ public class fsmAgent extends AbstractDedaleAgent {
 //		if (!b) {
 //			this.ressources_knowledge.add(ressources_knowledge);
 //		}
-
+	public void mergeRessources_knowledge(List<Couple<String, Couple<Long, Couple<String, Integer>>>> l_know) {
+		for (int i = 0; i < l_know.size(); i++) {
+//			if (!this.ressources_knowledge.contains(e)) {
+//				this.ressources_knowledge.add(e);
+//				continue;
+//			}
+			for(int j = 0; j < this.ressources_knowledge.size(); j++) {
+				if (! (this.ressources_knowledge.get(j).getLeft() == l_know.get(i).getLeft() && l_know.get(i).getRight().getLeft() > this.ressources_knowledge.get(j).getRight().getLeft() && l_know.get(i).getRight().getRight().getLeft() == this.ressources_knowledge.get(j).getRight().getRight().getLeft()
+						&& l_know.get(i).getRight().getRight().getRight() == this.ressources_knowledge.get(j).getRight().getRight().getRight())) {
+					this.ressources_knowledge.add(l_know.get(i));
+					continue;
+				}
+				if (this.ressources_knowledge.get(j).getLeft() == l_know.get(i).getLeft() && l_know.get(i).getRight().getLeft() > this.ressources_knowledge.get(j).getRight().getLeft()) {
+					if (l_know.get(i).getRight().getRight().getLeft() != this.ressources_knowledge.get(j).getRight().getRight().getLeft()) {
+						this.ressources_knowledge.add(l_know.get(i));
+						break;
+					} else {
+					this.ressources_knowledge.remove(j);
+					this.ressources_knowledge.add(l_know.get(i));
+					break;
+					}
+				}
+			}
+		}
+	}
+	
+	
 }
