@@ -44,7 +44,7 @@ public class BoopedBehaviour extends OneShotBehaviour {
 			} catch (UnreadableException e) {
 				e.printStackTrace();
 			}
-			System.out.println(" --> " + this.myAgent.getLocalName() + " <--- Received boop from " + msg.getSender().getLocalName() + "\n" + Arrays.toString(received_knowledge.toArray()));
+			System.out.println(" --> " + this.myAgent.getLocalName() + " <--- Received boop from " + msg.getSender().getLocalName() + "\n |-> " + Arrays.toString(received_knowledge.toArray()));
 			String cur_a = this.myAgent.getLocalName();
 			String sender_a = msg.getSender().getLocalName();
 			

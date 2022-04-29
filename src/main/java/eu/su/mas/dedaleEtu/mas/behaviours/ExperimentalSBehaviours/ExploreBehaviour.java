@@ -143,7 +143,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 					Couple<Long, Couple<String, Integer>> ie3 = new Couple<Long, Couple<String, Integer>>( ts3.getTime(), i3);
 					Couple<String, Couple<Long, Couple<String, Integer>>> e3 = new Couple<String, Couple<Long, Couple<String, Integer>>>( cur_pos, ie3);
 					((fsmAgent) this.myAgent).addRessources_knowledge(e3);
-					
+				
 					b = true;
 					break;
 					
@@ -152,7 +152,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 				}
 			}
 			
-			//int moveId = -100;
+			int moveId = -100;
 
 			if (!this.myMap.hasOpenNode()) {
 				System.out.println(" ---> ExploreBehaviour : No open nodes on the map for : " + this.myAgent.getLocalName());
@@ -178,9 +178,14 @@ public class ExploreBehaviour extends OneShotBehaviour {
 					e.printStackTrace();
 				}
 				
-				//System.out.println("I am : " + this.myAgent.getLocalName() + " My current infos are : " + Arrays.toString(((fsmAgent) this.myAgent).getRessources_knowledge().toArray()));
+				System.out.println("I am : " + this.myAgent.getLocalName() + " My current infos are : " + Arrays.toString(((fsmAgent) this.myAgent).getRessources_knowledge().toArray()));
 				
-				((AbstractDedaleAgent) this.myAgent).moveTo(nextNode);
+				while (!((AbstractDedaleAgent) this.myAgent).moveTo(nextNode)) {
+					Random r = new Random();
+					moveId = 1 + r.nextInt(lobs.size() - 1);
+					nextNode = lobs.get(moveId).getLeft();
+				}
+				//((AbstractDedaleAgent) this.myAgent).moveTo(nextNode);
 				//((AbstractDedaleAgent)this.myAgent).moveTo(lobs.get(moveId).getLeft());
 
 			}

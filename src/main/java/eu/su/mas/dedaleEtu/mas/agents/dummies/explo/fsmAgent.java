@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-
 import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
@@ -43,22 +42,22 @@ public class fsmAgent extends AbstractDedaleAgent {
 	private List<Couple<Observation, Integer>> BackpackCapacity;
 
 	private List<Couple<String, Couple<Long, Couple<String, Integer>>>> ressources_knowledge = new ArrayList<Couple<String, Couple<Long, Couple<String, Integer>>>>(); // <timestamp
-																													// :
-																													// <
-																													// node
-																													// :
-																													// <type
-																													// :
-																													// value>>>
-																													// type
-																													// =
-																													// ressource
-																													// type
-																													// :
-																													// gold,
-																													// diamond,
-																													// wumpus
-																													// ...3
+	// :
+	// <
+	// node
+	// :
+	// <type
+	// :
+	// value>>>
+	// type
+	// =
+	// ressource
+	// type
+	// :
+	// gold,
+	// diamond,
+	// wumpus
+	// ...3
 
 	private List<String> agenda;
 
@@ -201,61 +200,72 @@ public class fsmAgent extends AbstractDedaleAgent {
 
 	public void addRessources_knowledge(Couple<String, Couple<Long, Couple<String, Integer>>> ressources_knowledge) {
 		String node = ressources_knowledge.getLeft();
-		//System.out.println("1997 - " + node);
+		// System.out.println("1997 - " + node);
 		Long ts = ressources_knowledge.getRight().getLeft(); // ressource timestamp
-		//String ress_type = ressources_knowledge.getRight().getRight().getLeft(); // 4 later
-		//int qty = ressources_knowledge.getRight().getRight().getRight();
-		//boolean b = false;
-		//Iterator<Couple<String, Couple<Double, Couple<String, Integer>>>> k_it = this.ressources_knowledge.iterator();
-		
-		for(int j = 0; j < this.ressources_knowledge.size(); j++) {
-			if (this.ressources_knowledge.get(j).getLeft() == node && this.ressources_knowledge.get(j).getRight().getLeft() < ts) {
+		// String ress_type = ressources_knowledge.getRight().getRight().getLeft(); // 4
+		// later
+		// int qty = ressources_knowledge.getRight().getRight().getRight();
+
+		for (int j = 0; j < this.ressources_knowledge.size(); j++) {
+			if (this.ressources_knowledge.get(j).getLeft() == node
+					&& this.ressources_knowledge.get(j).getRight().getLeft() <= ts) {
 				this.ressources_knowledge.remove(j);
 				this.ressources_knowledge.add(ressources_knowledge);
 				return;
 			}
 		}
-		this.ressources_knowledge.add(ressources_knowledge);	
+		this.ressources_knowledge.add(ressources_knowledge);
+		clean_knowledge();
 	}
-		
-//		while (k_it.hasNext()) {
-//			//System.out.println("1998 - " + k_it.next().getLeft());
-//			if (k_it.next().getLeft() == node && k_it.next().getRight().getLeft() < ts) {
-//				System.out.println("deleting old node rn");
-//				k_it.remove();
-//				this.ressources_knowledge.add(ressources_knowledge);
-//				b = true;
-//				return;
-//			}
-//		}
-//		if (!b) {
-//			this.ressources_knowledge.add(ressources_knowledge);
-//		}
-	public void mergeRessources_knowledge(List<Couple<String, Couple<Long, Couple<String, Integer>>>> l_know) {
-		for (int i = 0; i < l_know.size(); i++) {
-//			if (!this.ressources_knowledge.contains(e)) {
-//				this.ressources_knowledge.add(e);
-//				continue;
-//			}
-			for(int j = 0; j < this.ressources_knowledge.size(); j++) {
-				if (! (this.ressources_knowledge.get(j).getLeft() == l_know.get(i).getLeft() && l_know.get(i).getRight().getLeft() > this.ressources_knowledge.get(j).getRight().getLeft() && l_know.get(i).getRight().getRight().getLeft() == this.ressources_knowledge.get(j).getRight().getRight().getLeft()
-						&& l_know.get(i).getRight().getRight().getRight() == this.ressources_knowledge.get(j).getRight().getRight().getRight())) {
-					this.ressources_knowledge.add(l_know.get(i));
-					continue;
-				}
-				if (this.ressources_knowledge.get(j).getLeft() == l_know.get(i).getLeft() && l_know.get(i).getRight().getLeft() > this.ressources_knowledge.get(j).getRight().getLeft()) {
-					if (l_know.get(i).getRight().getRight().getLeft() != this.ressources_knowledge.get(j).getRight().getRight().getLeft()) {
-						this.ressources_knowledge.add(l_know.get(i));
-						break;
-					} else {
+
+	public void clean_knowledge() {
+		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
+			for (int j = i + 1; j < this.ressources_knowledge.size(); j++) {
+				if (this.ressources_knowledge.get(j).getLeft() == this.ressources_knowledge.get(i).getLeft()
+						&& this.ressources_knowledge.get(i).getRight().getLeft() == this.ressources_knowledge.get(j)
+								.getRight().getLeft()
+						&& this.ressources_knowledge.get(i).getRight().getRight().getLeft() == this.ressources_knowledge
+								.get(j).getRight().getRight().getLeft()
+						&& this.ressources_knowledge.get(i).getRight().getRight()
+								.getRight() == this.ressources_knowledge.get(j).getRight().getRight().getRight()) {
 					this.ressources_knowledge.remove(j);
-					this.ressources_knowledge.add(l_know.get(i));
-					break;
-					}
 				}
 			}
 		}
 	}
-	
-	
+
+	public void mergeRessources_knowledge(List<Couple<String, Couple<Long, Couple<String, Integer>>>> l_know) {
+		for (int i = 0; i < l_know.size(); i++) {
+			boolean in_it = false;
+			for (int j = 0; j < this.ressources_knowledge.size(); j++) {
+				if (this.ressources_knowledge.get(j).getLeft() == l_know.get(i).getLeft()
+						&& l_know.get(i).getRight().getLeft() == this.ressources_knowledge.get(j).getRight().getLeft()
+						&& l_know.get(i).getRight().getRight().getLeft() == this.ressources_knowledge.get(j).getRight()
+								.getRight().getLeft()
+						&& l_know.get(i).getRight().getRight().getRight() == this.ressources_knowledge.get(j).getRight()
+								.getRight().getRight()) {
+					in_it = true;
+					break;
+				}
+				if (this.ressources_knowledge.get(j).getLeft() == l_know.get(i).getLeft()
+						&& l_know.get(i).getRight().getLeft() == this.ressources_knowledge.get(j).getRight().getLeft()
+						&& l_know.get(i).getRight().getRight().getLeft() == "Stench") {
+					in_it = true;
+					break;
+				} else {
+					if (this.ressources_knowledge.get(j).getLeft() == l_know.get(i).getLeft() && l_know.get(i)
+							.getRight().getLeft() > this.ressources_knowledge.get(j).getRight().getLeft()) {
+						this.ressources_knowledge.remove(j);
+						this.ressources_knowledge.add(l_know.get(i));
+						break;
+					}
+				}
+			}
+			if (!in_it) {
+				this.ressources_knowledge.add(l_know.get(i));
+			}
+		}
+		clean_knowledge();
+	}
+
 }
