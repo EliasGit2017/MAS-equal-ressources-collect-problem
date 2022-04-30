@@ -9,8 +9,8 @@ public class StopBehaviour extends OneShotBehaviour {
 
 	@Override
 	public void action() {
-		System.out.println(" ---> StopB 1 : " + this.myAgent.getLocalName() + " <---"); //precise agent name & characteristics for debug
-		System.out.println(" ---> StopB 2 :" + this.myAgent.getLocalName() + "\n backpackcapacity : " + ((fsmAgent)this.myAgent).getBackBackcpcty() + " CollectedQty : " + ((fsmAgent)this.myAgent).getCollectedQty());
+		System.out.println(" ---> StopB 1 : " + this.myAgent.getLocalName() + " stops <---"); //precise agent name & characteristics for debug
+		System.out.println(" ---> StopB 2 : " + this.myAgent.getLocalName() + " backpackcapacity : " + ((fsmAgent)this.myAgent).getBackBackcpcty() + " CollectedQty : " + ((fsmAgent)this.myAgent).getCollectedQty());
 	}
 
 }
