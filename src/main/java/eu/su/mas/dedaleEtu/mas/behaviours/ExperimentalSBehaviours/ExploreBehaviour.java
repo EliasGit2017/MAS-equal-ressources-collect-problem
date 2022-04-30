@@ -139,7 +139,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 				
 				case STENCH:
 					Timestamp ts3 = new Timestamp(System.currentTimeMillis());
-					Couple<String, Integer> i3 = new Couple<String, Integer>(o.getLeft().toString(), o.getRight());
+					Couple<String, Integer> i3 = new Couple<String, Integer>(o.getLeft().toString(), 0);
 					Couple<Long, Couple<String, Integer>> ie3 = new Couple<Long, Couple<String, Integer>>( ts3.getTime(), i3);
 					Couple<String, Couple<Long, Couple<String, Integer>>> e3 = new Couple<String, Couple<Long, Couple<String, Integer>>>( cur_pos, ie3);
 					((fsmAgent) this.myAgent).addRessources_knowledge(e3);
@@ -160,10 +160,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 			} else {
 				if (nextNode == null) {
 					nextNode = this.myMap.getShortestPathToClosestOpenNode(cur_pos).get(0); // decide next Node
-					// Random Walk : not optimized at all
-//					Random r = new Random();
-//					moveId = 1 + r.nextInt(lobs.size() - 1);
-//					nextNode = lobs.get(moveId).getLeft();
+					
 					checkInbox();
 					
 				} else {

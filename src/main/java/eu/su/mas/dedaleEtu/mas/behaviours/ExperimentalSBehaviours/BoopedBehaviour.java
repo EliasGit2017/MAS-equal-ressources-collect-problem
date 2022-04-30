@@ -57,6 +57,8 @@ public class BoopedBehaviour extends OneShotBehaviour {
 			//block(); // !!!
 			System.out.println("no message for booped behaviour");
 		}
+		
+		System.out.println("I am : " + this.myAgent.getLocalName() + " infos after merge : " + Arrays.toString(((fsmAgent) this.myAgent).getRessources_knowledge().toArray()));
 
 	}
 

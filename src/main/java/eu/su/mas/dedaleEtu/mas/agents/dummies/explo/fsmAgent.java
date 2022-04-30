@@ -202,12 +202,11 @@ public class fsmAgent extends AbstractDedaleAgent {
 		String node = ressources_knowledge.getLeft();
 		// System.out.println("1997 - " + node);
 		Long ts = ressources_knowledge.getRight().getLeft(); // ressource timestamp
-		// String ress_type = ressources_knowledge.getRight().getRight().getLeft(); // 4
-		// later
+		// String ress_type = ressources_knowledge.getRight().getRight().getLeft();
 		// int qty = ressources_knowledge.getRight().getRight().getRight();
 
 		for (int j = 0; j < this.ressources_knowledge.size(); j++) {
-			if (this.ressources_knowledge.get(j).getLeft() == node
+			if (this.ressources_knowledge.get(j).getLeft().equals(node)
 					&& this.ressources_knowledge.get(j).getRight().getLeft() <= ts) {
 				this.ressources_knowledge.remove(j);
 				this.ressources_knowledge.add(ressources_knowledge);
@@ -218,16 +217,16 @@ public class fsmAgent extends AbstractDedaleAgent {
 		clean_knowledge();
 	}
 
+	/*
+	 * Clean doubles ---> need to make a function to clean based on the timestamp
+	 */
 	public void clean_knowledge() {
 		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
 			for (int j = i + 1; j < this.ressources_knowledge.size(); j++) {
-				if (this.ressources_knowledge.get(j).getLeft() == this.ressources_knowledge.get(i).getLeft()
-						&& this.ressources_knowledge.get(i).getRight().getLeft() == this.ressources_knowledge.get(j)
-								.getRight().getLeft()
-						&& this.ressources_knowledge.get(i).getRight().getRight().getLeft() == this.ressources_knowledge
-								.get(j).getRight().getRight().getLeft()
-						&& this.ressources_knowledge.get(i).getRight().getRight()
-								.getRight() == this.ressources_knowledge.get(j).getRight().getRight().getRight()) {
+				if (this.ressources_knowledge.get(j).getLeft().equals(this.ressources_knowledge.get(i).getLeft())
+						&& this.ressources_knowledge.get(i).getRight().getLeft().equals(this.ressources_knowledge.get(j).getRight().getLeft())
+						&& this.ressources_knowledge.get(i).getRight().getRight().getLeft().equals(this.ressources_knowledge.get(j).getRight().getRight().getLeft())
+						&& this.ressources_knowledge.get(i).getRight().getRight().getRight().equals(this.ressources_knowledge.get(j).getRight().getRight().getRight())) {
 					this.ressources_knowledge.remove(j);
 				}
 			}
@@ -235,33 +234,40 @@ public class fsmAgent extends AbstractDedaleAgent {
 	}
 
 	public void mergeRessources_knowledge(List<Couple<String, Couple<Long, Couple<String, Integer>>>> l_know) {
+		if (this.ressources_knowledge.size() == 0) {
+			for (int i = 0; i < l_know.size(); i++) {
+				this.ressources_knowledge.add(l_know.get(i));
+			}
+			return;
+		}
 		for (int i = 0; i < l_know.size(); i++) {
 			boolean in_it = false;
 			for (int j = 0; j < this.ressources_knowledge.size(); j++) {
-				if (this.ressources_knowledge.get(j).getLeft() == l_know.get(i).getLeft()
-						&& l_know.get(i).getRight().getLeft() == this.ressources_knowledge.get(j).getRight().getLeft()
-						&& l_know.get(i).getRight().getRight().getLeft() == this.ressources_knowledge.get(j).getRight()
-								.getRight().getLeft()
-						&& l_know.get(i).getRight().getRight().getRight() == this.ressources_knowledge.get(j).getRight()
-								.getRight().getRight()) {
+				if (l_know.get(i).getRight().getRight().getLeft() != "Stench" && this.ressources_knowledge.get(j).getLeft().equals(l_know.get(i).getLeft())
+						&& l_know.get(i).getRight().getLeft().equals(this.ressources_knowledge.get(j).getRight().getLeft())
+						&& l_know.get(i).getRight().getRight().getLeft().equals(this.ressources_knowledge.get(j).getRight().getRight().getLeft())
+						&& l_know.get(i).getRight().getRight().getRight().equals(this.ressources_knowledge.get(j).getRight().getRight().getRight())) {
+					System.out.println("not adding this couple, already here");
 					in_it = true;
 					break;
 				}
-				if (this.ressources_knowledge.get(j).getLeft() == l_know.get(i).getLeft()
-						&& l_know.get(i).getRight().getLeft() == this.ressources_knowledge.get(j).getRight().getLeft()
+				if (this.ressources_knowledge.get(j).getLeft().equals(l_know.get(i).getLeft())
+						&& l_know.get(i).getRight().getLeft().equals(this.ressources_knowledge.get(j).getRight().getLeft())
 						&& l_know.get(i).getRight().getRight().getLeft() == "Stench") {
+					System.out.println("not adding this couple, already here");
 					in_it = true;
 					break;
 				} else {
-					if (this.ressources_knowledge.get(j).getLeft() == l_know.get(i).getLeft() && l_know.get(i)
+					if (this.ressources_knowledge.get(j).getLeft().equals(l_know.get(i).getLeft()) && l_know.get(i)
 							.getRight().getLeft() > this.ressources_knowledge.get(j).getRight().getLeft()) {
+						System.out.println("remove and add");
 						this.ressources_knowledge.remove(j);
 						this.ressources_knowledge.add(l_know.get(i));
-						break;
 					}
 				}
 			}
 			if (!in_it) {
+				System.out.println("brut add");
 				this.ressources_knowledge.add(l_know.get(i));
 			}
 		}
