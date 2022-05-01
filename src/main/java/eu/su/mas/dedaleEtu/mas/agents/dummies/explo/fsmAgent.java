@@ -215,6 +215,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 		}
 		this.ressources_knowledge.add(ressources_knowledge);
 		clean_knowledge();
+		keep_knowledge_recent();
 	}
 
 	/*
@@ -225,6 +226,20 @@ public class fsmAgent extends AbstractDedaleAgent {
 			for (int j = i + 1; j < this.ressources_knowledge.size(); j++) {
 				if (this.ressources_knowledge.get(j).getLeft().equals(this.ressources_knowledge.get(i).getLeft())
 						&& this.ressources_knowledge.get(i).getRight().getLeft().equals(this.ressources_knowledge.get(j).getRight().getLeft())
+						&& this.ressources_knowledge.get(i).getRight().getRight().getLeft().equals(this.ressources_knowledge.get(j).getRight().getRight().getLeft())
+						&& this.ressources_knowledge.get(i).getRight().getRight().getRight().equals(this.ressources_knowledge.get(j).getRight().getRight().getRight())) {
+					this.ressources_knowledge.remove(j);
+				}
+			}
+		}
+	}
+	
+	public void keep_knowledge_recent() {
+		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
+			for (int j = i + 1; j < this.ressources_knowledge.size(); j++) {
+				if (this.ressources_knowledge.get(j).getLeft().equals(this.ressources_knowledge.get(i).getLeft())
+						&& (this.ressources_knowledge.get(i).getRight().getLeft().equals(this.ressources_knowledge.get(j).getRight().getLeft())
+								|| (int) (this.ressources_knowledge.get(j).getRight().getLeft() - this.ressources_knowledge.get(i).getRight().getLeft()) < 0)
 						&& this.ressources_knowledge.get(i).getRight().getRight().getLeft().equals(this.ressources_knowledge.get(j).getRight().getRight().getLeft())
 						&& this.ressources_knowledge.get(i).getRight().getRight().getRight().equals(this.ressources_knowledge.get(j).getRight().getRight().getRight())) {
 					this.ressources_knowledge.remove(j);
@@ -272,6 +287,37 @@ public class fsmAgent extends AbstractDedaleAgent {
 			}
 		}
 		clean_knowledge();
+		keep_knowledge_recent(); // remove old elems
 	}
-
+	
+	public List<Couple<String, Couple<Long, Couple<String, Integer>>>> getGolds() {
+		List<Couple<String, Couple<Long, Couple<String, Integer>>>> goldy = new ArrayList<>();
+		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
+			if (this.ressources_knowledge.get(i).getRight().getRight().getLeft().equals("Gold")) {
+				goldy.add(this.ressources_knowledge.get(i));
+			}
+		}
+		return goldy;
+	}
+	
+	public List<Couple<String, Couple<Long, Couple<String, Integer>>>> getDiamonds() {
+		List<Couple<String, Couple<Long, Couple<String, Integer>>>> diam = new ArrayList<>();
+		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
+			if (this.ressources_knowledge.get(i).getRight().getRight().getLeft().equals("Diamond")) {
+				diam.add(this.ressources_knowledge.get(i));
+			}
+		}
+		return diam;
+	}
+	
+	public List<Couple<String, Couple<Long, Couple<String, Integer>>>> get_node_Knowledge(String node) {
+		List<Couple<String, Couple<Long, Couple<String, Integer>>>> on_node = new ArrayList<>();
+		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
+			if (this.ressources_knowledge.get(i).getLeft().equals(node)) {
+				on_node.add(this.ressources_knowledge.get(i));
+			}
+		}
+	return on_node;
+	}
+	
 }
