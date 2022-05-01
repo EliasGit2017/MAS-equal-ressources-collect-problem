@@ -19,11 +19,7 @@ public class Unblock extends OneShotBehaviour {
 
 	private boolean success;
 	
-	private int tries;
-	
-	private boolean communicate;
-	
-	private final int MAX = ((MainAgent)this.myAgent).getMaxShareFail();
+	boolean shareInit;
 	
 	public Unblock(Agent a) {
 		super(a);
@@ -31,38 +27,22 @@ public class Unblock extends OneShotBehaviour {
 
 	@Override
 	public void action() {
-		System.out.println("-> " + this.myAgent.getLocalName() + " unblock <-");
-		this.tries = ((MainAgent)this.myAgent).getCurrentShareTries();
-		this.communicate = false;
+//		System.out.println("-> " + this.myAgent.getLocalName() + " unblock <-");
 		this.success = false;
+		this.shareInit = false;
 		
-		if (this.tries == 0) {
-			this.communicate = true;
-			((MainAgent)this.myAgent).incrementCurrentShareTries();
+		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("STANDBY");
+		if (newMsg && ( (MainAgent)this.myAgent).getMeetingPoint().isEmpty() ) {
+			this.shareInit = true;
 			return;
 		}
-		
-		if (this.tries < MAX) { 												//On attend une réponse avant de bouger
-			boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
-			if (newMsg) {
-				((MainAgent)this.myAgent).incrementShareStep();
-				((MainAgent)this.myAgent).incrementShareStep();
-				((MainAgent)this.myAgent).incrementLastStepSent();
-				this.communicate = true;
-				return;
-			}
-			((MainAgent)this.myAgent).incrementCurrentShareTries();
-			return;
-		}
-		
-		((MainAgent)this.myAgent).resetCurrentShareTries();
-		
+
 		List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
 		int size = obs.size();
 		
 		for (int i = 1 ; i < size ; i ++ ) {
 			String node = obs.get(i).getLeft() ;
-			this.success = ((AbstractDedaleAgent)this.myAgent).moveTo(node);
+			this.success = ((MainAgent)this.myAgent).move(node);
 			if (this.success) { 
 				((MainAgent)this.myAgent).resetBlockCount();
 //				System.out.println("Successfully unblocked !");
@@ -76,14 +56,8 @@ public class Unblock extends OneShotBehaviour {
 		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
 		((MainAgent)this.myAgent).updateLastBehaviour("Unblock");
 		
-		if (this.communicate) {
-			return 3;
-			
-		} else if (!this.success) {
-			return 0;
-			
-		} else {
-			return 2;	
-		}
+		if (this.shareInit){ return 3; }
+		if (!this.success) { return 0; } 
+		else 			   { return 2; }
 	}
 }

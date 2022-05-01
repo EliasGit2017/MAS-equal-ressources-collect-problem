@@ -43,7 +43,7 @@ public class Explore extends OneShotBehaviour {
 		}
 		
 	public void action() {
-		System.out.println("-> " + this.myAgent.getLocalName() + " explore <-");
+//		System.out.println("-> " + this.myAgent.getLocalName() + " explore <-");
 		
 		currentPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 		open = ((MainAgent)this.myAgent).getOpenNodes();
@@ -56,7 +56,13 @@ public class Explore extends OneShotBehaviour {
 		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate() ;
 		this.blocked = ((MainAgent)this.myAgent).isBlocked();
 		
-		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
+		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("STANDBY");
+		if (newMsg && ( (MainAgent)this.myAgent).getMeetingPoint().isEmpty() ) {
+			this.shareInit = true;
+			return;
+		}
+		
+		newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
 		if (newMsg) {
 			((MainAgent)this.myAgent).incrementShareStep();
 			((MainAgent)this.myAgent).incrementShareStep();
@@ -103,7 +109,6 @@ public class Explore extends OneShotBehaviour {
 				boolean isNew = map.addNewNode(node);
 				
 				if (isNew) {
-					map.addNode(node, MapAttribute.open);
 					open.add(node);
 				}
 				map.addEdge(currentPosition, node);
@@ -133,7 +138,7 @@ public class Explore extends OneShotBehaviour {
 				return;	
 			}
 			
-			boolean success = ((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
+			boolean success = ((MainAgent)this.myAgent).move(nextNode);
 			if (success) { ((MainAgent)this.myAgent).resetBlockCount();     }
 			else		 { ((MainAgent)this.myAgent).incrementBlockCount(); }
 			
@@ -153,7 +158,6 @@ public class Explore extends OneShotBehaviour {
 		
 		((MainAgent)this.myAgent).setLastPosition(currentPosition);
 		((MainAgent)this.myAgent).setMap(map);
-		((MainAgent)this.myAgent).incrementLastCommValues();
 		((MainAgent)this.myAgent).updateLastBehaviour("Explore");
 		
 		if (this.communicate || this.shareInit) {
@@ -161,7 +165,7 @@ public class Explore extends OneShotBehaviour {
 		}
 		
 		if (this.explo_done) {
-			return 5;
+			return 2;
 		}
 		
 		if (this.blocked) {

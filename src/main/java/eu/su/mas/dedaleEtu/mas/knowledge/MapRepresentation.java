@@ -63,20 +63,7 @@ public class MapRepresentation implements Serializable {
 	private Integer nbEdges;//used to generate the edges ids
 
 	private SerializableSimpleGraph<String, MapAttribute> sg;//used as a temporary dataStructure during migration
-	
-	
-	public List<String> getNeighbors(String id_node) { //Retrieve neighbors of a node
-		Node n = this.g.getNode(id_node);
-		Stream<String> neighboring = n.neighborNodes().map(node -> node.getId());
-		List<String> neighbor_nodes = neighboring.collect(Collectors.toList());
-		return neighbor_nodes;		
-	}
-	
-	public Object getAttr(String id_node) {
-		Node n = this.g.getNode(id_node);
-		Object t = n.getAttribute("ui.class");
-		return t;
-	}
+
 
 	public MapRepresentation(boolean openIt) {
 		//System.setProperty("org.graphstream.ui.renderer","org.graphstream.ui.j2dviewer.J2DGraphRenderer");
@@ -93,7 +80,26 @@ public class MapRepresentation implements Serializable {
 
 		this.nbEdges=0;
 	}
-
+	
+	public MapRepresentation copy() {
+		MapRepresentation copied = new MapRepresentation(false);
+		SerializableSimpleGraph<String, MapAttribute> sg = this.getSerializableGraph();
+		copied.mergeMap(sg);
+		return copied;
+	}
+	
+	public List<String> getNeighbors(String id_node) { //Retrieve neighbors of a node
+		Node n = this.g.getNode(id_node);
+		Stream<String> neighboring = n.neighborNodes().map(node -> node.getId());
+		List<String> neighbor_nodes = neighboring.collect(Collectors.toList());
+		return neighbor_nodes;		
+	}
+	
+	public Object getAttr(String id_node) {
+		Node n = this.g.getNode(id_node);
+		Object t = n.getAttribute("ui.class");
+		return t;
+	}
 	/**
 	 * Add or replace a node and its attribute 
 	 * @param id

@@ -12,6 +12,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.behaviours.InitializeBehaviour;
 import eu.su.mas.dedaleEtu.mas.behaviours.Explore;
 import eu.su.mas.dedaleEtu.mas.behaviours.Navigation;
+import eu.su.mas.dedaleEtu.mas.behaviours.SetMeetup;
 import eu.su.mas.dedaleEtu.mas.behaviours.ShareMap;
 import eu.su.mas.dedaleEtu.mas.behaviours.StopAgent;
 import eu.su.mas.dedaleEtu.mas.behaviours.Unblock;
@@ -39,7 +40,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	
 	private MapRepresentation myMap;						// Know map
 
-	private List<String> unblockPath = new ArrayList<>();	// Path that would lead to unblock a bad situation while exploring
+	private List<String> unblockPath = new ArrayList<String>();	// Path that would lead to unblock a bad situation while exploring
 	
 	private String lastBehaviour = "Init";					// The last behaviour
 	
@@ -63,29 +64,52 @@ public class MainAgent extends AbstractDedaleAgent {
 	private int lastStepMsg = 0;		    // Useful for ShareMap behaviour - last step when agent sent a message on shareMap
 	
 	private int tries = 0;					// Number of times a step was checked
-	private final int MAX_SM_FAIL = 5; 		// If check same step more than MAX_SM_FAIL times, stop map sharing
-	
+
 	Hashtable<String, Integer> lastComm = new Hashtable<>();
-	private final int COMM_TIMEOUT = 10;	//Refuse communication (other than collision solver) with an agent if they communicated less than COMM_TIMEOUT steps earlier.
-	
-	private final int WAIT_TIME = 1_00; 		// Standard time (in ms) to wait between each action
 	
 	private String currentCommunicationID = "";
-	private String temporaryOtherID = ""; //When waiting for double ACK
 	
 	private int globalTick = 0;
 	
-	private int knownNodes = 0;
-	private int learntNodes = 0;
+	private String meetingNode = "";
+	private List<String> meetupGroup =  new ArrayList<String>();
 	
-	public void setKnownNodes(int nbNew) {
-		this.knownNodes = nbNew;
+	private final int MAX_SM_FAIL = 5; 		// If check same step more than MAX_SM_FAIL times, stop map sharing
+	
+	private final int COMM_COOLDOWN = 10;	//Refuse communication (other than collision solver) with an agent if they communicated less than COMM_TIMEOUT steps earlier.
+	
+	private final int WAIT_TIME = 100; 		// Standard time (in ms) to wait between each action
+	
+	
+	public boolean interlocutorInMeetupGroup() {
+		return this.meetupGroup.contains( this.getInterlocutorName() );
 	}
-	public int getLearnt() {
-		return this.learntNodes;
+	
+	public List<String> getMeetupGroup() {
+		return this.meetupGroup;
 	}
-	public void incrementLearnNodes(int nbNew) {
-		this.learntNodes += nbNew;
+	
+	public void resetMeetupGroup() {
+		this.meetupGroup = new ArrayList<String>();
+	}
+	public void removeFromMeetupGroup(String agent) {
+		this.meetupGroup.remove(agent);
+	}
+	
+	public void addToMeetupGroup(String agent) {
+		this.meetupGroup.add(agent);
+	}
+	
+	public void setMeetingPoint(String newNode) {
+		this.meetingNode = newNode;
+	}
+	
+	public String getMeetingPoint() {
+		return this.meetingNode;
+	}
+	
+	public void resetCommunication() {
+		this.communicate = 0;
 	}
 	
 	public void incrementGlobalTick() {
@@ -96,21 +120,16 @@ public class MainAgent extends AbstractDedaleAgent {
 		return this.globalTick;
 	}
 	
-	public String getTemporaryOtherID() {
-		return this.temporaryOtherID;
-	}
-	
-	public void setTemporaryOtherID(String id) {
-		this.temporaryOtherID = id;
-	}
-	
 	public void resetCommID() {
 		this.currentCommunicationID = "";
-		this.temporaryOtherID = "";
 	}
 	
 	public void setCommID(String newID) {
 		this.currentCommunicationID = newID;
+	}
+	
+	public String getCommID() {
+		return this.currentCommunicationID;
 	}
 	
 	public void incrementCurrentShareTries() {
@@ -141,15 +160,16 @@ public class MainAgent extends AbstractDedaleAgent {
 		return this.lastStepMsg;
 	}
 	
-	public boolean canCommunicateWith(String agent) {
-		return this.getLastCommValue(agent) >= COMM_TIMEOUT;
+	public boolean canShareMapWith(String agent) {
+		return this.getLastCommValue(agent) >= this.COMM_COOLDOWN;
 	}
 	
 	public void initLastComm() {
 		for(String agent : this.agenda) {
-			this.lastComm.put(agent, this.COMM_TIMEOUT + 1);
+			this.lastComm.put(agent, this.COMM_COOLDOWN + 1);
 		}
 	}
+	
 
 	public void incrementLastCommValues() {
 		for (String agent : this.agenda) {
@@ -166,7 +186,7 @@ public class MainAgent extends AbstractDedaleAgent {
 		return this.lastComm.get(agent);
 	}
 	
-	public AID getInterlocutor() {
+	public AID getInterlocutorAID() {
 		return this.currentMessage.getSender();
 	}
 	
@@ -175,7 +195,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	}
 	
 	public String getInterlocutorName() {
-		return this.getInterlocutor().getLocalName();
+		return this.getInterlocutorAID().getLocalName();
 	}
 	
 	public ACLMessage getCurrentMsg() {
@@ -248,7 +268,7 @@ public class MainAgent extends AbstractDedaleAgent {
 				
 		if (msgReceived != null) {
 			
-			if ( ProtocolName.contains("SM") && !this.canCommunicateWith( msgReceived.getSender().getLocalName() ) ) {
+			if ( ProtocolName.contains("SM") && !this.canShareMapWith( msgReceived.getSender().getLocalName() ) ) {
 				System.out.println("Agent " + this.getLocalName() + " has IGNORED a message from " + msgReceived.getSender().getLocalName() + "!" + " Protocol: " + ProtocolName);
 				return false;
 			}
@@ -265,8 +285,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	}
 	
 	public boolean shouldCommunicate() {
-		this.communicate += 1;
-		if (this.communicate > this.COMM_STEP) { //Behaviour will stop right after this function returns true
+		if (this.communicate >= this.COMM_STEP) { //>= because behaviour will stop right after this function returns true
 			this.communicate = 0;
 			return true;
 		}
@@ -340,6 +359,16 @@ public class MainAgent extends AbstractDedaleAgent {
 		this.lastPosition = update_pos;
 	}
 	
+	public boolean move(String dest) {
+		boolean hasMoved = this.moveTo(dest);
+		if (hasMoved) {
+			this.communicate += 1;
+			this.incrementLastCommValues();
+			return true;
+		}
+		return false;
+	}
+	
 	public List<String> getAgenda() {
 		return this.agenda;
 	}
@@ -349,8 +378,9 @@ public class MainAgent extends AbstractDedaleAgent {
 	private static final String Explo	   = "B";
 	private static final String Nav 	   = "C";
 	private static final String Share      = "D";
-	private static final String Unblock	   = "E";
-	private static final String Standby	   = "F";
+	private static final String SetMeet    = "E";
+	private static final String Unblock	   = "F";
+	private static final String Standby	   = "G";
 	
 	private static final String End		   = "Z";
  
@@ -383,7 +413,8 @@ public class MainAgent extends AbstractDedaleAgent {
 		 *   0     -> stay in the same state (default)
 		 *   1     -> switch to Explore 
 		 *   2     -> switch to Navigation 
-		 *   3	   -> switch to InitComm 
+		 *   3	   -> switch to Share
+		 *   33	   -> switch to SetMeetup
 		 *   4	   -> switch to Unblock
 		 *   5	   -> switch to Stanbdy 
 		 *   99	   -> switch to End
@@ -395,6 +426,7 @@ public class MainAgent extends AbstractDedaleAgent {
 		fsm.registerState(new Explore(this),    Explo);
 		fsm.registerState(new Navigation(this), Nav);
 		fsm.registerState(new ShareMap(this),   Share);
+		fsm.registerState(new SetMeetup(this),  SetMeet);
 		fsm.registerState(new Unblock(this),    Unblock);
 		fsm.registerState(new Standby(this),    Standby);
 		fsm.registerLastState(new StopAgent(),  End);
@@ -417,7 +449,7 @@ public class MainAgent extends AbstractDedaleAgent {
 		fsm.registerDefaultTransition(Share, Share);
 		fsm.registerTransition(Share, Explo, 1);
 		fsm.registerTransition(Share, Nav, 2);
-		fsm.registerTransition(Share, Unblock, 4);
+		fsm.registerTransition(Share, SetMeet, 33);
 		
 		fsm.registerDefaultTransition(Unblock, Unblock);
 		fsm.registerTransition(Unblock, Nav, 2);
@@ -426,6 +458,9 @@ public class MainAgent extends AbstractDedaleAgent {
 		fsm.registerDefaultTransition(Standby, Standby);
 		fsm.registerTransition(Standby, Share, 3);
 		fsm.registerTransition(Standby, End, 99);
+		
+		fsm.registerDefaultTransition(SetMeet, SetMeet);
+		fsm.registerTransition(SetMeet, Nav, 2);
 		
 		
 		List<Behaviour> lb=new ArrayList<Behaviour>();

@@ -28,13 +28,16 @@ public class Navigation extends OneShotBehaviour {
 	
 	private boolean explo_done;
 	
+	private boolean switch_to_standby;
+	
 	public Navigation(Agent a) {
 		super(a);
 	}
 
 	@Override
 	public void action() {
-		System.out.println("-> " + this.myAgent.getLocalName() + " navigation <-");
+//		System.out.println("-> " + this.myAgent.getLocalName() + " navigation <-");
+		String myName = this.myAgent.getLocalName();
 		this.currentPosition = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 	    this.joined_destination = false;
 		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate();
@@ -44,8 +47,18 @@ public class Navigation extends OneShotBehaviour {
 		this.explo_done = open.isEmpty();
 		
 		this.shareInit = false;
+		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("STANDBY");
+		if      (newMsg && ((MainAgent)this.myAgent).getMeetingPoint().isEmpty() ) {
+			this.shareInit = true;
+			return;
+		}
+		else if (newMsg && ((MainAgent)this.myAgent).interlocutorInMeetupGroup() ) {
+			if (!this.explo_done) { this.shareInit= true;         }
+			else                  { this.switch_to_standby = true;}
+			return;
+		}
 		
-		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
+		newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
 		if (newMsg) {
 			((MainAgent)this.myAgent).incrementShareStep();
 			((MainAgent)this.myAgent).incrementShareStep();
@@ -78,30 +91,30 @@ public class Navigation extends OneShotBehaviour {
 			return;
 		}
 		
-		List<String> upath = ((MainAgent)this.myAgent).getUnblockPath();
-		if (upath.isEmpty()) {
-//			System.out.println(this.myAgent.getLocalName() + "path is empty");
-			MapRepresentation map = ((MainAgent)this.myAgent).getMap();
-			List<String> path = map.getShortestPathToClosestOpenNode( currentPosition );
-//			for (int i = 0 ; i < 20 ; i++) { System.out.println(this.myAgent.getLocalName() + " computed path " + path); }
-//			((MainAgent)this.myAgent).pause();
-			if (path.isEmpty()) {System.out.println("What is going on???");}
-			((MainAgent)this.myAgent).setUnblockPath(path);
+		MapRepresentation map = ((MainAgent)this.myAgent).getMap();
+		List<String> path = ((MainAgent)this.myAgent).getUnblockPath();
+
+		if (path.isEmpty()) {
+			if ( ((MainAgent)this.myAgent).getLastBehaviour().equals("ShareMap") ) { path = map.getShortestPathToRandomOpenNode(currentPosition);  }
+			else															       { path = map.getShortestPathToClosestOpenNode(currentPosition); }
 
 		} else {										// If we come from unblock, we might not be near the first node
-//			System.out.println(this.myAgent.getLocalName() + "path is not empty");
-			String firstNode = upath.get(0);
-			MapRepresentation map = ((MainAgent)this.myAgent).getMap();
+			String firstNode = path.get(0);
 			if(!map.getNeighbors(currentPosition).contains(firstNode)) {
-				List<String> path = map.getShortestPathToRandomOpenNode( currentPosition ); //Recompute in case a node is considered as blocked
-//				for (int i = 0 ; i < 20 ; i++) { System.out.println(this.myAgent.getLocalName() + " computed path " + path); }
-//				((MainAgent)this.myAgent).pause();
-				
-				((MainAgent)this.myAgent).setUnblockPath(path);
+				path = map.getShortestPathToRandomOpenNode( currentPosition ); //Recompute in case a node is considered as blocked
 			}
 		}
 		
-		String nextNode = ((MainAgent)this.myAgent).getNextUnblockPath();
+		if (path == null) {
+			for (String node : open) {
+				path = map.getShortestPath(currentPosition, node);
+				if ( path != null ) {System.out.println(myName + " resorting to backup path");break;}
+			}
+		}
+		if (path == null) {System.out.println("Smells like trouble");  int a = 1/0;}
+		((MainAgent)this.myAgent).setUnblockPath(path);
+		
+		String nextNode = ((MainAgent)this.myAgent).getNextUnblockPath(); //TODO: PEUT ETRE VIDE : si par Share, on recoit un noeud ouvert pas accessible (graphes de connaissance disjoints)
 //		System.out.println(this.myAgent.getLocalName()  + " Next node to reach " + nextNode);
 //		System.out.println(this.myAgent.getLocalName() + "Rest of the path " + ((MainAgent)this.myAgent).getUnblockPath());
 		
@@ -112,10 +125,10 @@ public class Navigation extends OneShotBehaviour {
 		
 		if (!this.joined_destination) {
 //			System.out.println("Moving from "+ currentPosition + " to " + nextNode + " !");
-			boolean success = ((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
+			boolean success = ((MainAgent)this.myAgent).move(nextNode);
 			
 			if ( !success ) {
-				List<String> path = ((MainAgent)this.myAgent).getUnblockPath();
+				path = ((MainAgent)this.myAgent).getUnblockPath();
 				path.add(0, nextNode);
 				((MainAgent)this.myAgent).setUnblockPath(path);
 //				System.out.println("Agent " + this.myAgent.getLocalName() + " computed escape path " + path );
@@ -137,7 +150,6 @@ public class Navigation extends OneShotBehaviour {
 		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
 		
 		((MainAgent)this.myAgent).setLastPosition(currentPosition);
-		((MainAgent)this.myAgent).incrementLastCommValues();
 		((MainAgent)this.myAgent).updateLastBehaviour("Navigation");
 		
 		
@@ -145,8 +157,11 @@ public class Navigation extends OneShotBehaviour {
 			return 3;
 		}
 		
-		if (this.explo_done) {
-//			System.out.println(this.myAgent.getLocalName() +" changing to EXPLO_ENDED");
+		if(this.switch_to_standby) {
+			return 5;
+		}
+		
+		if (this.explo_done) { //Should start navigation to meetup point
 			return 5;
 		}
 		
