@@ -204,7 +204,6 @@ public class fsmAgent extends AbstractDedaleAgent {
 		Long ts = ressources_knowledge.getRight().getLeft(); // ressource timestamp
 		// String ress_type = ressources_knowledge.getRight().getRight().getLeft();
 		// int qty = ressources_knowledge.getRight().getRight().getRight();
-
 		for (int j = 0; j < this.ressources_knowledge.size(); j++) {
 			if (this.ressources_knowledge.get(j).getLeft().equals(node)
 					&& this.ressources_knowledge.get(j).getRight().getLeft() <= ts) {
