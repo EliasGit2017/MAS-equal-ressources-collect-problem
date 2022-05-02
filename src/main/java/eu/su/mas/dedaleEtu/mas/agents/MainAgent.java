@@ -59,7 +59,6 @@ public class MainAgent extends AbstractDedaleAgent {
 	 **********/
 	
 	private int communicate = 0;	 		// Stores the number of steps since last communication
-	private final int COMM_STEP = 3; 		// Communicate every COMM_STEP times
 	
 	private int lastStepMsg = 0;		    // Useful for ShareMap behaviour - last step when agent sent a message on shareMap
 	
@@ -74,12 +73,34 @@ public class MainAgent extends AbstractDedaleAgent {
 	private String meetingNode = "";
 	private List<String> meetupGroup =  new ArrayList<String>();
 	
+	private int nbPingSent = 0;
+	private int nbMovement = 0;
+	
+	private long tsChecker = 0;
+	
+	private final int COMM_STEP = 2; 		// Communicate every COMM_STEP times
+	
 	private final int MAX_SM_FAIL = 5; 		// If check same step more than MAX_SM_FAIL times, stop map sharing
 	
 	private final int COMM_COOLDOWN = 10;	//Refuse communication (other than collision solver) with an agent if they communicated less than COMM_TIMEOUT steps earlier.
 	
 	private final int WAIT_TIME = 100; 		// Standard time (in ms) to wait between each action
 	
+	public int getNbPing()                { return this.nbPingSent; }
+	public void incrementNbPing()         { this.nbPingSent += 1;   }
+	public int getNbMovement()            { return this.nbMovement; }
+	public void incremementMoveCounter()  { this.nbMovement += 1;   }
+	
+	public Hashtable returnComm() {
+		return this.lastComm;
+	}
+	public String timer()	{
+		long datetime = System.currentTimeMillis();
+		long returnVal = -1;
+		if (this.tsChecker == 0) { this.tsChecker = datetime; }
+		else { returnVal = datetime - this.tsChecker; this.tsChecker = 0;}
+		return String.valueOf(returnVal);
+	}
 	
 	public boolean interlocutorInMeetupGroup() {
 		return this.meetupGroup.contains( this.getInterlocutorName() );
@@ -104,11 +125,13 @@ public class MainAgent extends AbstractDedaleAgent {
 		this.meetingNode = newNode;
 	}
 	
+
 	public String getMeetingPoint() {
 		return this.meetingNode;
 	}
 	
-	public void resetCommunication() {
+	
+	public void resetCommunicate() {
 		this.communicate = 0;
 	}
 	
@@ -132,32 +155,8 @@ public class MainAgent extends AbstractDedaleAgent {
 		return this.currentCommunicationID;
 	}
 	
-	public void incrementCurrentShareTries() {
-		this.tries += 1;
-	}
-	
-	public void resetCurrentShareTries() {
-		this.tries = 0;
-	}
-	
-	public int getCurrentShareTries() {
-		return this.tries;
-	}
-	
 	public int getMaxShareFail() {
 		return this.MAX_SM_FAIL;
-	}
-	
-	public void resetLastStepSent() {
-		this.lastStepMsg = 0;
-	}
-	
-	public void incrementLastStepSent() {
-		this.lastStepMsg += 1;
-	}
-	
-	public int getLastStepSent() {
-		return this.lastStepMsg;
 	}
 	
 	public boolean canShareMapWith(String agent) {
@@ -222,7 +221,7 @@ public class MainAgent extends AbstractDedaleAgent {
 		this.currentMessage = null;
 	}
 	
-	public int getShareStep() {
+	public int getShareStep() { //Do not remove, useful for switching steps on other behaviours
 		return this.shareStep;
 	}
 	
@@ -252,6 +251,12 @@ public class MainAgent extends AbstractDedaleAgent {
 		this.lastBehaviour = change;
 	}
 	
+	public void emptyInbox() {
+		int counter = 0;
+		ACLMessage received = this.receive();
+		while (received != null) {received = this.receive(); counter +=1;}
+		System.out.println(this.getLocalName() + " emptied " + counter + " messages.");
+	}
 	public boolean checkInbox(String ProtocolName) {
 		MessageTemplate msgTemplate = null;
 		if (this.currentCommunicationID.isEmpty()) {
@@ -286,7 +291,6 @@ public class MainAgent extends AbstractDedaleAgent {
 	
 	public boolean shouldCommunicate() {
 		if (this.communicate >= this.COMM_STEP) { //>= because behaviour will stop right after this function returns true
-			this.communicate = 0;
 			return true;
 		}
 		return false;
@@ -302,23 +306,6 @@ public class MainAgent extends AbstractDedaleAgent {
 
 	public List<String> getUnblockPath() {
 		return this.unblockPath;
-	}
-	
-	public void resetUnblockPath() {
-		this.unblockPath = new ArrayList<>();
-	}
-	
-	public void setUnblockPath(List<String> path) {
-		this.unblockPath = path;
-	}
-	
-	public String getNextUnblockPath() {
-		String next = "";
-		if (this.unblockPath.size() != 0) {
-			next = this.unblockPath.get(0);
-			this.unblockPath.remove(next);
-		}
-		return next;
 	}
 	
 	public MapRepresentation getMap() {
@@ -338,8 +325,6 @@ public class MainAgent extends AbstractDedaleAgent {
 	}
 	
 	public boolean isBlocked() {
-//		if (this.blockCount >= this.BLOCK_LIMIT) {
-//			System.out.println("EUSSOUUU"); }
 		return this.blockCount >= this.BLOCK_LIMIT;
 	}
 	
@@ -364,6 +349,8 @@ public class MainAgent extends AbstractDedaleAgent {
 		if (hasMoved) {
 			this.communicate += 1;
 			this.incrementLastCommValues();
+			this.incremementMoveCounter();
+			this.resetBlockCount();
 			return true;
 		}
 		return false;
@@ -449,6 +436,7 @@ public class MainAgent extends AbstractDedaleAgent {
 		fsm.registerDefaultTransition(Share, Share);
 		fsm.registerTransition(Share, Explo, 1);
 		fsm.registerTransition(Share, Nav, 2);
+		fsm.registerTransition(Share, Unblock, 4);
 		fsm.registerTransition(Share, SetMeet, 33);
 		
 		fsm.registerDefaultTransition(Unblock, Unblock);

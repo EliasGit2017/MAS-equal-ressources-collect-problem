@@ -29,9 +29,9 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 		
 	private List<String> open2;
 
-	private int lastSent;
+	private int lastSent = 0;
 	
-	private int tries;
+	private int tries = 0;
 	private final int MAX_FAIL = ((MainAgent)this.myAgent).getMaxShareFail();
 
 	private int tick;
@@ -48,10 +48,12 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 	private void abandonCommunication() { //Should always write return; after calling this function 
 		int currentStep = this.step;
 		int lastStep    = 7;
-//		System.out.println("#################### Tick " + this.tick + " : " + this.myAgent.getLocalName() + " abandons communication on step " + currentStep);
+
+		System.out.println("-*-*-*-*-*- " + this.myAgent.getLocalName() + " abandons communication  with "+ this.tempInterlocutor + " on step " + currentStep);
 		for (int foo = 0 ; foo < lastStep - currentStep ; foo++) {
 			((MainAgent)this.myAgent).incrementShareStep();
 		}
+		((MainAgent)this.myAgent).emptyInbox();
 	}
 	
 	private String encode(List<String> list) {
@@ -74,27 +76,26 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 	@Override
 	public void action() {
 		step = ((MainAgent)this.myAgent).getShareStep();
-//		System.out.println("---------- " + myName + " enters step " + step + " on tick " + tick + " ---------- (" + this.tries + " tries)");
 		String myName = this.myAgent.getLocalName();
-		this.lastSent = ((MainAgent)this.myAgent).getLastStepSent();
-		this.tries = ((MainAgent)this.myAgent).getCurrentShareTries();
-		int tick = ((MainAgent)this.myAgent).getGlobalTick();
-		this.tick = tick;
+//		if (step > 0) {System.out.println("---------- " + myName + " enters step " + step +  " ---------- (" + this.tries + " tries)");}
+
 		this.meetup = false;
 
 		
 		
 		
-		
 		if (step == 0) { //Haven't received any message from other agents yet ; 
 			List<String> agentsNames = ((MainAgent)this.myAgent).getAgenda();
-			
+			System.out.println(myName + " says hello");
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.setProtocol("SM-HELLO");
 			msg.setSender(     this.myAgent.getAID()    );
 			msg.setContent( myName );
-			for (String teammate : agentsNames) { msg.addReceiver(new AID(teammate, AID.ISLOCALNAME )); }
+			for (String teammate : agentsNames) { msg.addReceiver(new AID(teammate, AID.ISLOCALNAME )); ((MainAgent)this.myAgent).incrementNbPing();}
 			((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+			((MainAgent)this.myAgent).resetCommunicate();
+			
+			((MainAgent)this.myAgent).doWait( ((MainAgent)this.myAgent).getWaitTime() );
 			return;
 		}
 		
@@ -110,6 +111,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 			}
 
 			if (this.lastSent < step) {	
+				System.out.println( myName + " sends ACK to " + ((MainAgent)this.myAgent).getInterlocutorName() );
 				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 				msg.setProtocol("SM-ACK");
 				msg.setSender( this.myAgent.getAID() );
@@ -120,7 +122,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 				msg.addReceiver( ((MainAgent)this.myAgent).getInterlocutorAID() );
 				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
 				
-				while ( ((MainAgent)this.myAgent).getLastStepSent() <  step) { ((MainAgent)this.myAgent).incrementLastStepSent(); }
+				this.lastSent = 1;
 			}
 			
 			String currentInterlocutor = this.tempInterlocutor;
@@ -131,7 +133,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 				if ( myName.equals(checkMyID) ) {
 					((MainAgent)this.myAgent).incrementShareStep();
 					((MainAgent)this.myAgent).incrementShareStep(); // No need to send ACK2
-					((MainAgent)this.myAgent).resetCurrentShareTries();
+					this.tries = 0;
 					this.tempInterlocutor = ((MainAgent)this.myAgent).getInterlocutorName();
 				} else {
 					this.abandonCommunication();
@@ -147,12 +149,12 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 				
 				if ( othersName.compareTo(myName) > 0 ) { //ACK from other has priority eg. othersID < myID
 					((MainAgent)this.myAgent).incrementShareStep();
-					((MainAgent)this.myAgent).resetCurrentShareTries();
+					this.tries = 0;
 					return;
 				}
 			}
 
-			((MainAgent)this.myAgent).incrementCurrentShareTries();
+			this.tries += 1;
 			return;
 		}
 		
@@ -184,10 +186,10 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 				msg.setContent( interlocutor );
 				msg.addReceiver( ((MainAgent)this.myAgent).getInterlocutorAID() );
 				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-				while ( ((MainAgent)this.myAgent).getLastStepSent() <  step) { ((MainAgent)this.myAgent).incrementLastStepSent(); }
+				this.lastSent = 2;
 			}
 			
-			((MainAgent)this.myAgent).resetCurrentShareTries();
+			this.tries = 0;
 			((MainAgent)this.myAgent).incrementShareStep();
 			return;
 		}
@@ -232,8 +234,6 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 			String encoded = this.encode(open);
 			
 			if (this.lastSent < step) {
-				String sender = ((MainAgent)this.myAgent).getInterlocutorName();
-				
 				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 				msg.setProtocol("SM-OPEN");
 				msg.setConversationId( ((MainAgent)this.myAgent).getCommID() );
@@ -242,17 +242,17 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 				msg.addReceiver( ((MainAgent)this.myAgent).getInterlocutorAID() );
 				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
 				
-				while ( ((MainAgent)this.myAgent).getLastStepSent() <  step) { ((MainAgent)this.myAgent).incrementLastStepSent(); }
+				this.lastSent = 3;
 			}
 			
 			boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-OPEN");
 			if (newMsg) {
 				((MainAgent)this.myAgent).incrementShareStep();
-				((MainAgent)this.myAgent).resetCurrentShareTries();
+				this.tries = 0;
 				return;
 			}
 			
-			((MainAgent)this.myAgent).incrementCurrentShareTries();
+			this.tries += 1;
 			return;
 		}
 		
@@ -291,17 +291,17 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 				msg.addReceiver( ((MainAgent)this.myAgent).getInterlocutorAID() );
 				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
  				
-				while ( ((MainAgent)this.myAgent).getLastStepSent() <  step) { ((MainAgent)this.myAgent).incrementLastStepSent(); }
+				this.lastSent = 4;
 			}
 				
 			boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-NODE");
 			if (newMsg) {
 				((MainAgent)this.myAgent).incrementShareStep();
-				((MainAgent)this.myAgent).resetCurrentShareTries();
+				this.tries = 0;
 				return;
 			}
 			
-			((MainAgent)this.myAgent).incrementCurrentShareTries();
+			this.tries += 1;
 			return;
 		}
 		
@@ -362,17 +362,17 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 				msg.addReceiver( ((MainAgent)this.myAgent).getInterlocutorAID() );
 				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
 				
-				while ( ((MainAgent)this.myAgent).getLastStepSent() <  step) { ((MainAgent)this.myAgent).incrementLastStepSent(); }
+				this.lastSent = 5;
 			}
 			
 			boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-MAP");
 			if (newMsg) {
 				((MainAgent)this.myAgent).incrementShareStep();
-				((MainAgent)this.myAgent).resetCurrentShareTries();
+				this.tries = 0;
 				return;
 			}		
 			
-			((MainAgent)this.myAgent).incrementCurrentShareTries();
+			this.tries += 1;
 			return;
 		}
 		
@@ -380,8 +380,6 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 		
 		
 		else if (step == 6) {
-
-			
 			@SuppressWarnings("unchecked")
 			SerializableSimpleGraph<String, MapAttribute> sgreceived= (SerializableSimpleGraph<String, MapAttribute>)((MainAgent)this.myAgent).getCurrentMsgContent();
 
@@ -400,26 +398,27 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 		
 		
 		else if (step == 7) { //Reset all variables step and resume normal activity
-			((MainAgent)this.myAgent).resetCommID();
-			((MainAgent)this.myAgent).resetLastStepSent();
 			((MainAgent)this.myAgent).resetShareStep();
-			((MainAgent)this.myAgent).resetCurrentShareTries();
 			if (this.lastSent > 2) { //Reset comm only if it worked
-				((MainAgent)this.myAgent).resetLastCommValue( ((MainAgent)this.myAgent).getInterlocutorName() ); }
-				((MainAgent)this.myAgent).resetCommunication();
+				((MainAgent)this.myAgent).resetLastCommValue( ((MainAgent)this.myAgent).getInterlocutorName() ); 
 				this.meetup = true;
+			}
+			this.lastSent = 0;
+			this.tries = 0;
 			this.tempInterlocutor = "";
+			this.step = 0;
 			return;
 		}		
 	}
 	
 	public int onEnd() {
-		((MainAgent)this.myAgent).incrementGlobalTick();
 		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
+		
+		if ( ((MainAgent)this.myAgent).getLastBehaviour().equals("Unblock") ) {return 4;}
 		
 		((MainAgent)this.myAgent).updateLastBehaviour("ShareMap");	
 		
-		if ( this.step == 0 || this.step == 7)  {// have not received a reply or ended comm scheme
+		if ( this.step == 0)  {// have not received a reply or ended comm scheme
 			if (this.meetup) { return 33; }
 			else			 { return 2;  }
 		}

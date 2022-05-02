@@ -21,13 +21,16 @@ public class Unblock extends OneShotBehaviour {
 	
 	boolean shareInit;
 	
+	private int tries = 0;
+	
 	public Unblock(Agent a) {
 		super(a);
 	}
 
 	@Override
 	public void action() {
-//		System.out.println("-> " + this.myAgent.getLocalName() + " unblock <-");
+		String myName = this.myAgent.getLocalName();
+		System.out.println("-> " + myName + " unblock on try "+this.tries+" <-");
 		this.success = false;
 		this.shareInit = false;
 		
@@ -36,6 +39,21 @@ public class Unblock extends OneShotBehaviour {
 			this.shareInit = true;
 			return;
 		}
+		newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
+		if (newMsg) {
+			((MainAgent)this.myAgent).incrementShareStep();
+			((MainAgent)this.myAgent).incrementShareStep();
+			this.shareInit = true;
+			return;
+		}
+		newMsg = ((MainAgent)this.myAgent).checkInbox("SM-HELLO");
+		if (newMsg) {
+			((MainAgent)this.myAgent).incrementShareStep();
+			this.shareInit = true;
+			return;
+		}
+		
+		if (this.tries == 0) {this.shareInit = true; this.tries += 1; return;}
 
 		List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
 		int size = obs.size();
@@ -43,12 +61,13 @@ public class Unblock extends OneShotBehaviour {
 		for (int i = 1 ; i < size ; i ++ ) {
 			String node = obs.get(i).getLeft() ;
 			this.success = ((MainAgent)this.myAgent).move(node);
-			if (this.success) { 
-				((MainAgent)this.myAgent).resetBlockCount();
-//				System.out.println("Successfully unblocked !");
+			if (this.success) {
+					
+				this.tries = 0;
 				break;
 			}
 		}
+		this.tries += 1;
 	}
 
 	public int onEnd() {

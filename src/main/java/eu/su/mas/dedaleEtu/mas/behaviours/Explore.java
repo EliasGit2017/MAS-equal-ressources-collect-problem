@@ -38,17 +38,19 @@ public class Explore extends OneShotBehaviour {
 	
 	private boolean blocked;
 	
+	private boolean switch_to_standby;
+	
 	public Explore(final AbstractDedaleAgent agent) {
 		super(agent); 
 		}
 		
 	public void action() {
-//		System.out.println("-> " + this.myAgent.getLocalName() + " explore <-");
-		
+		System.out.println("-> " + this.myAgent.getLocalName() + " explore <-");
 		currentPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 		open = ((MainAgent)this.myAgent).getOpenNodes();
 		closed = ((MainAgent)this.myAgent).getClosedNodes();
 		map = ((MainAgent)this.myAgent).getMap();
+		String myName = this.myAgent.getLocalName();
 		
 		this.noOpenNearby = false; //Keep those with "this." because useful in onEnd() function
 		this.explo_done = false;
@@ -57,8 +59,13 @@ public class Explore extends OneShotBehaviour {
 		this.blocked = ((MainAgent)this.myAgent).isBlocked();
 		
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("STANDBY");
-		if (newMsg && ( (MainAgent)this.myAgent).getMeetingPoint().isEmpty() ) {
-			this.shareInit = true;
+		if (newMsg && ((MainAgent)this.myAgent).interlocutorInMeetupGroup() ) {
+			if (!this.explo_done) { this.shareInit= true;         }
+			else                  { this.switch_to_standby = true;}
+			return;
+		}
+		else if (newMsg && !this.explo_done) {
+			this.shareInit= true;
 			return;
 		}
 		
@@ -66,7 +73,6 @@ public class Explore extends OneShotBehaviour {
 		if (newMsg) {
 			((MainAgent)this.myAgent).incrementShareStep();
 			((MainAgent)this.myAgent).incrementShareStep();
-			((MainAgent)this.myAgent).incrementLastStepSent();
 			this.shareInit = true;
 			return;
 		}
@@ -116,6 +122,12 @@ public class Explore extends OneShotBehaviour {
 					nextNodesChoice.add(node);
 				}
 			}
+			
+			if (open.size() == 0 && closed.size() != 0) {
+				System.out.println("END OF EXPLORATION FOR " + myName);
+				this.explo_done = true;
+				return;
+			}
 
 			String nextNode = null;
 			if ( nextNodesChoice.size() != 0 ) { //Choosing an open node at random
@@ -123,29 +135,16 @@ public class Explore extends OneShotBehaviour {
 				int choice = r.nextInt( nextNodesChoice.size() );
 				nextNode = nextNodesChoice.get(choice);
 			}
-			
-			if (open.size() == 0 && closed.size() != 0) {
-				System.out.println("END OF EXPLORATION -- stopping agent");
-				this.explo_done = true;
-				return;
-			}
-			
+		
 			if ( (nextNode == null) && (open.size() != 0) ) {
 				//On est dans une impasse
 				this.noOpenNearby = true;
-//				System.out.println("Blocked ! Computed escape path from " + currentPosition + " to " + nextNode);
-//				System.out.println(path);
 				return;	
 			}
 			
 			boolean success = ((MainAgent)this.myAgent).move(nextNode);
-			if (success) { ((MainAgent)this.myAgent).resetBlockCount();     }
-			else		 { ((MainAgent)this.myAgent).incrementBlockCount(); }
-			
-
+			if (!success) { ((MainAgent)this.myAgent).incrementBlockCount(); }
 		}
-		
-		
 	}
 	
 	public int onEnd() {
@@ -159,6 +158,10 @@ public class Explore extends OneShotBehaviour {
 		((MainAgent)this.myAgent).setLastPosition(currentPosition);
 		((MainAgent)this.myAgent).setMap(map);
 		((MainAgent)this.myAgent).updateLastBehaviour("Explore");
+		
+		if (this.switch_to_standby) {
+			return 5;
+		}
 		
 		if (this.communicate || this.shareInit) {
 			return 3;

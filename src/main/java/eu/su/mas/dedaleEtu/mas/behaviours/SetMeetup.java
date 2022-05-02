@@ -29,12 +29,11 @@ public class SetMeetup extends OneShotBehaviour { //
 		String myPos = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 		String myName = this.myAgent.getLocalName();
 		
-		System.out.println( "####### " + myName + " enters SetMeetup on step " + this.step +" on try " + currentTries + " #######");
+//		System.out.println( "####### " + myName + " enters SetMeetup on step " + this.step +" on try " + currentTries + " #######");
 		
 		if (this.step == 0) {
-			if (currentTries > MAX_FAIL) { System.out.println(myName + " fail SetMeetup");this.step = 2; return; }
-			
-
+			if (currentTries > MAX_FAIL) { this.step = 2; return; }
+		
 			if (currentTries == 0) {
 				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 				msg.setProtocol("SET-MEET");
@@ -43,7 +42,7 @@ public class SetMeetup extends OneShotBehaviour { //
 				msg.setContent( myMeetPoint + ";" + myPos);
 				msg.addReceiver( interlocutor );
 				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-				System.out.println(myName + ": sends meeting point: " + myMeetPoint + " and position " + myPos);
+
 			}
 			boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SET-MEET");
 			if (newMsg) {
@@ -59,7 +58,7 @@ public class SetMeetup extends OneShotBehaviour { //
 		
 		
 		if (this.step == 1) {
-			if (currentTries > MAX_FAIL) { System.out.println(myName + " fail SetMeetup");this.step = 2; return; }
+			if (currentTries > MAX_FAIL) { this.step = 2; return; }
 			
 
 			
@@ -82,17 +81,15 @@ public class SetMeetup extends OneShotBehaviour { //
 					newMeetPoint = othersMeetPoint;
 				}
 				else {// If both have a meet point, they keep it
-					System.out.println(myName + " and " + othersName + " have meet points, do nothing !");
 					this.step = 3;
 					return;
 				}
 				
-				if (newMeetPoint != "") { ((MainAgent)this.myAgent).setMeetingPoint(newMeetPoint); System.out.println(myName + " changed meeting point for " + newMeetPoint);}
+				if (newMeetPoint != "") { ((MainAgent)this.myAgent).setMeetingPoint(newMeetPoint); }
 				
 				if (othersMeetPoint.isEmpty() || myMeetPoint.isEmpty() ) {
 					List<String> group = ((MainAgent)this.myAgent).getMeetupGroup();
 					String stringGroup = String.join( "," , group );
-					System.out.println(myName + " sends his group: " + stringGroup);
 					ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 					msg.setProtocol("SEND-GROUP");
 					msg.setConversationId( ((MainAgent)this.myAgent).getCommID() );
@@ -105,7 +102,7 @@ public class SetMeetup extends OneShotBehaviour { //
 			boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SEND-GROUP");
 			if (newMsg) {
 				this.step += 1;
-				this.currentTries = MAX_FAIL + 2;
+				this.currentTries = MAX_FAIL + 1;
 			}
 			this.currentTries += 1;
 			return;
@@ -114,15 +111,14 @@ public class SetMeetup extends OneShotBehaviour { //
 		if (this.step == 2) { // CAUTION : if changing last step, update it in previous steps for fail 
 
 			if (currentTries == MAX_FAIL + 2) { //Meaning we come from last behaviour
-				System.out.println("Updating group");
 				List<String> myCurrentGroup = ((MainAgent)this.myAgent).getMeetupGroup();
 				String[] group = ((MainAgent)this.myAgent).getCurrentMsgStringContent().split(";");
 				for (String agent: group) {
 					if (!(myName.equals(agent) || myCurrentGroup.contains(agent) )) { ((MainAgent)this.myAgent).addToMeetupGroup(agent); }
 				}
 			}
-			else {System.out.println(myName + " not updating group");}
 			this.currentTries = 0;
+			this.step += 1;
 			
 			return;
 		}
@@ -130,8 +126,11 @@ public class SetMeetup extends OneShotBehaviour { //
 	}
 	
 	public int onEnd() {
-		if (this.step == 2) {
-			System.out.println(this.myAgent.getLocalName() + " goes away from setmeetup");
+		
+		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
+		
+		if (this.step == 3) {
+			((MainAgent)this.myAgent).emptyInbox();
 			this.step = 0;
 			return 2;
 		}

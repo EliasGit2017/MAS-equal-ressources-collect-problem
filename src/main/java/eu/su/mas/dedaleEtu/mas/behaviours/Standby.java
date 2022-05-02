@@ -15,7 +15,7 @@ public class Standby extends OneShotBehaviour { //Called when ended explo and wa
 	
 	private boolean shareInit;
 	
-	private final int LIMIT_FACTOR = 50; // Avoid sending too many "standby" pings, while also having a high refresh rate (doWait not too high)
+	private final int WAIT_TIME = ((MainAgent)this.myAgent).getWaitTime(); // Avoid sending too many "standby" pings, while also having a high refresh rate (doWait not too high)
 	
 	private final int COMM_STEP = 3;
 	
@@ -26,25 +26,31 @@ public class Standby extends OneShotBehaviour { //Called when ended explo and wa
 	}
 
 	@Override
-	public void action() {
+	public void action() { // TODO: Plutot que regrouper, assume mm tailles de sac a dos et update au fur et a mesure qu'on rencontre (ou alors update au fur et a mesure + regrouper qm)
 		String myName = this.myAgent.getLocalName();
 		String myPos  = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 		List<String> group = ((MainAgent)this.myAgent).getMeetupGroup();
+		String meetPoint = ((MainAgent)this.myAgent).getMeetingPoint();
 		((MainAgent)this.myAgent).initLastComm(); // Let every communication happen
+
 		this.shareInit = false;
 		
-		System.out.println(myName + " : meeting with " + group);
+		System.out.println(myName + " : meeting with " + group + " at: " + meetPoint + " and sent a total nb of pings: " + ((MainAgent)this.myAgent).getNbPing());
+		System.out.println("Comm value " + this.communicate + " / needs to match " + COMM_STEP );
+		if (this.communicate >= this.COMM_STEP) {
+			
+			List<String> agentsNames = ((MainAgent)this.myAgent).getAgenda();
+			
+			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+			msg.setProtocol("STANDBY");
+			msg.setSender(     this.myAgent.getAID()    );
+			msg.setContent( myName );
+			for (String teammate : agentsNames) { msg.addReceiver(new AID(teammate, AID.ISLOCALNAME )); }
+			((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+			this.communicate = 0;
+		}
 		
-//		if (this.communicate >= COMM_STEP) {
-//			List<String> agentsNames = ((MainAgent)this.myAgent).getAgenda();
-//			
-//			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-//			msg.setProtocol("STANDBY");
-//			msg.setSender(     this.myAgent.getAID()    );
-//			msg.setContent( myName );
-//			for (String teammate : agentsNames) { msg.addReceiver(new AID(teammate, AID.ISLOCALNAME )); }
-//			((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
-//		}
+		
 		
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-HELLO");
 		if (newMsg) {
@@ -52,7 +58,7 @@ public class Standby extends OneShotBehaviour { //Called when ended explo and wa
 			this.shareInit = true;
 			return;
 		}
-		this.myAgent.doWait(1000);
+
 		this.communicate += 1;
 	}
 
@@ -61,7 +67,7 @@ public class Standby extends OneShotBehaviour { //Called when ended explo and wa
 		
 
 		
-		 this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
+		 this.myAgent.doWait( this.WAIT_TIME );
 		
 		((MainAgent)this.myAgent).updateLastBehaviour("Standby");
 		
