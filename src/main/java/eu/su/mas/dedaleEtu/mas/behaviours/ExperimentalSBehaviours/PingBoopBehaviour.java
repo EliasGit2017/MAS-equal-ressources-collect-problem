@@ -29,7 +29,7 @@ public class PingBoopBehaviour extends OneShotBehaviour {
 	@Override
 	public void action() {
 		
-		System.out.println("---> " + this.myAgent.getLocalName() + " is trying to boop its friends <---");
+		//**System.out.println("---> " + this.myAgent.getLocalName() + " is trying to boop its friends <---");
 		
 		//String cur_pos = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 		

@@ -18,6 +18,7 @@ import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.StopBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.FSMBehaviour;
+import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.Rejoin;
 
 public class fsmAgent extends AbstractDedaleAgent {
 
@@ -25,13 +26,13 @@ public class fsmAgent extends AbstractDedaleAgent {
 
 	private MapRepresentation myMap;
 
-	public boolean move = true, successMerge = false, stopExploration = false, changeNode = false;
+	public boolean move = true, successMerge = false, rejoinMode = false;
 	// private static final int PokeTime = 3000; // might be usefull to reduce # of
 	// msgs sent
 	// public final int sensi=20;
 	public boolean successExch = false;
 
-	public String CollectorType;
+	public String CollectorType = "Undefined"; // (Undefined, Gold, Diamond)
 
 	public final int speed = 1000;
 
@@ -60,6 +61,8 @@ public class fsmAgent extends AbstractDedaleAgent {
 	// ...3
 
 	private List<String> agenda;
+	
+	private List<String> meeting_room = new ArrayList<String>();
 
 	private List<Behaviour> lb;
 
@@ -72,7 +75,8 @@ public class fsmAgent extends AbstractDedaleAgent {
 	private static final String Explo = "Exploration";
 	private static final String Booped = "Booped";
 	private static final String StopAg = "Stop";
-
+	private static final String Rejoin = "Rejoin";
+	
 	protected void setup() {
 
 		super.setup();
@@ -106,7 +110,8 @@ public class fsmAgent extends AbstractDedaleAgent {
 		fsmb.registerState(new ShareMapB(this, this.myMap, this.agenda), ShareMap); // ShareMap Behaviour
 		fsmb.registerState(new ReceiveMap(this), R_Map); // ReceiveMap Behaviour
 		fsmb.registerState(new ExploreBehaviour(this, this.myMap, this.agenda), Explo); // Exploration
-		fsmb.registerLastState(new StopBehaviour(), StopAg); // Ending
+		fsmb.registerState(new StopBehaviour(), StopAg); // Ending
+		fsmb.registerLastState(new Rejoin(this, this.myMap), Rejoin);
 
 		// Define transitions :
 
@@ -122,8 +127,9 @@ public class fsmAgent extends AbstractDedaleAgent {
 		fsmb.registerTransition(Explo, R_Map, 5); // explo -> receive map
 		fsmb.registerDefaultTransition(R_Map, Explo); // receive map -> explo
 
-		fsmb.registerTransition(Explo, StopAg, 100); // Last State when agent needs to die / stop
-
+		fsmb.registerTransition(Explo, StopAg, 100); // finishing exploration
+		fsmb.registerDefaultTransition(StopAg, Rejoin); // Rejoin at meeting room
+		
 		/*
 		 * Start FSM and print in console
 		 */
@@ -214,7 +220,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 		}
 		this.ressources_knowledge.add(ressources_knowledge);
 		clean_knowledge();
-		keep_knowledge_recent();
+		keep_knowledge_recent(); // keep only the most recent
 	}
 
 	/*
@@ -261,27 +267,27 @@ public class fsmAgent extends AbstractDedaleAgent {
 						&& l_know.get(i).getRight().getLeft().equals(this.ressources_knowledge.get(j).getRight().getLeft())
 						&& l_know.get(i).getRight().getRight().getLeft().equals(this.ressources_knowledge.get(j).getRight().getRight().getLeft())
 						&& l_know.get(i).getRight().getRight().getRight().equals(this.ressources_knowledge.get(j).getRight().getRight().getRight())) {
-					System.out.println("not adding this couple, already here");
+					//System.out.println("not adding this couple, already here");
 					in_it = true;
 					break;
 				}
 				if (this.ressources_knowledge.get(j).getLeft().equals(l_know.get(i).getLeft())
 						&& l_know.get(i).getRight().getLeft().equals(this.ressources_knowledge.get(j).getRight().getLeft())
 						&& l_know.get(i).getRight().getRight().getLeft() == "Stench") {
-					System.out.println("not adding this couple, already here");
+					//System.out.println("not adding this couple, already here");
 					in_it = true;
 					break;
 				} else {
 					if (this.ressources_knowledge.get(j).getLeft().equals(l_know.get(i).getLeft()) && l_know.get(i)
 							.getRight().getLeft() > this.ressources_knowledge.get(j).getRight().getLeft()) {
-						System.out.println("remove and add");
+						//System.out.println("remove and add");
 						this.ressources_knowledge.remove(j);
 						this.ressources_knowledge.add(l_know.get(i));
 					}
 				}
 			}
 			if (!in_it) {
-				System.out.println("brut add");
+				//System.out.println("brut add");
 				this.ressources_knowledge.add(l_know.get(i));
 			}
 		}
@@ -318,5 +324,43 @@ public class fsmAgent extends AbstractDedaleAgent {
 		}
 	return on_node;
 	}
+
+	public List<String> getMeeting_room() {
+		return meeting_room;
+	}
+
+	public void setMeeting_room(List<String> meeting_room) {
+		this.meeting_room = meeting_room;
+	}
+	
+	public int sizeMeetR() {
+		return this.meeting_room.size();
+	}
+	
+	public void add_to_m_room (String e) {
+		this.meeting_room.add(e);
+	}
+	
+	public void rm_m_room (String e) {
+		this.meeting_room.remove(e);
+	}
+	
+	public List<String> read_m_room() {
+		List<String> res = new ArrayList<String>();
+		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
+			if (this.ressources_knowledge.get(i).getRight().getLeft().equals(128L)) {
+				res.add(this.ressources_knowledge.get(i).getLeft());
+				res.add(this.ressources_knowledge.get(i).getRight().getRight().getLeft());
+				res.add(String.valueOf(this.ressources_knowledge.get(i).getRight().getRight().getRight()));
+				break;
+			}
+		}
+		return res;
+	}
+	
+	
+	
+	
+	
 	
 }

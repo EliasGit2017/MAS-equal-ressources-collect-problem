@@ -32,19 +32,20 @@ public class BoopedBehaviour extends OneShotBehaviour {
 		
 		final ACLMessage msg = this.myAgent.receive(msgTemplate);
 		
-		System.out.println(" ---> BoopedBehaviour running for ---> " + this.myAgent.getLocalName() + " <---");
+		//**System.out.println(" ---> BoopedBehaviour running for ---> " + this.myAgent.getLocalName() + " <---");
 		
 		List<Couple<String, Couple<Long, Couple<String, Integer>>>> received_knowledge = null;
 		
 		if (msg != null) {
 			// Use ExploCoopAgent to set exploration behaviours
 			//((ExploreCoopAgent)this.myAgent).moving=false;
+			
 			try {
 				received_knowledge = (List<Couple<String, Couple<Long, Couple<String, Integer>>>>) msg.getContentObject();
 			} catch (UnreadableException e) {
 				e.printStackTrace();
 			}
-			System.out.println(" --> " + this.myAgent.getLocalName() + " <--- Received boop from " + msg.getSender().getLocalName() + "\n |-> " + Arrays.toString(received_knowledge.toArray()));
+			//**System.out.println(" --> " + this.myAgent.getLocalName() + " <--- Received boop from " + msg.getSender().getLocalName() + "\n |-> " + Arrays.toString(received_knowledge.toArray()));
 			String cur_a = this.myAgent.getLocalName();
 			String sender_a = msg.getSender().getLocalName();
 			
@@ -53,12 +54,20 @@ public class BoopedBehaviour extends OneShotBehaviour {
 			if(cur_a.compareTo(sender_a) > 0) {
 				((fsmAgent)this.myAgent).successExch = true;
 			}
+			
+			List<String> meeting_room = ((fsmAgent) this.myAgent).read_m_room();
+			
+			if (meeting_room.size() ==  ((fsmAgent) this.myAgent).getCptAgents() + 1 ) {
+				((fsmAgent) this.myAgent).setMeeting_room(meeting_room);
+				System.out.println(" ----->>> ++ Meeting Room Set for " + this.myAgent.getLocalName() + ((fsmAgent) this.myAgent).getMeeting_room().toString() + " ++");
+			}
+			
 		}else{
 			//block(); // !!!
-			System.out.println("no message for booped behaviour");
+			//**System.out.println("no message for booped behaviour");
 		}
 		
-		System.out.println("I am : " + this.myAgent.getLocalName() + " infos after merge : " + Arrays.toString(((fsmAgent) this.myAgent).getRessources_knowledge().toArray()));
+		//**System.out.println("I am : " + this.myAgent.getLocalName() + " infos after merge : " + Arrays.toString(((fsmAgent) this.myAgent).getRessources_knowledge().toArray()));
 
 	}
 
