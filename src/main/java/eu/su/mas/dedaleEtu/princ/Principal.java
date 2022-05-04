@@ -404,7 +404,7 @@ public class Principal {
 
 
 		// Agents pre-initialized: James, Henry, Drake, Luke
-		List<String> agentsToInit = List.of( "James", "Henry");
+		List<String> agentsToInit = List.of( "James", "Henry", "Drake", "Luke");
 		for (String agentId : agentsToInit) {
 			// 1) Get the container where the agent will appear
 			c = containerList.get(ConfigurationFile.LOCAL_CONTAINER2_NAME);

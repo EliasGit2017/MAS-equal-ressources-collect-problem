@@ -129,6 +129,23 @@ public class MapRepresentation implements Serializable {
 		Object t = n.getAttribute("ui.class");
 		return t;
 	}
+	
+	public String getTreasureType(String id_node) {
+		Node n = this.g.getNode(id_node);
+		Object t = n.getAttribute("ui.treasureType");
+		return t.toString();
+	}
+	
+	public void setTreasureInfo(String id_node, String treasureType) {
+		Node n;
+		if (this.g.getNode(id_node)==null){
+			System.out.println("Node should exist !");
+			return;
+		}else{
+			n=this.g.getNode(id_node);
+		}
+		n.setAttribute("treasureType", treasureType);
+	}
 	/**
 	 * Add or replace a node and its attribute 
 	 * @param id
@@ -144,9 +161,7 @@ public class MapRepresentation implements Serializable {
 		n.clearAttributes();
 		n.setAttribute("ui.class", mapAttribute.toString());
 		n.setAttribute("ui.label",id);
-		n.setAttribute("ui.treasure", "none");
-		n.setAttribute("GOLD", 0);
-		n.setAttribute("DIAMOND", 0);
+		n.setAttribute("treasureType", "none");
 	}
 
 	/**
@@ -214,7 +229,7 @@ public class MapRepresentation implements Serializable {
 	public List<String> getShortestPathToClosestOpenNode(String myPosition) {
 		//1) Get all openNodes
 		List<String> opennodes=getOpenNodes();
-
+		if (opennodes.isEmpty()) {System.out.println("No more open nodes !");}
 		//2) select the closest one
 		List<Couple<String,Integer>> lc=
 				opennodes.stream()

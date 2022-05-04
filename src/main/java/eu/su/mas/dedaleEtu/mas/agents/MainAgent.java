@@ -5,8 +5,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
 
 import dataStructures.tuple.Couple;
+import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.startMyBehaviours;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
@@ -60,11 +62,9 @@ public class MainAgent extends AbstractDedaleAgent {
 	 *  4	-> 	End of the protocol	
 	 **********/
 	
+	
+	
 	private int communicate = 0;	 		// Stores the number of steps since last communication
-	
-	private int lastStepMsg = 0;		    // Useful for ShareMap behaviour - last step when agent sent a message on shareMap
-	
-	private int tries = 0;					// Number of times a step was checked
 
 	Hashtable<String, Integer> lastComm = new Hashtable<>();
 	
@@ -80,7 +80,10 @@ public class MainAgent extends AbstractDedaleAgent {
 	
 	private long tsChecker = 0;
 	
-	private Hashtable<String,Pair<String,Integer>> treasures = new Hashtable();
+	private long initTime;
+	
+	private Hashtable<String,Couple<Couple<String,Integer>, Long>> treasures = new Hashtable<String,Couple<Couple<String,Integer>, Long>>(); //Second integer is timestamp
+	private Hashtable<String,List<Couple<String,Integer>>> agentInfo = new Hashtable<String,List<Couple<String,Integer>>>();
 	
 	private final int COMM_STEP = 2; 		// Communicate every COMM_STEP times
 	
@@ -90,14 +93,128 @@ public class MainAgent extends AbstractDedaleAgent {
 	
 	private final int WAIT_TIME = 100; 		// Standard time (in ms) to wait between each action
 	
+	private String lastTriedMovement = "";
+	
 	public int getNbPing()                { return this.nbPingSent; }
 	public void incrementNbPing()         { this.nbPingSent += 1;   }
 	public int getNbMovement()            { return this.nbMovement; }
 	public void incremementMoveCounter()  { this.nbMovement += 1;   }
 	
-	public Hashtable returnComm() {
-		return this.lastComm;
+	public String getLastTry() {
+		return this.lastTriedMovement;
 	}
+	
+	public int getBlockCount() {
+		return this.blockCount;
+	}
+
+	public void mergeReceivedNodesTreasuresInfo(String received) {
+		if (received.isEmpty()) {return;}
+		String[] info = received.split(";") ;
+		for(String el : info) {
+			String[] data = el.split(",");
+			String node = data[0];
+			long timestamp = Long.parseLong(data[1]);
+			String type    = data[2];
+			int qty        = Integer.parseInt(data[3]);
+			this.addTreasureOnNode(node, type, qty, timestamp);
+		}
+	}
+	
+	public String getNodesTreasuresSerialized() {
+		String RETURN = "";
+		Set<String> keys = this.treasures.keySet();
+		for (String node : keys) {
+			Couple<Couple<String,Integer>, Long> a = this.treasures.get(node);
+			String type = a.getLeft().getLeft();
+			String qty  = String.valueOf( a.getLeft().getRight() );
+			String ts   = String.valueOf( a.getRight() );
+			RETURN += node + "," + ts + "," + type + "," + qty + ";" ;
+		}
+		return RETURN;
+	}
+	
+	public String getAgentsInfoSerialized() {
+		String RETURN = "";
+		Set<String> keys = this.agentInfo.keySet();
+		for (String agent : keys) {
+			List<Couple<String,Integer>> info = this.agentInfo.get(agent);
+			RETURN += agent ;
+			for (Couple<String,Integer> c : info) {
+				String a = c.getLeft();
+				String b = String.valueOf( c.getRight() );
+				RETURN += "," + a + "," + b ;
+			}
+			RETURN += ";" ;
+		}
+
+		return RETURN;
+	}
+	
+	public void mergeReceivedAgentInfo(String receivedInfo) {
+		if (receivedInfo.isEmpty()) {return;}
+		String[] list = receivedInfo.split(";");
+		for (String step : list) {
+			String[] info = step.split(",");
+			String agentName = info[0];
+			if ( !this.agentInfo.contains(agentName) ) {
+				List<Couple<String,Integer>> newL = new ArrayList<Couple<String,Integer>>();
+				String type1 = info[1];
+				int qty1    = Integer.parseInt(info[2]);
+				String type2 = info[3];
+				int qty2     = Integer.parseInt(info[4]);
+				Couple<String,Integer> c1 = new Couple<String,Integer>(type1,qty1);
+				Couple<String,Integer> c2 = new Couple<String,Integer>(type2,qty2);
+				newL.add(c1) ; newL.add(c2);
+				this.addAgentInfo(agentName, newL);
+			}
+		}
+	}
+	
+	public Hashtable<String, List<Couple<String, Integer>>> getAgentsInfo() {
+		return this.agentInfo;
+	}
+	
+	public Hashtable<String, Couple<Couple<String, Integer>, Long>> getTreasuresInfo() {
+		return this.treasures;
+	}
+	
+	public void addRawAgentInfo(String agentName, List<Couple<Observation,Integer>> backpackInfo) {
+		List<Couple<String,Integer>> backpack = new ArrayList<Couple<String,Integer>>();
+		
+		for (Couple<Observation,Integer> c : backpackInfo) {
+			String obs = c.getLeft().getName();
+			int    qty = c.getRight();
+			Couple<String,Integer> cNew = new Couple<String,Integer>(obs,qty);
+			backpack.add(cNew);
+		}
+		
+		if ( !this.agentInfo.contains(agentName) ) {
+			this.agentInfo.put(agentName, backpack);
+			} 
+		}
+	
+	public void addAgentInfo(String agentName, List<Couple<String,Integer>> backpack) {
+		if ( !this.agentInfo.contains(agentName) ) {
+			this.agentInfo.put(agentName, backpack);
+			} 
+		}
+	
+	public void addTreasureOnNode(String node, String treasureType, int quantity, long timeOfObservation) {
+		Couple<String,Integer> newContent = new Couple<String,Integer>(treasureType,quantity);
+		Couple<Couple<String,Integer>,Long> newVal = new Couple<Couple<String,Integer>,Long>(newContent, timeOfObservation);
+		
+		if (this.treasures.contains(node)) {
+			long lastUpdate = this.treasures.get(node).getRight();
+			if (lastUpdate > timeOfObservation) {return;}
+			this.treasures.replace(node, newVal);
+			return;
+		}
+		
+		this.treasures.put(node, newVal);
+		this.myMap.setTreasureInfo(node, treasureType);
+	}
+	
 	public String timer()	{
 		long datetime = System.currentTimeMillis();
 		long returnVal = -1;
@@ -105,6 +222,8 @@ public class MainAgent extends AbstractDedaleAgent {
 		else { returnVal = datetime - this.tsChecker; this.tsChecker = 0;}
 		return String.valueOf(returnVal);
 	}
+	
+	private long getCurrentTime() {return System.currentTimeMillis() - this.initTime;}
 	
 	public boolean interlocutorInMeetupGroup() {
 		return this.meetupGroup.contains( this.getInterlocutorName() );
@@ -237,6 +356,8 @@ public class MainAgent extends AbstractDedaleAgent {
 		this.shareStep = 0;
 	}
 	
+	public void setInitTime(long time) {this.initTime = time;}
+	
 	public void pause() {	// Pauses the agent execution (useful for debugging)
 		try {
 			System.out.println("Press enter in the console to allow the agent " + this.getLocalName() +" to execute its next move");
@@ -339,6 +460,9 @@ public class MainAgent extends AbstractDedaleAgent {
 		return this.blockCount >= this.BLOCK_LIMIT;
 	}
 	
+	public List<Couple<Observation, Integer>> getBackpackSize() {
+		return this.getBackPackFreeSpace();
+	}
 	public void incrementBlockCount() {
 		this.blockCount += 1;
 	}
@@ -364,6 +488,7 @@ public class MainAgent extends AbstractDedaleAgent {
 			this.resetBlockCount();
 			return true;
 		}
+		this.lastTriedMovement = dest;
 		return false;
 	}
 	

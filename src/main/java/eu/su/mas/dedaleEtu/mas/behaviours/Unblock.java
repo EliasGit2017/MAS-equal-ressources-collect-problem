@@ -37,7 +37,7 @@ public class Unblock extends OneShotBehaviour {
 		((MainAgent)this.myAgent).resetCommID();
 		
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("STANDBY");
-		if (newMsg && ( (MainAgent)this.myAgent).getMeetingPoint().isEmpty() ) {
+		if (newMsg ) {
 			this.shareInit = true;
 			return;
 		}

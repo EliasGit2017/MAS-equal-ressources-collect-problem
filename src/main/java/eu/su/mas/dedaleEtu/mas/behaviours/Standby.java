@@ -36,7 +36,7 @@ public class Standby extends OneShotBehaviour { //Called when ended explo and wa
 		this.shareInit = false;
 		List<String> closed = ((MainAgent)this.myAgent).getClosedNodes();
 		String comid = ((MainAgent)this.myAgent).getCommID();
-		System.out.println(myName + " closed nodes" + closed + " commID" + comid);
+		System.out.println(myName + " closed nodes" + closed + " meetup with " + group + " at " + meetPoint);
 //		System.out.println(myName + " : meeting with " + group + " at: " + meetPoint + " and sent a total nb of pings: " + ((MainAgent)this.myAgent).getNbPing());
 //		System.out.println("Comm value " + this.communicate + " / needs to match " + COMM_STEP );
 		if (this.communicate >= this.COMM_STEP) {
@@ -53,7 +53,7 @@ public class Standby extends OneShotBehaviour { //Called when ended explo and wa
 		}
 		
 		
-		
+		((MainAgent)this.myAgent).resetCommID();
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-HELLO");
 		if (newMsg) {
 			((MainAgent)this.myAgent).incrementShareStep();

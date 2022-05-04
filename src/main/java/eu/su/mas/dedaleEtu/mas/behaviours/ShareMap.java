@@ -49,7 +49,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 	
 	private void abandonCommunication() { //Should always write return; after calling this function 
 		int currentStep = this.step;
-		int lastStep    = 7;
+		int lastStep    = 8;
 
 		System.out.println("-*-*-*-*-*- " + this.myAgent.getLocalName() + " abandons communication  with "+ this.tempInterlocutor + " on step " + currentStep);
 		for (int foo = 0 ; foo < lastStep - currentStep ; foo++) {
@@ -277,7 +277,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 			List<String> othersOpenList = this.decode(encoded);
 			
 			if (othersOpenList.isEmpty()) {
-				if ( ((MainAgent)this.myAgent).getOpenNodes().isEmpty() ) {this.step = 7; this.lastSent = 5; return;} //lastSent for allowing meetup
+				if ( ((MainAgent)this.myAgent).getOpenNodes().isEmpty() ) {this.abandonCommunication(); this.lastSent = 5; return;} //lastSent for allowing meetup
 			}
 			this.open2 = othersOpenList;
 			
@@ -343,7 +343,6 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 
 				
 				List<String> neighbors = myMap.getNeighbors(newNode);
-				System.out.println(myName + " " + newNode + " : " + neighbors);
 				for (String neighbor : neighbors) {
 					boolean isNew = mapToShare.addNewNode(neighbor);
 					mapToShare.addEdge(newNode, neighbor);
@@ -400,6 +399,11 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 		
 		
 		else if (step == 6) {
+			if (this.tries >= MAX_FAIL) {
+				this.abandonCommunication();
+				return;
+			}
+		
 			@SuppressWarnings("unchecked")
 			SerializableSimpleGraph<String, MapAttribute> sgreceived= (SerializableSimpleGraph<String, MapAttribute>)((MainAgent)this.myAgent).getCurrentMsgContent();
 
@@ -407,17 +411,45 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 			
 			if (!( sgreceived.toString().equals("{}") || sgreceived==null )) { myMap.mergeMap(sgreceived); }
 			
-			((MainAgent)this.myAgent).incrementShareStep();
-			
 			((MainAgent)this.myAgent).setMap(myMap);
 			
-			return;	
+			if (this.lastSent < step) {
+				String content = ((MainAgent)this.myAgent).getNodesTreasuresSerialized();
+				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+				msg.setProtocol("SM-TREASURE");
+				msg.setConversationId( ((MainAgent)this.myAgent).getCommID() );
+				msg.setSender( this.myAgent.getAID() );
+				msg.setContent( content );
+				msg.addReceiver( ((MainAgent)this.myAgent).getInterlocutorAID() );
+				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+ 				
+				this.lastSent = 6;
+			}
+			
+			boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SM-TREASURE");
+			if (newMsg) {
+				((MainAgent)this.myAgent).incrementShareStep();
+				this.tries = 0;
+				return;
+			}
+			
+			this.tries += 1;
+			return;
+		}
+		
+
+		else if (step == 7) {
+			String receivedNodeTreasures = ((MainAgent)this.myAgent).getCurrentMsgStringContent();
+			System.out.println(myName + " received " + receivedNodeTreasures);
+			((MainAgent)this.myAgent).mergeReceivedNodesTreasuresInfo(receivedNodeTreasures);
+
+			((MainAgent)this.myAgent).incrementShareStep();
+			return;
 		}
 		
 		
 		
-		
-		else if (step == 7) { //Reset all variables step and resume normal activity
+		else if (step == 8) { //Reset all variables step and resume normal activity
 			((MainAgent)this.myAgent).resetShareStep();
 			if (this.lastSent > 4) { //Reset comm only if it worked
 				((MainAgent)this.myAgent).resetLastCommValue( ((MainAgent)this.myAgent).getInterlocutorName() ); 
@@ -445,7 +477,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 			if (this.meetup) { return 33; }
 			else			 { return 2;  }
 		}
-		System.out.println(myName + " back to nav");
+		System.out.println(myName + " back to share");
 		return 0;
 		
 	}

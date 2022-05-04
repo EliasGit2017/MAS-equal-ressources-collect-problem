@@ -32,7 +32,7 @@ public class SetMeetup extends OneShotBehaviour { //
 //		System.out.println( "####### " + myName + " enters SetMeetup on step " + this.step +" on try " + currentTries + " #######");
 		
 		if (this.step == 0) {
-			if (currentTries > MAX_FAIL) { this.step = 2; return; }
+			if (currentTries > MAX_FAIL) { this.step = 4; return; }
 		
 			if (currentTries == 0) {
 				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
@@ -58,10 +58,8 @@ public class SetMeetup extends OneShotBehaviour { //
 		
 		
 		if (this.step == 1) {
-			if (currentTries > MAX_FAIL) { this.step = 2; return; }
-			
-
-			
+			if (currentTries > MAX_FAIL) { this.step = 4; return; }
+		
 			String[] msgContent = ((MainAgent)this.myAgent).getCurrentMsgStringContent().split(";");
 			String othersMeetPoint = msgContent[0];
 			String othersPosition  = msgContent[1]; 
@@ -69,6 +67,7 @@ public class SetMeetup extends OneShotBehaviour { //
 			String newMeetPoint = "";
 			
 			if (this.currentTries == 0) {
+				System.out.println(myName + " setting meet point");
 				if (othersMeetPoint.isEmpty() && myMeetPoint.isEmpty() ) { //Both agents have no meet point
 					if (myName.compareTo(othersName) > 0) {newMeetPoint = myPos;}
 					else 								  {newMeetPoint = othersPosition;}
@@ -81,7 +80,7 @@ public class SetMeetup extends OneShotBehaviour { //
 					newMeetPoint = othersMeetPoint;
 				}
 				else {// If both have a meet point, they keep it
-					this.step = 3;
+					this.step = 4;
 					return;
 				}
 				
@@ -110,17 +109,43 @@ public class SetMeetup extends OneShotBehaviour { //
 		
 		if (this.step == 2) { // CAUTION : if changing last step, update it in previous steps for fail 
 
-			if (currentTries == MAX_FAIL + 2) { //Meaning we come from last behaviour
+			if (currentTries > MAX_FAIL ) { //Meaning we come from last behaviour
 				List<String> myCurrentGroup = ((MainAgent)this.myAgent).getMeetupGroup();
 				String[] group = ((MainAgent)this.myAgent).getCurrentMsgStringContent().split(";");
 				for (String agent: group) {
-					if (!(myName.equals(agent) || myCurrentGroup.contains(agent) )) { ((MainAgent)this.myAgent).addToMeetupGroup(agent); }
+					if ( !agent.isBlank() && !(myName.equals(agent) || myCurrentGroup.contains(agent) )) { ((MainAgent)this.myAgent).addToMeetupGroup(agent); }
 				}
 			}
-			this.currentTries = 0;
 			this.step += 1;
-			
+			this.currentTries = 0;
 			return;
+		}
+		
+		if (this.step == 3) {
+			if (currentTries > MAX_FAIL) { this.step = 4; return; }
+			
+			if (this.currentTries == 0) {
+				String content = ((MainAgent)this.myAgent).getAgentsInfoSerialized();
+				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+				msg.setProtocol("SEND-AGENTS");
+				msg.setConversationId( ((MainAgent)this.myAgent).getCommID() );
+				msg.setSender( this.myAgent.getAID() );
+				msg.setContent( content );
+				msg.addReceiver( interlocutor );
+				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+				
+			}
+			
+			boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SEND-AGENTS");
+			if (newMsg) {
+				this.step += 1;
+				String content = ((MainAgent)this.myAgent).getCurrentMsgStringContent();
+				((MainAgent)this.myAgent).mergeReceivedAgentInfo(content);
+				return;
+			}
+			this.currentTries += 1;
+			return;
+			
 		}
 		
 	}
@@ -129,10 +154,12 @@ public class SetMeetup extends OneShotBehaviour { //
 		
 		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
 		
-		if (this.step == 3) {
+		if (this.step == 4) {
 			((MainAgent)this.myAgent).emptyInbox();
 			((MainAgent)this.myAgent).resetCommID();
 			this.step = 0;
+			this.currentTries = 0;
+			
 			return 2;
 		}
 		return 0;

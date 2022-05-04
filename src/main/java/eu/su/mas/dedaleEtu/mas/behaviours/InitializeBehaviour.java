@@ -1,6 +1,7 @@
 package eu.su.mas.dedaleEtu.mas.behaviours;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -12,6 +13,7 @@ import dataStructures.serializableGraph.SerializableSimpleGraph;
 import dataStructures.tuple.Couple;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
+import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedaleEtu.mas.agents.MainAgent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.UnreadableException;
@@ -32,5 +34,8 @@ public class InitializeBehaviour extends OneShotBehaviour {
 		((MainAgent)this.myAgent).setMap(map);
 		
 		((MainAgent)this.myAgent).initLastComm();
+		
+		long initTime = System.currentTimeMillis();
+		((MainAgent)this.myAgent).setInitTime(initTime);
 	}
 }
