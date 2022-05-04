@@ -33,6 +33,8 @@ public class Unblock extends OneShotBehaviour {
 		System.out.println("-> " + myName + " unblock on try "+this.tries+" <-");
 		this.success = false;
 		this.shareInit = false;
+		((MainAgent)this.myAgent).initLastComm();
+		((MainAgent)this.myAgent).resetCommID();
 		
 		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("STANDBY");
 		if (newMsg && ( (MainAgent)this.myAgent).getMeetingPoint().isEmpty() ) {
@@ -62,7 +64,7 @@ public class Unblock extends OneShotBehaviour {
 			String node = obs.get(i).getLeft() ;
 			this.success = ((MainAgent)this.myAgent).move(node);
 			if (this.success) {
-					
+				System.out.println(myName + " successfully unblocked");
 				this.tries = 0;
 				break;
 			}

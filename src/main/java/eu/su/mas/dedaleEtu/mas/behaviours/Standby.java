@@ -34,9 +34,11 @@ public class Standby extends OneShotBehaviour { //Called when ended explo and wa
 		((MainAgent)this.myAgent).initLastComm(); // Let every communication happen
 
 		this.shareInit = false;
-		
-		System.out.println(myName + " : meeting with " + group + " at: " + meetPoint + " and sent a total nb of pings: " + ((MainAgent)this.myAgent).getNbPing());
-		System.out.println("Comm value " + this.communicate + " / needs to match " + COMM_STEP );
+		List<String> closed = ((MainAgent)this.myAgent).getClosedNodes();
+		String comid = ((MainAgent)this.myAgent).getCommID();
+		System.out.println(myName + " closed nodes" + closed + " commID" + comid);
+//		System.out.println(myName + " : meeting with " + group + " at: " + meetPoint + " and sent a total nb of pings: " + ((MainAgent)this.myAgent).getNbPing());
+//		System.out.println("Comm value " + this.communicate + " / needs to match " + COMM_STEP );
 		if (this.communicate >= this.COMM_STEP) {
 			
 			List<String> agentsNames = ((MainAgent)this.myAgent).getAgenda();

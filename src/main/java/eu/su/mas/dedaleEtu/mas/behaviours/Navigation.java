@@ -42,6 +42,7 @@ public class Navigation extends OneShotBehaviour {
 
 	@Override
 	public void action() {
+		((MainAgent)this.myAgent).timer();
 		System.out.println("-> " + this.myAgent.getLocalName() + " navigation <-");
 		String myName = this.myAgent.getLocalName();
 		this.currentPosition = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
@@ -86,33 +87,32 @@ public class Navigation extends OneShotBehaviour {
 		
 		if (this.explo_done) {
 			this.destination = ((MainAgent)this.myAgent).getMeetingPoint();
-			System.out.println(myName + " currently at " + currentPosition + " trying to reach meeting point: " + this.destination);
-			
+			System.out.println(myName + " dest " + this.destination + " currentPos " + currentPosition);
 			if ( this.destination.isEmpty() ) {this.switch_to_standby = true;}
 			else {
 				List<Couple<String, List<Couple<Observation, Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
-				System.out.println(myName + obs+ " ");
 				for(int i = 0 ; i < obs.size() ; i++) {
 					String node = obs.get(i).getLeft();
 					if (this.destination.equals(node)) {this.switch_to_standby = true; return;}
-					else {System.out.println(myName + ": " + this.destination + " is not " + node);}
 				}
-				System.out.println();
 				
 				MapRepresentation map = ((MainAgent)this.myAgent).getMap();
 		
 				if (this.path.isEmpty()) {this.path = map.getShortestPath(currentPosition, this.destination); }
-				else {  
+				else {
 					String nextNode = this.path.get(0);
+					if(!map.getNeighbors(currentPosition).contains(nextNode)) {
+						this.path = map.getShortestPath( currentPosition, this.destination ); //Recompute in case a node is considered as blocked
+						nextNode = this.path.get(0);
+					}
+					
 					boolean success = ((MainAgent)this.myAgent).move(nextNode);
 					if (success) {this.path.remove(0);} else { ((MainAgent)this.myAgent).incrementBlockCount(); }
 				}     
 			}
 			return;
 		}
-		
-
-		
+	
 		if (open.contains(currentPosition)) {
 			onOpenNode = true;
 			return;
@@ -123,7 +123,6 @@ public class Navigation extends OneShotBehaviour {
 		}
 		
 		MapRepresentation map = ((MainAgent)this.myAgent).getMap();
-
 
 		if (this.path.isEmpty()) {
 			if ( ((MainAgent)this.myAgent).getLastBehaviour().equals("ShareMap") ) { this.path = map.getShortestPathToRandomOpenNode(currentPosition);  }
@@ -146,15 +145,14 @@ public class Navigation extends OneShotBehaviour {
 		String nextNode = this.path.get(0); //TODO: PEUT ETRE VIDE : si par Share, on recoit un noeud ouvert pas accessible (graphes de connaissance disjoints)
 		
 		if (nextNode == "") {
-			this.joined_destination = true;
+			this.joined_destination = true; return;
 		}
 		
-		if (!this.joined_destination) {
-			boolean success = ((MainAgent)this.myAgent).move(nextNode);
-			
-			if ( success )  { this.path.remove(0); }
-			else            { ((MainAgent)this.myAgent).incrementBlockCount(); }
-		}
+		boolean success = ((MainAgent)this.myAgent).move(nextNode);
+		
+		if ( success )  { this.path.remove(0); }
+		else            { ((MainAgent)this.myAgent).incrementBlockCount(); }
+
 	}
 
 	
@@ -162,6 +160,8 @@ public class Navigation extends OneShotBehaviour {
 		// To ensure standards respect, follow protocol above FSM behaviour declaration
 		
 		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
+		
+		System.out.println(myAgent.getLocalName() + " navigation time " + ((MainAgent)this.myAgent).timer());
 		
 		((MainAgent)this.myAgent).setLastPosition(currentPosition);
 		((MainAgent)this.myAgent).updateLastBehaviour("Navigation");

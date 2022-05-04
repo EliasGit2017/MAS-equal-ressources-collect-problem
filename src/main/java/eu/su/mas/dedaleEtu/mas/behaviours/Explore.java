@@ -143,6 +143,12 @@ public class Explore extends OneShotBehaviour {
 			}
 			
 			boolean success = ((MainAgent)this.myAgent).move(nextNode);
+			if (!success) { 
+				for (String node : nextNodesChoice) {
+					success =  ((MainAgent)this.myAgent).move(node);
+					if (success) {break;}
+				}
+			}
 			if (!success) { ((MainAgent)this.myAgent).incrementBlockCount(); }
 		}
 	}

@@ -81,6 +81,35 @@ public class MapRepresentation implements Serializable {
 		this.nbEdges=0;
 	}
 	
+	public void removeNode(String node_id) {
+		this.g.removeNode(node_id);
+	}
+	
+	public List<String> computeNearestEscape(String currentPos, List<String> nodesToAvoid) {
+		List<String> extend = new ArrayList<String>();
+		List<String> tried = new ArrayList<String>();
+		String goodCandidate = "";
+		
+		for ( String node : this.getNeighbors(currentPos) ) { 
+			if (!node.equals(nodesToAvoid.get(0))) {extend.add(node);} 
+		}
+		
+		while (extend.size() != 0) {
+			String newNode = extend.get(0); extend.remove(0);
+			if (!nodesToAvoid.contains(newNode)) {goodCandidate = newNode; break;}
+			else {
+				tried.add(newNode);
+				for (String neigh: this.getNeighbors(newNode)) {
+					if ( !(tried.contains(neigh) || neigh.equals(nodesToAvoid.get(0) ) ) ) {extend.add(neigh);}
+				}
+			}
+		}
+		
+		if (goodCandidate.isEmpty()) {System.out.println("Error in computing escape path"); return null;}
+		
+		return this.getShortestPath(currentPos, goodCandidate);
+	}
+	
 	public MapRepresentation copy() {
 		MapRepresentation copied = new MapRepresentation(false);
 		SerializableSimpleGraph<String, MapAttribute> sg = this.getSerializableGraph();
@@ -115,6 +144,9 @@ public class MapRepresentation implements Serializable {
 		n.clearAttributes();
 		n.setAttribute("ui.class", mapAttribute.toString());
 		n.setAttribute("ui.label",id);
+		n.setAttribute("ui.treasure", "none");
+		n.setAttribute("GOLD", 0);
+		n.setAttribute("DIAMOND", 0);
 	}
 
 	/**
@@ -206,6 +238,27 @@ public class MapRepresentation implements Serializable {
 		return getShortestPath(myPosition,node);
 	}
 
+	public List<String> getCorridorNodes(){
+		return this.g.nodes()
+				.filter(x -> x .getDegree() == 1) 
+				.map(Node::getId)
+				.collect(Collectors.toList());
+	}
+	
+	public List<String> getGoldNodes(){
+		return this.g.nodes()
+				.filter(x ->x .getAttribute("ui.treasure")=="GOLD") 
+				.map(Node::getId)
+				.collect(Collectors.toList());
+	}
+	
+	public List<String> getDiamondNodes(){
+		return this.g.nodes()
+				.filter(x ->x .getAttribute("ui.treasure")=="DIAMOND") 
+				.map(Node::getId)
+				.collect(Collectors.toList());
+	}
+	
 	public List<String> getOpenNodes(){
 		return this.g.nodes()
 				.filter(x ->x .getAttribute("ui.class")==MapAttribute.open.toString()) 

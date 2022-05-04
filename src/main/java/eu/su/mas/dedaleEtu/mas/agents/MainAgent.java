@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
+import dataStructures.tuple.Couple;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import eu.su.mas.dedale.mas.agent.behaviours.startMyBehaviours;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
@@ -23,6 +24,7 @@ import jade.core.behaviours.FSMBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
+import javafx.util.Pair;
 
 public class MainAgent extends AbstractDedaleAgent {
 
@@ -77,6 +79,8 @@ public class MainAgent extends AbstractDedaleAgent {
 	private int nbMovement = 0;
 	
 	private long tsChecker = 0;
+	
+	private Hashtable<String,Pair<String,Integer>> treasures = new Hashtable();
 	
 	private final int COMM_STEP = 2; 		// Communicate every COMM_STEP times
 	
@@ -259,6 +263,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	}
 	public boolean checkInbox(String ProtocolName) {
 		MessageTemplate msgTemplate = null;
+		
 		if (this.currentCommunicationID.isEmpty()) {
 			msgTemplate = MessageTemplate.and(
 					MessageTemplate.MatchProtocol(ProtocolName),
@@ -277,6 +282,12 @@ public class MainAgent extends AbstractDedaleAgent {
 				System.out.println("Agent " + this.getLocalName() + " has IGNORED a message from " + msgReceived.getSender().getLocalName() + "!" + " Protocol: " + ProtocolName);
 				return false;
 			}
+			
+			if (ProtocolName.equals("WHO-BLOCKS") && !this.getCurrentPosition().equals( msgReceived.getContent().split(",")[0] )) {
+				System.out.println("Agent " + this.getLocalName() + " has IGNORED a message from " + msgReceived.getSender().getLocalName() + "!" + " Protocol: " + ProtocolName);
+				return false;
+			}
+			
 			System.out.println("Agent " + this.getLocalName() + " has received a message from " + msgReceived.getSender().getLocalName() + "!" + " Protocol: " + ProtocolName);
 			this.currentMessage = msgReceived;
 			return true;

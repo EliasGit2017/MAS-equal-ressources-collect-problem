@@ -131,6 +131,7 @@ public class SetMeetup extends OneShotBehaviour { //
 		
 		if (this.step == 3) {
 			((MainAgent)this.myAgent).emptyInbox();
+			((MainAgent)this.myAgent).resetCommID();
 			this.step = 0;
 			return 2;
 		}

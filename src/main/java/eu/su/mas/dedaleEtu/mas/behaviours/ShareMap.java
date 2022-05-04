@@ -29,6 +29,8 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 		
 	private List<String> open2;
 
+	private boolean fromUnblock;
+	
 	private int lastSent = 0;
 	
 	private int tries = 0;
@@ -75,11 +77,13 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 
 	@Override
 	public void action() {
+		((MainAgent)this.myAgent).timer();
 		step = ((MainAgent)this.myAgent).getShareStep();
 		String myName = this.myAgent.getLocalName();
-//		if (step > 0) {System.out.println("---------- " + myName + " enters step " + step +  " ---------- (" + this.tries + " tries)");}
+		if (step > 0) {System.out.println("---------- " + myName + " enters step " + step +  " ---------- (" + this.tries + " tries)");}
 
 		this.meetup = false;
+		this.fromUnblock = ((MainAgent)this.myAgent).getLastBehaviour() == "Unblock" && step ==0;
 
 		
 		
@@ -229,11 +233,14 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 					myMap.addEdge(curPos, node);
 					if (isNew) {open.add(node);}
 				}
+				((MainAgent)this.myAgent).setMap(myMap);
 			}
+			
 			
 			String encoded = this.encode(open);
 			
 			if (this.lastSent < step) {
+				System.out.println(myName + " open nodes " + encoded);
 				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 				msg.setProtocol("SM-OPEN");
 				msg.setConversationId( ((MainAgent)this.myAgent).getCommID() );
@@ -268,15 +275,20 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 			String encoded = ((MainAgent)this.myAgent).getCurrentMsgStringContent();
 			
 			List<String> othersOpenList = this.decode(encoded);
+			
+			if (othersOpenList.isEmpty()) {
+				if ( ((MainAgent)this.myAgent).getOpenNodes().isEmpty() ) {this.step = 7; this.lastSent = 5; return;} //lastSent for allowing meetup
+			}
 			this.open2 = othersOpenList;
 			
-			List<String> open = ((MainAgent)this.myAgent).getOpenNodes();
+//			List<String> open = ((MainAgent)this.myAgent).getOpenNodes();
 			List<String> closed = ((MainAgent)this.myAgent).getClosedNodes();
 			
 			String choices = "";
 			if (!encoded.isEmpty()) {
 				for (String node : othersOpenList) {
-					if ( (!open.contains(node) &&  (!closed.contains(node)) ) ) {
+//					if ( (!open.contains(node) &&  (!closed.contains(node)) ) ) {
+					if ( !closed.contains(node) )  {
 						choices += node + ",";
 					}
 				} 
@@ -320,7 +332,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 			MapRepresentation mapToShare = new MapRepresentation(false);
 			MapRepresentation myMap = ((MainAgent)this.myAgent).getMap();
 			List<String> otherOpenList = this.open2;
-
+			System.out.println("nodes to parse " + nodesToParse);
 			while (!nodesToParse.isEmpty()) { //Compute nodes to share
 				String newNode = nodesToParse.get(0);
 				nodesToParse.remove(0);
@@ -331,10 +343,15 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 
 				
 				List<String> neighbors = myMap.getNeighbors(newNode);
+				System.out.println(myName + " " + newNode + " : " + neighbors);
 				for (String neighbor : neighbors) {
 					boolean isNew = mapToShare.addNewNode(neighbor);
-					if (!otherOpenList.contains(neighbor) && isNew) {nodesToParse.add(neighbor);}
 					mapToShare.addEdge(newNode, neighbor);
+					if (!otherOpenList.contains(neighbor) && isNew) {nodesToParse.add(neighbor);}
+					else if (isNew) {
+						List<String> neighbors2 = myMap.getNeighbors(neighbor);
+						for (String neighbor2 : neighbors2) {mapToShare.addNewNode(neighbor2); mapToShare.addEdge(neighbor, neighbor2);}
+					}
 				}
 			}
 			
@@ -343,6 +360,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 					mapToShare.addNode(node, MapAttribute.closed);
 					List<String> neighbors = myMap.getNeighbors(node);
 					for (String neighbor : neighbors) {
+						mapToShare.addNewNode(neighbor);
 						mapToShare.addEdge(node, neighbor);
 					}
 				}
@@ -359,6 +377,8 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+				System.out.println(this.myAgent.getLocalName() + " has map "  + myMap.getSerializableGraph() );
+				System.out.println(this.myAgent.getLocalName() + " shares map " + sg);
 				msg.addReceiver( ((MainAgent)this.myAgent).getInterlocutorAID() );
 				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
 				
@@ -399,7 +419,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 		
 		else if (step == 7) { //Reset all variables step and resume normal activity
 			((MainAgent)this.myAgent).resetShareStep();
-			if (this.lastSent > 2) { //Reset comm only if it worked
+			if (this.lastSent > 4) { //Reset comm only if it worked
 				((MainAgent)this.myAgent).resetLastCommValue( ((MainAgent)this.myAgent).getInterlocutorName() ); 
 				this.meetup = true;
 			}
@@ -412,16 +432,20 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 	}
 	
 	public int onEnd() {
+		String myName = this.myAgent.getLocalName();
 		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
 		
-		if ( ((MainAgent)this.myAgent).getLastBehaviour().equals("Unblock") ) {return 4;}
+		System.out.println(myName + " time for share " + ((MainAgent)this.myAgent).timer() );
 		
 		((MainAgent)this.myAgent).updateLastBehaviour("ShareMap");	
+		
+		if ( this.fromUnblock ) {System.out.println(myName + " back to unblock"); this.fromUnblock=false; return 4;}
 		
 		if ( this.step == 0)  {// have not received a reply or ended comm scheme
 			if (this.meetup) { return 33; }
 			else			 { return 2;  }
 		}
+		System.out.println(myName + " back to nav");
 		return 0;
 		
 	}
