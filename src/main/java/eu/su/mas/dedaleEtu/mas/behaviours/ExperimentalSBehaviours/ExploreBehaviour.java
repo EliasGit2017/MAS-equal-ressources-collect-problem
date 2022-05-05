@@ -3,6 +3,7 @@ package eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Currency;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -50,8 +51,6 @@ public class ExploreBehaviour extends OneShotBehaviour {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void action() {
-
-		System.out.println(" ---> ExploreBehaviour running for " + this.myAgent.getLocalName() + " <---");
 		
 		// Might be useless due to how the fsmAgent's first state is defined
 		if (this.myMap == null) {
@@ -65,8 +64,15 @@ public class ExploreBehaviour extends OneShotBehaviour {
 		
 		String cur_pos = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
 		String agent_name = this.myAgent.getLocalName();
+		Integer ag_number = Character.getNumericValue(agent_name.charAt(0));
 
+		if (!((fsmAgent) this.myAgent).isRejoinMode()) {
+			System.out.println(" ---> ExploreBehaviour running for " + this.myAgent.getLocalName() + " at " + cur_pos  +" <---");
+		}
+		
 		if (cur_pos != null) {
+			
+			System.out.println(" ---> ExploreBehaviour running for " + this.myAgent.getLocalName() + " at " + cur_pos  +" <---\n\n");
 
 			List<Couple<String, List<Couple<Observation, Integer>>>> lobs = ((AbstractDedaleAgent) this.myAgent).observe();
 
@@ -82,8 +88,8 @@ public class ExploreBehaviour extends OneShotBehaviour {
 				String nodeId = iter.next().getLeft();
 				boolean isNewNode = this.myMap.addNewNode(nodeId); // the node may exist, but not necessarily the edge
 				
-				// Improve here
-				if ((agent_name.charAt(0) == '1') && (((fsmAgent) this.myAgent).sizeMeetR() <= ((fsmAgent) this.myAgent).getCptAgents()) && (lobs.size() >= ((fsmAgent) this.myAgent).getCptAgents())) {
+				// Improve here */*/*/*/
+				if ((agent_name.charAt(0) == '1') && (((fsmAgent) this.myAgent).sizeMeetR() <= ((fsmAgent) this.myAgent).getCptAgents()) && (lobs.size() > ((fsmAgent) this.myAgent).getCptAgents() + 1)) {
 					((fsmAgent) this.myAgent).add_to_m_room(nodeId);
 				}
 				
@@ -209,40 +215,75 @@ public class ExploreBehaviour extends OneShotBehaviour {
 			int moveId = -100;
 
 			if (!this.myMap.hasOpenNode()) {
-				System.out.println(" ---> ExploreBehaviour : No open nodes on the map for : " + this.myAgent.getLocalName());
+				//goes to its corresponding node in the meeting room
+				String node_cible = ((fsmAgent) this.myAgent).getMeeting_room().get(ag_number - 1);;
 				
-				System.out.println(" ---> RejoinBehaviour running for " + this.myAgent.getLocalName() + " at " + cur_pos + " <--- " + ((fsmAgent) this.myAgent).getMeeting_room().toString());
+				if (!((fsmAgent) this.myAgent).isRejoinMode()) {
+				// agent switches to rejoin mode :
+					((fsmAgent) this.myAgent).setRejoinMode(true);
+				
+					System.out.println(" ---> ExploreBehaviour : No open nodes on the map for : " + this.myAgent.getLocalName());
+				
+					System.out.println("*********/> " + this.myAgent.getLocalName() +" ---> Explo done & joining from " + cur_pos + " to " + ((fsmAgent) this.myAgent).getMeeting_room().get(ag_number - 1) + " <--- " + ((fsmAgent) this.myAgent).getMeeting_room().toString());
 				//this.exitCode = 100; // -> StopAg behaviour
-				Random rand = new Random();
-				List<String> meeting_room = ((fsmAgent) this.myAgent).getMeeting_room();
-				String node_cible = meeting_room.get(rand.nextInt(meeting_room.size()));
-				((fsmAgent) this.myAgent).rm_m_room(node_cible);
-				
-				System.out.println(" ---> RejoinBehaviour running for " + this.myAgent.getLocalName() + " at " + cur_pos + " <--- " + ((fsmAgent) this.myAgent).getMeeting_room().toString() + " going to " + node_cible );
-				
-				//this.myMap.openNode(node_cible);
-				
-				//MapRepresentation m = ((fsmAgent) this.myAgent).getMyMap();
-				
-				List<String> path = this.myMap.getShortestPath(cur_pos, node_cible);
-				
-				//List<String> path = this.myMap.getShortestPathToClosestOpenNode(cur_pos);
-
-				if (cur_pos != node_cible) {
-					for (int i = 0; i < path.size(); i++) {
-						System.out.println("888888888888888 Going to " + node_cible + "  88888888888888888");
-						List<Couple<String, List<Couple<Observation, Integer>>>> lobs2 = ((AbstractDedaleAgent) this.myAgent)
-								.observe();
-						while (!((AbstractDedaleAgent) this.myAgent).moveTo(path.get(i))) {
-							Random r = new Random();
-							int moveId2 = 1 + r.nextInt(lobs2.size() - 1);
-							((AbstractDedaleAgent) this.myAgent).moveTo(lobs2.get(moveId2).getLeft());
-						}
-					}
-				} else {
-					System.out.println("rejoin, got to dest");
+					
+					((fsmAgent) this.myAgent).setTargetNode(node_cible);
 					return;
+				
+				} else {
+//					Random rand = new Random();
+//					List<String> meeting_room = ((fsmAgent) this.myAgent).getMeeting_room();
+//					String node_cible = meeting_room.get(rand.nextInt(meeting_room.size()));
+//					((fsmAgent) this.myAgent).rm_m_room(node_cible);
+					
+					//System.out.println(" ---> RejoinBehaviour running for " + this.myAgent.getLocalName() + " at " + cur_pos + " <--- " + ((fsmAgent) this.myAgent).getMeeting_room().toString() + " going to " + node_cible );
+					
+					//MapRepresentation m = ((fsmAgent) this.myAgent).getMyMap();
+
+					List<String> path = this.myMap.getShortestPath(cur_pos, node_cible);
+					if (path != null) {
+						((fsmAgent) this.myAgent).setPath_to_rejoin(this.myMap.getShortestPath(cur_pos, node_cible));
+					}
+					//List<String> path = this.myMap.getShortestPathToClosestOpenNode(cur_pos);
+
+					if (cur_pos != node_cible && ((fsmAgent) this.myAgent).getPath_to_rejoin().size() != 0) {
+							
+							//System.out.println("888888888888888 Going to " + node_cible + "  88888888888888888");
+							//List<Couple<String, List<Couple<Observation, Integer>>>> lobs2 = ((AbstractDedaleAgent) this.myAgent).observe();
+							String step = ((fsmAgent) this.myAgent).getPath_to_rejoin().get(0);
+							//System.out.println(" TRAVEL ~~~~~~~~>>>>" + this.myAgent.getLocalName() + " traveling to " + ((fsmAgent) this.myAgent).getTargetNode() + "||||||\n" + "123456789 ---> rejoining " + step + " from " + cur_pos);
+							//System.out.println("123456789 ---> rejoining " + step + " from " + cur_pos);
+							//checkInbox();
+							if (((AbstractDedaleAgent) this.myAgent).moveTo(step)) {
+								
+								((fsmAgent) this.myAgent).rm_e_path_to_rejoin(step);
+								
+							} else {
+								//System.out.println(" 4444444 _> je me décale <_ 4444444");
+								List<Couple<String, List<Couple<Observation, Integer>>>> lobs2 = ((AbstractDedaleAgent) this.myAgent).observe();
+								Random r = new Random();
+								int moveId2 = 1 + r.nextInt(lobs2.size() - 1);
+								
+								((AbstractDedaleAgent) this.myAgent).moveTo(lobs2.get(moveId2).getLeft());
+								
+								//checkInbox();
+								try {
+									this.myAgent.doWait(((fsmAgent) this.myAgent).speed); // wait : 300ms default (agent speed)
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+								//checkInbox();
+								((AbstractDedaleAgent) this.myAgent).moveTo(cur_pos);
+								
+							}
+					} else {
+						System.out.println("rejoin" + this.myAgent.getLocalName() + ", got to dest or curpos == nodecible ****------->>> " + cur_pos );
+						((fsmAgent) this.myAgent).setMyMap(this.myMap);
+						this.exitCode = 102;
+						return;
+					}					
 				}
+
 			} else {
 				if (nextNode == null) {
 					nextNode = this.myMap.getShortestPathToClosestOpenNode(cur_pos).get(0); // decide next Node
@@ -256,7 +297,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 				}
 				
 				try {
-					this.myAgent.doWait(((fsmAgent) this.myAgent).speed); // wait : 300ms default (agent speed)
+					this.myAgent.doWait(((fsmAgent) this.myAgent).speed - 700); // wait : 300ms default (agent speed)
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

@@ -59,7 +59,7 @@ public class BoopedBehaviour extends OneShotBehaviour {
 			
 			if (meeting_room.size() ==  ((fsmAgent) this.myAgent).getCptAgents() + 1 ) {
 				((fsmAgent) this.myAgent).setMeeting_room(meeting_room);
-				System.out.println(" ----->>> ++ Meeting Room Set for " + this.myAgent.getLocalName() + ((fsmAgent) this.myAgent).getMeeting_room().toString() + " ++");
+				//System.out.println(" ----->>> ++ Meeting Room Set for " + this.myAgent.getLocalName() + ((fsmAgent) this.myAgent).getMeeting_room().toString() + " ++");
 			}
 			
 		}else{
@@ -67,7 +67,7 @@ public class BoopedBehaviour extends OneShotBehaviour {
 			//**System.out.println("no message for booped behaviour");
 		}
 		
-		//**System.out.println("I am : " + this.myAgent.getLocalName() + " infos after merge : " + Arrays.toString(((fsmAgent) this.myAgent).getRessources_knowledge().toArray()));
+		System.out.println("I am : " + this.myAgent.getLocalName() + " infos after merge : " + Arrays.toString(((fsmAgent) this.myAgent).getRessources_knowledge().toArray()));
 
 	}
 

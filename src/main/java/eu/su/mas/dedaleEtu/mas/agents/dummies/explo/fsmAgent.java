@@ -18,7 +18,7 @@ import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.StopBehaviour;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.FSMBehaviour;
-import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.Rejoin;
+import eu.su.mas.dedaleEtu.mas.behaviours.ExperimentalSBehaviours.ComputeColl;
 
 public class fsmAgent extends AbstractDedaleAgent {
 
@@ -27,6 +27,14 @@ public class fsmAgent extends AbstractDedaleAgent {
 	private MapRepresentation myMap;
 
 	public boolean move = true, successMerge = false, rejoinMode = false;
+	public boolean isRejoinMode() {
+		return rejoinMode;
+	}
+
+	public void setRejoinMode(boolean rejoinMode) {
+		this.rejoinMode = rejoinMode;
+	}
+
 	// private static final int PokeTime = 3000; // might be usefull to reduce # of
 	// msgs sent
 	// public final int sensi=20;
@@ -39,6 +47,8 @@ public class fsmAgent extends AbstractDedaleAgent {
 	private int cptAgents;
 
 	private int CollectedQty = 0;
+	
+	private String targetNode;
 
 	private List<Couple<Observation, Integer>> BackpackCapacity;
 
@@ -65,6 +75,9 @@ public class fsmAgent extends AbstractDedaleAgent {
 	private List<String> meeting_room = new ArrayList<String>();
 
 	private List<Behaviour> lb;
+	
+	private List<List<String>> paths_to_treasures = new ArrayList<List<String>>();;
+	private List<String> path_to_rejoin = new ArrayList<String>();
 
 	private FSMBehaviour fsmb;
 
@@ -75,7 +88,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 	private static final String Explo = "Exploration";
 	private static final String Booped = "Booped";
 	private static final String StopAg = "Stop";
-	private static final String Rejoin = "Rejoin";
+	private static final String ComputeColl = "ComputeColl";
 	
 	protected void setup() {
 
@@ -111,7 +124,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 		fsmb.registerState(new ReceiveMap(this), R_Map); // ReceiveMap Behaviour
 		fsmb.registerState(new ExploreBehaviour(this, this.myMap, this.agenda), Explo); // Exploration
 		fsmb.registerState(new StopBehaviour(), StopAg); // Ending
-		fsmb.registerLastState(new Rejoin(this, this.myMap), Rejoin);
+		fsmb.registerLastState(new ComputeColl(this, this.myMap, this.agenda), ComputeColl);
 
 		// Define transitions :
 
@@ -127,8 +140,8 @@ public class fsmAgent extends AbstractDedaleAgent {
 		fsmb.registerTransition(Explo, R_Map, 5); // explo -> receive map
 		fsmb.registerDefaultTransition(R_Map, Explo); // receive map -> explo
 
-		fsmb.registerTransition(Explo, StopAg, 100); // finishing exploration
-		fsmb.registerDefaultTransition(StopAg, Rejoin); // Rejoin at meeting room
+		fsmb.registerTransition(Explo, ComputeColl, 102); // finishing exploration
+		//fsmb.registerDefaultTransition(StopAg, ComputeColl); // Rejoin at meeting room
 		
 		/*
 		 * Start FSM and print in console
@@ -305,6 +318,26 @@ public class fsmAgent extends AbstractDedaleAgent {
 		return goldy;
 	}
 	
+	public int total_gold() {
+		int res = 0;
+		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
+			if (this.ressources_knowledge.get(i).getRight().getRight().getLeft().equals("Gold")) {
+				res += this.ressources_knowledge.get(i).getRight().getRight().getRight();
+			}
+		}
+		return res;
+	}
+	
+	public int total_diam() {
+		int res = 0;
+		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
+			if (this.ressources_knowledge.get(i).getRight().getRight().getLeft().equals("Diamond")) {
+				res += this.ressources_knowledge.get(i).getRight().getRight().getRight();
+			}
+		}
+		return res;
+	}
+	
 	public List<Couple<String, Couple<Long, Couple<String, Integer>>>> getDiamonds() {
 		List<Couple<String, Couple<Long, Couple<String, Integer>>>> diam = new ArrayList<>();
 		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
@@ -323,6 +356,26 @@ public class fsmAgent extends AbstractDedaleAgent {
 			}
 		}
 	return on_node;
+	}
+	
+	public List<Couple<String, Integer>> get_ags_bckpck_g() {
+		List<Couple<String, Integer>> res = new ArrayList<Couple<String, Integer>>();
+		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
+			if(this.ressources_knowledge.get(i).getLeft().equals("1stAgent") || this.ressources_knowledge.get(i).getLeft().equals("2ndAgent") || this.ressources_knowledge.get(i).getLeft().equals("3ndAgent")) {
+				res.add(new Couple<String, Integer>(this.ressources_knowledge.get(i).getLeft(), this.ressources_knowledge.get(i).getRight().getRight().getRight()));
+			}
+		}
+		return res;
+	}
+	
+	public List<Couple<String, Integer>> get_ags_bckpck_d() {
+		List<Couple<String, Integer>> res = new ArrayList<Couple<String, Integer>>();
+		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
+			if(this.ressources_knowledge.get(i).getLeft().equals("1stAgent") || this.ressources_knowledge.get(i).getLeft().equals("2ndAgent") || this.ressources_knowledge.get(i).getLeft().equals("3ndAgent")) {
+				res.add(new Couple<String, Integer>(this.ressources_knowledge.get(i).getLeft(), Integer.parseInt(this.ressources_knowledge.get(i).getRight().getRight().getLeft())));
+			}
+		}
+		return res;
 	}
 
 	public List<String> getMeeting_room() {
@@ -356,6 +409,40 @@ public class fsmAgent extends AbstractDedaleAgent {
 			}
 		}
 		return res;
+	}
+
+	public List<List<String>> getPaths_to_treasures() {
+		return paths_to_treasures;
+	}
+
+	public void setPaths_to_treasures(List<List<String>> paths_to_treasures) {
+		this.paths_to_treasures = paths_to_treasures;
+	}
+	
+	public void updatePath_to_rejoin(List<String> path_to_rejoin) {
+		this.path_to_rejoin.clear();
+		this.path_to_rejoin = new ArrayList<String>();
+		this.path_to_rejoin = path_to_rejoin;
+	}
+
+	public List<String> getPath_to_rejoin() {
+		return path_to_rejoin;
+	}
+	
+	public void rm_e_path_to_rejoin(String e) {
+		this.path_to_rejoin.remove(e);
+	}
+
+	public void setPath_to_rejoin(List<String> path_to_rejoin) {
+		this.path_to_rejoin = path_to_rejoin;
+	}
+
+	public String getTargetNode() {
+		return targetNode;
+	}
+
+	public void setTargetNode(String targetNode) {
+		this.targetNode = targetNode;
 	}
 	
 	
