@@ -15,6 +15,7 @@ import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation.MapAttribute;
 import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedaleEtu.mas.agents.MainAgent;
+import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.UnreadableException;
 import javafx.util.Pair;
@@ -37,5 +38,9 @@ public class InitializeBehaviour extends OneShotBehaviour {
 		
 		long initTime = System.currentTimeMillis();
 		((MainAgent)this.myAgent).setInitTime(initTime);
+		
+		List<Couple<Observation, Integer>> state = ((AbstractDedaleAgent)this.myAgent).getBackPackFreeSpace();
+		((MainAgent)this.myAgent).addRawAgentInfo(this.myAgent.getLocalName(), state);
+		
 	}
 }

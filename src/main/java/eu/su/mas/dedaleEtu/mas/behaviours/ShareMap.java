@@ -281,14 +281,13 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 			}
 			this.open2 = othersOpenList;
 			
-//			List<String> open = ((MainAgent)this.myAgent).getOpenNodes();
+			List<String> open = ((MainAgent)this.myAgent).getOpenNodes();
 			List<String> closed = ((MainAgent)this.myAgent).getClosedNodes();
 			
 			String choices = "";
 			if (!encoded.isEmpty()) {
 				for (String node : othersOpenList) {
-//					if ( (!open.contains(node) &&  (!closed.contains(node)) ) ) {
-					if ( !closed.contains(node) )  {
+					if ( (!open.contains(node) &&  (!closed.contains(node)) ) ) {
 						choices += node + ",";
 					}
 				} 
@@ -414,7 +413,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 			((MainAgent)this.myAgent).setMap(myMap);
 			
 			if (this.lastSent < step) {
-				String content = ((MainAgent)this.myAgent).getNodesTreasuresSerialized();
+				String content = ((MainAgent)this.myAgent).getTreasuresInfoSerialized();
 				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 				msg.setProtocol("SM-TREASURE");
 				msg.setConversationId( ((MainAgent)this.myAgent).getCommID() );

@@ -34,6 +34,8 @@ public class Navigation extends OneShotBehaviour {
 	
 	private boolean switch_to_standby;
 	
+	private boolean switch_to_unblock;
+	private int 	consecutive_block=0;
 	private String destination;
 	
 	public Navigation(Agent a) {
@@ -45,16 +47,28 @@ public class Navigation extends OneShotBehaviour {
 		((MainAgent)this.myAgent).timer();
 		System.out.println("-> " + this.myAgent.getLocalName() + " navigation <-");
 		String myName = this.myAgent.getLocalName();
+		MapRepresentation map = ((MainAgent)this.myAgent).getMap();
 		this.currentPosition = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 	    this.joined_destination = false;
 		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate();
 		this.blocked = ((MainAgent)this.myAgent).isBlocked();
 		this.open = ((MainAgent)this.myAgent).getOpenNodes();
 		this.onOpenNode = false;
-		this.explo_done = open.isEmpty();
 		this.shareInit = false;
+		boolean newMsg=false;
+		this.explo_done = open.isEmpty();
+		switch_to_unblock = false;
+
 		
-		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("STANDBY");
+		newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
+		if (newMsg) {
+			((MainAgent)this.myAgent).incrementShareStep();
+			((MainAgent)this.myAgent).incrementShareStep();
+			this.shareInit = true;
+			return;
+		}
+
+	    newMsg = ((MainAgent)this.myAgent).checkInbox("STANDBY");
 		if (newMsg && ((MainAgent)this.myAgent).interlocutorInMeetupGroup() ) {
 			if (!this.explo_done) { this.shareInit= true;         }
 			else                  { this.switch_to_standby = true;}
@@ -65,15 +79,7 @@ public class Navigation extends OneShotBehaviour {
 			this.shareInit= true;
 			return;
 		}
-		else {System.out.println(myName + " ignores it and has destination " + this.destination + " was blocked " + ((MainAgent)this.myAgent).getBlockCount() + " is he blocked ? " + this.blocked);}
 		
-		newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
-		if (newMsg) {
-			((MainAgent)this.myAgent).incrementShareStep();
-			((MainAgent)this.myAgent).incrementShareStep();
-			this.shareInit = true;
-			return;
-		}
 		
 		newMsg = ((MainAgent)this.myAgent).checkInbox("SM-HELLO");
 		if (newMsg) {
@@ -83,10 +89,25 @@ public class Navigation extends OneShotBehaviour {
 		}
 		
 		if (this.blocked) {
+			if (this.consecutive_block > 4) { 
+				this.switch_to_unblock = true;
+				this.consecutive_block = 0;
+				if (this.path == null) {
+					if (!this.explo_done) {this.path = map.getShortestPathToClosestOpenNode(currentPosition);}
+					else {
+						if (this.destination != null) {this.path = map.getShortestPath(currentPosition, this.destination);}
+						else						  {System.out.println(myName + " is in trouble"); return;}
+					}
+				}
+				((MainAgent)this.myAgent).setPathToFollow(this.path);
+				return; 
+			}
+			
 			String lastTried = ((MainAgent)this.myAgent).getLastTry();
 			MapRepresentation tempMap = ((MainAgent)this.myAgent).getMap().copy();
 			tempMap.removeNode(lastTried);
 			if (!this.explo_done) {
+				if ( tempMap.getOpenNodes().isEmpty() ) {return;}
 				this.path = tempMap.getShortestPathToClosestOpenNode(currentPosition);
 				if (this.path == null) {
 					for (String node : ((tempMap.getOpenNodes() ))) {
@@ -103,6 +124,7 @@ public class Navigation extends OneShotBehaviour {
 			}
 			return;
 		}
+		else {this.consecutive_block = 0;}
 		
 		if (this.communicate && !this.explo_done) {
 			this.shareInit = true;
@@ -119,7 +141,7 @@ public class Navigation extends OneShotBehaviour {
 					if (this.destination.equals(node)) {this.switch_to_standby = true; return;}
 				}
 				
-				MapRepresentation map = ((MainAgent)this.myAgent).getMap();
+				
 		
 				if ( this.path == null || this.path.isEmpty()) {this.path = map.getShortestPath(currentPosition, this.destination); }
 				else {
@@ -142,7 +164,7 @@ public class Navigation extends OneShotBehaviour {
 		}
 		
 		
-		MapRepresentation map = ((MainAgent)this.myAgent).getMap();
+
 
 		if (this.path == null ||   this.path.isEmpty()) {
 			if ( ((MainAgent)this.myAgent).getLastBehaviour().equals("ShareMap") ) { this.path = map.getShortestPathToRandomOpenNode(currentPosition);  }
@@ -194,8 +216,12 @@ public class Navigation extends OneShotBehaviour {
 			return 3;
 		}
 		
-		if (this.blocked) {
+		if (this.switch_to_unblock) {
 			return 4;
+		}
+		
+		if (this.blocked) {
+			return 0;
 		}
 		
 		if (this.explo_done) { //Should start navigation to meetup point

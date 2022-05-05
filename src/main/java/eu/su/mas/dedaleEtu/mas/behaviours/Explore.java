@@ -105,14 +105,21 @@ public class Explore extends OneShotBehaviour {
 			}
 						
 			List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
-			
 			int size = obs.size() ;
 			List<String> nextNodesChoice = new ArrayList<>();
 			
 			for (int i = 1 ; i < size ; i ++ ) {
 				String node = obs.get(i).getLeft() ;
-				
 				boolean isNew = map.addNewNode(node);
+
+				List<Couple<Observation, Integer>> getInfo = obs.get(i).getRight();				
+				if (!getInfo.isEmpty()) {
+					Couple<Observation,Integer> c = getInfo.get(0);
+					String treasureType = c.getLeft().getName();
+					int qty 			= c.getRight();
+					long timeOfObs = ((MainAgent)this.myAgent).getCurrentTime();
+					((MainAgent)this.myAgent).addTreasureOnNode(node, treasureType, qty, timeOfObs);
+				}
 				
 				if (isNew) {
 					open.add(node);

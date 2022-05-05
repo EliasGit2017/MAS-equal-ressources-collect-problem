@@ -15,13 +15,13 @@ import eu.su.mas.dedaleEtu.mas.knowledge.MapRepresentation;
 public class SolveInterlocking extends OneShotBehaviour { //Works during collect
 
 
-	private AID blockedAgent;	//The agent we're blocking
-	private String blockedAgentPos;
-	private List<String> blockedAgentPath;
+	private AID agentImBlocking;	//The agent we're blocking
+	private List<String> agentImBlockingPath;
 	
-	private List<String> path;
+	private AID agentThatBlocksMe;	//The agent that blocks us
 	
-	private AID blockingAgent;	//The agent that blocks us
+	private List<String> pathToUnblock = null; // Path that I will make me go 
+	private List<String> pathToFollow = null;  // Path that I need to follow
 	
 	private final int MAX_TRIES = 5;
 	
@@ -31,6 +31,13 @@ public class SolveInterlocking extends OneShotBehaviour { //Works during collect
 	
 	private boolean end = false;
 	
+	private boolean blockingSomeone() {
+		return this.agentImBlocking == null;
+	}
+	
+	private boolean blockedBySomeone() {
+		return this.agentThatBlocksMe == null;
+	}
 	
 	private String encode(List<String> list) {
 		String separator = ",";
@@ -57,49 +64,65 @@ public class SolveInterlocking extends OneShotBehaviour { //Works during collect
 	public void action() {
 		String myName          = this.myAgent.getLocalName();
 		String currentPosition = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
-		String desiredPosition = "";
-		String destination = "";
+		List<String> pathToFollow = ((MainAgent)this.myAgent).getPathToFollow();
 		
-		if (this.step == 0) {
+		if (this.step == 0) { // I am blocked - send message
 			
 			if (this.tries == 0) {
 				List<String> agentsNames = ((MainAgent)this.myAgent).getAgenda();
+				List<String> content = new ArrayList<String>();
+				content.add(currentPosition);
+				for (String el : pathToFollow) { content.add(el); }
+				if (this.agentImBlocking == null) {content.add("false");}
+				else							  {content.add("true") ;}
 				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 				msg.setProtocol("BLOCK-WHO");
-				msg.setSender(     this.myAgent.getAID()    );
-				msg.setContent( desiredPosition );
+				msg.setSender(  this.myAgent.getAID()     );
+				msg.setContent( this.encode(pathToFollow) );
 				for (String teammate : agentsNames) { msg.addReceiver(new AID(teammate, AID.ISLOCALNAME ));}
 				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
 			}
 			
+			// If receives message of someone that is blocked
+			
 			if (this.tries >= this.MAX_TRIES) {
-				MapRepresentation map = ((MainAgent)this.myAgent).getMap();
-				map.removeNode(desiredPosition);
-				List<String> path = map.getShortestPath(currentPosition, destination);
-				if (path == null) {return;} //RETRY
-				else			  {return;}
+				MapRepresentation newMap = ((MainAgent)this.myAgent).getMap().copy();
+				newMap.removeNode( pathToFollow.get(0) );
+				List<String> path = newMap.getShortestPath(currentPosition, pathToFollow.get( pathToFollow.size() - 1 ));
+				if (path == null) {System.out.println(myName +" Trouble"); int a = 1/0;} //RETRY
+				((MainAgent)this.myAgent).setPathToFollow(path);
+				return;
 			}
 			
+			boolean newMsg = ((MainAgent)this.myAgent).checkInbox("BLOCK-ACK");
+			if (newMsg){
+				this.step = 2;
+			}
+			
+			newMsg         = ((MainAgent)this.myAgent).checkInbox("BLOCK-WHO"); 
+			if (newMsg){
+				String othersName = ((MainAgent)this.myAgent).getInterlocutorName();
+				List<String> recMsg = this.decode( ((MainAgent)this.myAgent).getCurrentMsgStringContent() );
+				String blockingOther = recMsg.get( recMsg.size()-1 );
+				boolean isBlockingOther = blockingOther.equals("true");
+				boolean priorityMine = true;
+				
+				if (  isBlockingOther && !this.blockingSomeone() ) { priorityMine = false; }
+				
+				if ( !isBlockingOther && !this.blockingSomeone() ) { if (othersName.compareTo(myName) > 0) {priorityMine = false;} }
+				
+				if ( isBlockingOther  &&  this.blockingSomeone() ) {  System.out.println("Can't handle this"); }
+				
+				if (!priorityMine) { this.step = 1;} 
+				else               { this.step = 2;}
+			}
 			return;
 		}
 		
-		if (this.step == 1) {
-			MapRepresentation map = ((MainAgent)this.myAgent).getMap();
-			AID interlocutor = ((MainAgent)this.myAgent).getInterlocutorAID();
-			this.blockedAgent = interlocutor;
-			
-			if (this.tries == 0) {
-				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-				msg.setSender( this.myAgent.getAID() );
-				msg.setProtocol("BLOCK-ACK");
-				msg.setContent("1");
-				msg.addReceiver(interlocutor);
-				((AbstractDedaleAgent)this.myAgent).send(msg);
-			}
-			
-			if (this.path.isEmpty()) {
-
-			}
+		
+		
+		
+		if (this.step == 1) { // I am blocking someone - sending ACK (tell  him I'm going to unblock)
 			
 			if (this.tries > MAX_TRIES) { // Tries to get unblocked
 				this.tries = 0;
@@ -107,44 +130,61 @@ public class SolveInterlocking extends OneShotBehaviour { //Works during collect
 				return;
 			}
 			
-			
-			List<String> nodesToAvoid = this.decode( ((MainAgent)this.myAgent).getCurrentMsgStringContent() );
-			List<String> neighbors = map.getNeighbors(currentPosition);
-			boolean success = false;
-			for (String node: neighbors) {
-				if (!nodesToAvoid.contains(node)) {
-					success = ((MainAgent)this.myAgent).move(node);
-					if (success) {break;}
-				}
+			if (this.tries == 0) {
+				AID interlocutor = ((MainAgent)this.myAgent).getInterlocutorAID();
+				
+				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+				msg.setSender( this.myAgent.getAID() );
+				msg.setProtocol("BLOCK-ACK");
+				msg.setContent("1");
+				msg.addReceiver(interlocutor);
+				((AbstractDedaleAgent)this.myAgent).send(msg);
+				
+				if (this.agentImBlocking != null) {System.out.println(myName + " trouble on step 1"); int a = 1/0; }
+				
+				MapRepresentation myMap = ((MainAgent)this.myAgent).getMap();
+				this.agentImBlocking = interlocutor;
+				this.agentImBlockingPath = this.decode( ((MainAgent)this.myAgent).getCurrentMsgStringContent() );
+				String lastElement = this.agentImBlockingPath.get( this.agentImBlockingPath.size() - 1 );
+				this.agentImBlockingPath.remove(lastElement);
+				this.pathToUnblock = myMap.computeNearestEscape(currentPosition, agentImBlockingPath);
 			}
-			if (!success && this.path == null) { this.path = map.computeNearestEscape(currentPosition, nodesToAvoid); }
-			if (this.path == null)			   {System.out.println(myName + " had an issue while escaping ! "); int a = 1/0;}
-			else {
-				String nextNode = this.path.get(0);
-				boolean worked = ((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
-				if (worked) {this.path.remove(0); this.tries = 1; return;}
-				else	    {this.tries +=1;}
+				
+			String nextNode = this.pathToUnblock.get(0);
+			boolean check = ((AbstractDedaleAgent)this.myAgent).moveTo(currentPosition);
+			if (check) {
+				this.pathToUnblock.remove(0); 
+				this.tries = 0;
+				if ( pathToUnblock.isEmpty() )  {
+					this.step = 3;
+					return;
+				} 
 			}
+			else { this.tries += 1; }
 		}
 		
-//		if (this.step == 2) { //Received block ACK
-//			if (normalPath.isEmpty)
-//				if blockedAgent.isEmpty
-//					this.end = true;
-//				else 
-//					this.step = 1;
-//				return
-//						
-//			String nextNode = path.get(0)
-//			boolean moved = Abstract this.myAgent.moveTo(nextNode)
-//			if (moved) {normalPath.remove(0);}
-//			
-//		}
+		
+		
+		
+		if (this.step == 2) { //Received block ACK - waiting for being unblocked
+			String nextNode = this.pathToFollow.get(0);
+			boolean success = ((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
+			if (success) { 
+				this.pathToFollow.remove(0); 
+				if ( this.pathToFollow.isEmpty() ) {
+					this.step = 3;
+				}
+			}
+		}		
 	}
 
 	public int onEnd() {
 		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
-		
+		if (this.step == 3) { //end of conflict
+			this.step = 0;
+			this.tries = 0;
+			return 2;
+		}
 		return 0;
 	}
 }

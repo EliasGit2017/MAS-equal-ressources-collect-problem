@@ -95,6 +95,8 @@ public class MainAgent extends AbstractDedaleAgent {
 	
 	private String lastTriedMovement = "";
 	
+	private List<String> pathToFollow = new ArrayList<String>();
+	
 	public int getNbPing()                { return this.nbPingSent; }
 	public void incrementNbPing()         { this.nbPingSent += 1;   }
 	public int getNbMovement()            { return this.nbMovement; }
@@ -107,7 +109,15 @@ public class MainAgent extends AbstractDedaleAgent {
 	public int getBlockCount() {
 		return this.blockCount;
 	}
+	
+	public List<String> getPathToFollow() {
+		return this.pathToFollow;
+	}
 
+	public void setPathToFollow(List<String> newPath) {
+		this.pathToFollow = newPath;
+	}
+	
 	public void mergeReceivedNodesTreasuresInfo(String received) {
 		if (received.isEmpty()) {return;}
 		String[] info = received.split(";") ;
@@ -121,7 +131,7 @@ public class MainAgent extends AbstractDedaleAgent {
 		}
 	}
 	
-	public String getNodesTreasuresSerialized() {
+	public String getTreasuresInfoSerialized() {
 		String RETURN = "";
 		Set<String> keys = this.treasures.keySet();
 		for (String node : keys) {
@@ -208,10 +218,8 @@ public class MainAgent extends AbstractDedaleAgent {
 			long lastUpdate = this.treasures.get(node).getRight();
 			if (lastUpdate > timeOfObservation) {return;}
 			this.treasures.replace(node, newVal);
-			return;
 		}
-		
-		this.treasures.put(node, newVal);
+		else { this.treasures.put(node, newVal); }
 		this.myMap.setTreasureInfo(node, treasureType);
 	}
 	
@@ -223,7 +231,7 @@ public class MainAgent extends AbstractDedaleAgent {
 		return String.valueOf(returnVal);
 	}
 	
-	private long getCurrentTime() {return System.currentTimeMillis() - this.initTime;}
+	public long getCurrentTime() {return System.currentTimeMillis() - this.initTime;}
 	
 	public boolean interlocutorInMeetupGroup() {
 		return this.meetupGroup.contains( this.getInterlocutorName() );
@@ -404,7 +412,7 @@ public class MainAgent extends AbstractDedaleAgent {
 				return false;
 			}
 			
-			if (ProtocolName.equals("WHO-BLOCKS") && !this.getCurrentPosition().equals( msgReceived.getContent().split(",")[0] )) {
+			if (ProtocolName.equals("BLOCK-WHO") && !this.getCurrentPosition().equals( msgReceived.getContent().split(",")[0] )) {
 				System.out.println("Agent " + this.getLocalName() + " has IGNORED a message from " + msgReceived.getSender().getLocalName() + "!" + " Protocol: " + ProtocolName);
 				return false;
 			}

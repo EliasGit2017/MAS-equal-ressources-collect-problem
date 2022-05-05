@@ -80,7 +80,7 @@ public class SetMeetup extends OneShotBehaviour { //
 					newMeetPoint = othersMeetPoint;
 				}
 				else {// If both have a meet point, they keep it
-					this.step = 4;
+					this.step = 3;
 					return;
 				}
 				
