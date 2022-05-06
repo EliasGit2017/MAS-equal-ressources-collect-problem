@@ -118,15 +118,6 @@ public class Explore extends OneShotBehaviour {
 			for (int i = 1 ; i < size ; i ++ ) {
 				String node = obs.get(i).getLeft() ;
 				boolean isNew = map.addNewNode(node);
-
-				List<Couple<Observation, Integer>> getInfo = obs.get(i).getRight();				
-				if (!getInfo.isEmpty()) {
-					Couple<Observation,Integer> c = getInfo.get(0);
-					String treasureType = c.getLeft().getName();
-					int qty 			= c.getRight();
-					long timeOfObs = ((MainAgent)this.myAgent).getCurrentTime();
-					((MainAgent)this.myAgent).addTreasureOnNode(node, treasureType, qty, timeOfObs);
-				}
 				
 				if (isNew) {
 					open.add(node);
@@ -136,6 +127,30 @@ public class Explore extends OneShotBehaviour {
 					nextNodesChoice.add(node);
 				}
 			}
+			
+			for (int j = 0 ; j < size ; j++) {
+				String node = obs.get(j).getLeft();
+				List<Couple<Observation, Integer>> getInfo = obs.get(j).getRight();	
+				if (!getInfo.isEmpty()) {
+					System.out.println("here");
+					Couple<Observation,Integer> c=null;
+					for (Couple<Observation,Integer> test : getInfo) {
+						String tst = test.getLeft().getName();
+						if (tst.equals("Gold") || tst.equals("Diamond")) {
+							c = test; break;
+						}
+					}
+
+					String treasureType = c.getLeft().getName();
+					int qty 			= c.getRight();
+					long timeOfObs = ((MainAgent)this.myAgent).getCurrentTime();
+					((MainAgent)this.myAgent).addTreasureOnNode(node, treasureType, qty, timeOfObs);
+
+				}
+			}
+			
+			
+			
 			
 			if (open.size() == 0 && closed.size() != 0) {
 				System.out.println("END OF EXPLORATION FOR " + myName);

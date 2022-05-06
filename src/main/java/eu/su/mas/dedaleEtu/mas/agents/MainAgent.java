@@ -92,7 +92,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	
 	private final int COMM_COOLDOWN = 10;	//Refuse communication (other than collision solver) with an agent if they communicated less than COMM_TIMEOUT steps earlier.
 	
-	private final int WAIT_TIME = 500; 		// Standard time (in ms) to wait between each action
+	private final int WAIT_TIME = 100; 		// Standard time (in ms) to wait between each action
 	
 	private String lastTriedMovement = "";
 	
