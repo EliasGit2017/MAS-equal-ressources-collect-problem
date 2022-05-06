@@ -57,8 +57,15 @@ public class Explore extends OneShotBehaviour {
 		this.shareInit = false;
 		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate() ;
 		this.blocked = ((MainAgent)this.myAgent).isBlocked();
+		boolean newMsg= false;
 		
-		boolean newMsg = ((MainAgent)this.myAgent).checkInbox("STANDBY");
+		newMsg = ((MainAgent)this.myAgent).checkInbox("BLOCK-WHO");
+		if (newMsg) {
+			this.blocked = true;
+			((MainAgent)this.myAgent).setReceivedInterlockIssue();
+			return;
+		}
+		newMsg = ((MainAgent)this.myAgent).checkInbox("STANDBY");
 		if (newMsg && ((MainAgent)this.myAgent).interlocutorInMeetupGroup() ) {
 			if (!this.explo_done) { this.shareInit= true;         }
 			else                  { this.switch_to_standby = true;}

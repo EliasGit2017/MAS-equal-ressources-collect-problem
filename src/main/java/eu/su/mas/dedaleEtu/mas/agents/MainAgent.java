@@ -17,6 +17,7 @@ import eu.su.mas.dedaleEtu.mas.behaviours.Explore;
 import eu.su.mas.dedaleEtu.mas.behaviours.Navigation;
 import eu.su.mas.dedaleEtu.mas.behaviours.SetMeetup;
 import eu.su.mas.dedaleEtu.mas.behaviours.ShareMap;
+import eu.su.mas.dedaleEtu.mas.behaviours.SolveInterlocking;
 import eu.su.mas.dedaleEtu.mas.behaviours.StopAgent;
 import eu.su.mas.dedaleEtu.mas.behaviours.Unblock;
 import eu.su.mas.dedaleEtu.mas.behaviours.Standby;
@@ -91,16 +92,35 @@ public class MainAgent extends AbstractDedaleAgent {
 	
 	private final int COMM_COOLDOWN = 10;	//Refuse communication (other than collision solver) with an agent if they communicated less than COMM_TIMEOUT steps earlier.
 	
-	private final int WAIT_TIME = 100; 		// Standard time (in ms) to wait between each action
+	private final int WAIT_TIME = 500; 		// Standard time (in ms) to wait between each action
 	
 	private String lastTriedMovement = "";
 	
 	private List<String> pathToFollow = new ArrayList<String>();
 	
+	private boolean need_solve_interlock = false;
+	
+	private List<String> blockedNodes = new ArrayList<String>();
+	
 	public int getNbPing()                { return this.nbPingSent; }
 	public void incrementNbPing()         { this.nbPingSent += 1;   }
 	public int getNbMovement()            { return this.nbMovement; }
 	public void incremementMoveCounter()  { this.nbMovement += 1;   }
+	
+	public void addBlockedNode(String node) { if (!this.blockedNodes.contains(node)) {this.blockedNodes.add(node);} } 
+	public List<String> getBlockedNodes() {
+		return this.blockedNodes;
+	}
+	public void resetBlockedNodes() {this.blockedNodes = new ArrayList<String>();}
+	
+	public boolean getReceivedInterlockIssue() {
+		boolean value = this.need_solve_interlock;
+		this.need_solve_interlock = false;
+		return value;
+	}
+	public void setReceivedInterlockIssue() {
+		this.need_solve_interlock = true;
+	}
 	
 	public String getLastTry() {
 		return this.lastTriedMovement;
@@ -116,6 +136,17 @@ public class MainAgent extends AbstractDedaleAgent {
 
 	public void setPathToFollow(List<String> newPath) {
 		this.pathToFollow = newPath;
+	}
+	
+	public MapRepresentation mapWithoutBlocked(boolean onlyLast) {
+		MapRepresentation newMap = this.myMap.copy();
+		if (onlyLast) {
+			newMap.removeNode( this.getLastTry() );
+		}
+		else {
+			for (String node : this.blockedNodes) {newMap.removeNode(node);}
+		}
+			return newMap;
 	}
 	
 	public void mergeReceivedNodesTreasuresInfo(String received) {
@@ -411,9 +442,10 @@ public class MainAgent extends AbstractDedaleAgent {
 				System.out.println("Agent " + this.getLocalName() + " has IGNORED a message from " + msgReceived.getSender().getLocalName() + "!" + " Protocol: " + ProtocolName);
 				return false;
 			}
-			
-			if (ProtocolName.equals("BLOCK-WHO") && !this.getCurrentPosition().equals( msgReceived.getContent().split(",")[0] )) {
+
+			if (ProtocolName.equals("BLOCK-WHO") && !this.getCurrentPosition().equals( msgReceived.getContent().split(",")[1] )) {
 				System.out.println("Agent " + this.getLocalName() + " has IGNORED a message from " + msgReceived.getSender().getLocalName() + "!" + " Protocol: " + ProtocolName);
+				System.out.println("curr pos " + this.getCurrentPosition() + " path " + msgReceived.getContent() + " compare " + msgReceived.getContent().split(",")[1]);
 				return false;
 			}
 			
@@ -511,7 +543,8 @@ public class MainAgent extends AbstractDedaleAgent {
 	private static final String Share      = "D";
 	private static final String SetMeet    = "E";
 	private static final String Unblock	   = "F";
-	private static final String Standby	   = "G";
+	private static final String AdvUnblock = "G";
+	private static final String Standby	   = "H";
 	
 	private static final String End		   = "Z";
  
@@ -554,13 +587,14 @@ public class MainAgent extends AbstractDedaleAgent {
 		FSMBehaviour fsm = new FSMBehaviour(this);
 		
 		fsm.registerFirstState(new InitializeBehaviour(), Start);
-		fsm.registerState(new Explore(this),    Explo);
-		fsm.registerState(new Navigation(this), Nav);
-		fsm.registerState(new ShareMap(this),   Share);
-		fsm.registerState(new SetMeetup(this),  SetMeet);
-		fsm.registerState(new Unblock(this),    Unblock);
-		fsm.registerState(new Standby(this),    Standby);
-		fsm.registerLastState(new StopAgent(),  End);
+		fsm.registerState(new Explore(this),              Explo);
+		fsm.registerState(new Navigation(this),           Nav);
+		fsm.registerState(new ShareMap(this),             Share);
+		fsm.registerState(new SetMeetup(this),            SetMeet);
+		fsm.registerState(new Unblock(this),              Unblock);
+		fsm.registerState(new SolveInterlocking(this),    AdvUnblock);
+		fsm.registerState(new Standby(this),              Standby);
+		fsm.registerLastState(new StopAgent(),            End);
 		
 		
 		fsm.registerDefaultTransition(Start, Explo);
@@ -568,13 +602,13 @@ public class MainAgent extends AbstractDedaleAgent {
 		fsm.registerDefaultTransition(Explo, Explo);
 		fsm.registerTransition(Explo, Nav, 2);
 		fsm.registerTransition(Explo, Share, 3);
-		fsm.registerTransition(Explo, Unblock, 4);
+		fsm.registerTransition(Explo, AdvUnblock, 4);
 		fsm.registerTransition(Explo, Standby, 5);
 		
 		fsm.registerDefaultTransition(Nav, Nav);
 		fsm.registerTransition(Nav, Explo, 1);
 		fsm.registerTransition(Nav, Share, 3);
-		fsm.registerTransition(Nav, Unblock, 4);
+		fsm.registerTransition(Nav, AdvUnblock, 4);
 		fsm.registerTransition(Nav, Standby, 5);
 		
 		fsm.registerDefaultTransition(Share, Share);
@@ -593,6 +627,9 @@ public class MainAgent extends AbstractDedaleAgent {
 		
 		fsm.registerDefaultTransition(SetMeet, SetMeet);
 		fsm.registerTransition(SetMeet, Nav, 2);
+		
+		fsm.registerDefaultTransition(AdvUnblock, AdvUnblock);
+		fsm.registerTransition(AdvUnblock, Nav, 2);
 		
 		
 		List<Behaviour> lb=new ArrayList<Behaviour>();

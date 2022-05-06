@@ -38,6 +38,8 @@ public class Navigation extends OneShotBehaviour {
 	private int 	consecutive_block=0;
 	private String destination;
 	
+	private boolean tryAgain = false;
+	
 	public Navigation(Agent a) {
 		super(a);
 	}
@@ -59,6 +61,12 @@ public class Navigation extends OneShotBehaviour {
 		this.explo_done = open.isEmpty();
 		switch_to_unblock = false;
 
+		newMsg = ((MainAgent)this.myAgent).checkInbox("BLOCK-WHO");
+		if (newMsg) {
+			this.blocked = true;
+			((MainAgent)this.myAgent).setReceivedInterlockIssue();
+			return;
+		}
 		
 		newMsg = ((MainAgent)this.myAgent).checkInbox("SM-ACK");
 		if (newMsg) {
@@ -89,44 +97,52 @@ public class Navigation extends OneShotBehaviour {
 		}
 		
 		if (this.blocked) {
-			if (this.consecutive_block > 4) { 
-				this.switch_to_unblock = true;
-				this.consecutive_block = 0;
-				if (this.path == null) {
-					if (!this.explo_done) {this.path = map.getShortestPathToClosestOpenNode(currentPosition);}
-					else {
-						if (this.destination != null) {this.path = map.getShortestPath(currentPosition, this.destination);}
-						else						  {System.out.println(myName + " is in trouble"); return;}
-					}
-				}
-				((MainAgent)this.myAgent).setPathToFollow(this.path);
-				return; 
-			}
-			
-			String lastTried = ((MainAgent)this.myAgent).getLastTry();
-			MapRepresentation tempMap = ((MainAgent)this.myAgent).getMap().copy();
-			tempMap.removeNode(lastTried);
+//			this.consecutive_block += 1;
+//			if (this.consecutive_block > 4) { 
+//				this.switch_to_unblock = true;
+//				this.consecutive_block = 0;
+//				if (this.path == null) {
+//					if (!this.explo_done) {this.path = map.getShortestPathToClosestOpenNode(currentPosition);}
+//					else {
+//						if (this.destination != null) {this.path = map.getShortestPath(currentPosition, this.destination);}
+//						else						  {System.out.println(myName + " is in trouble"); return;}
+//					}
+//				}
+//				((MainAgent)this.myAgent).setPathToFollow(this.path);
+//				return; 
+//			}
+			String lastTry = ((MainAgent)this.myAgent).getLastTry();
+			((MainAgent)this.myAgent).addBlockedNode(lastTry);
+			MapRepresentation tempMap;
+			if (!this.tryAgain) { tempMap = ((MainAgent)this.myAgent).mapWithoutBlocked(false); }
+			else 		        { tempMap = ((MainAgent)this.myAgent).mapWithoutBlocked(true); this.tryAgain=false; }
+
+			System.out.println("Ici ?");
 			if (!this.explo_done) {
-				if ( tempMap.getOpenNodes().isEmpty() ) {return;}
-				this.path = tempMap.getShortestPathToClosestOpenNode(currentPosition);
+				if ( tempMap.getOpenNodes().isEmpty() ) {System.out.println("thats where");return;}
+				this.path = tempMap.getShortestPathToRandomOpenNode(currentPosition);
+				System.out.println("Là !");
+				System.out.println(this.path);
 				if (this.path == null) {
 					for (String node : ((tempMap.getOpenNodes() ))) {
 						this.path = tempMap.getShortestPath(currentPosition, node);
 						if (this.path != null) { this.blocked = false; return;}
 					}
 				}
+				if (this.path == null) {this.tryAgain = true; return;}
 			}
 			else {
 				if (this.destination == null) {this.switch_to_standby = true; this.blocked=false; return;}
 				
 				this.path = tempMap.getShortestPath(currentPosition, this.destination);
-				if (this.path == null) {System.out.println(myName + " is in trouble");}
+				if (this.path == null) {this.tryAgain=true;return;}
 			}
-			return;
+
 		}
 		else {this.consecutive_block = 0;}
 		
-		if (this.communicate && !this.explo_done) {
+		if (this.communicate && !this.explo_done && !this.blocked) {
+			System.out.println("We need to talk");
 			this.shareInit = true;
 			return;
 		}
@@ -191,7 +207,7 @@ public class Navigation extends OneShotBehaviour {
 		}
 		
 		boolean success = ((MainAgent)this.myAgent).move(nextNode);
-		
+		System.out.println("here they are");
 		if ( success )  { this.path.remove(0); }
 		else            { ((MainAgent)this.myAgent).incrementBlockCount(); }
 
@@ -217,6 +233,7 @@ public class Navigation extends OneShotBehaviour {
 		}
 		
 		if (this.switch_to_unblock) {
+			((MainAgent)this.myAgent).resetBlockCount();
 			return 4;
 		}
 		
