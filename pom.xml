@@ -1,6 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.su.mas</groupId>
 	<artifactId>dedale-etu</artifactId>
@@ -13,7 +11,7 @@
 		<name>SU-LIP6-SMA</name>
 		<url>http://www.lip6.fr/recherche/team.php?id=380</url>
 	</organization>
-	
+
 	<distributionManagement>
 		<downloadUrl>http://dedale.gitlab.io</downloadUrl>
 	</distributionManagement>
@@ -93,9 +91,9 @@
 
 		<!--  Jade -->
 		<dependency>
-    		<groupId>com.gitlab.jade-project</groupId>
-    		<artifactId>jade</artifactId>
-    		<version>master-SNAPSHOT</version>
+			<groupId>com.gitlab.jade-project</groupId>
+			<artifactId>jade</artifactId>
+			<version>master-SNAPSHOT</version>
 		</dependency>
 
 		<!-- GraphStream -->
@@ -135,6 +133,7 @@
 			<version>8036</version>
 		</dependency>
 
+
 		<!-- Junit -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -166,21 +165,31 @@
 		</dependency>
 		-->
 		<dependency>
-		    <groupId>com.gitlab.dedale</groupId>
-	    	<artifactId>dedale</artifactId>
-	    	<version>-SNAPSHOT</version>
+			<groupId>com.gitlab.dedale</groupId>
+			<artifactId>dedale</artifactId>
+			<version>-SNAPSHOT</version>
 		</dependency>
-		
+
 		<dependency>
-		    <groupId>com.gitlab.deltas</groupId>
-	    	<artifactId>mas</artifactId>
-	    	<version>-SNAPSHOT</version>
+			<groupId>com.gitlab.deltas</groupId>
+			<artifactId>mas</artifactId>
+			<version>-SNAPSHOT</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.gitlab.herpsonc</groupId>
 			<artifactId>tools</artifactId>
 			<version>-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.protobuf</groupId>
+			<artifactId>protobuf-java</artifactId>
+			<version>3.20.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.ortools</groupId>
+			<artifactId>ortools-java</artifactId>
+			<version>9.3.10497</version>
 		</dependency>
 	</dependencies>
 

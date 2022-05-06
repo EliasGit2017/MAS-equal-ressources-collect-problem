@@ -26,7 +26,16 @@ public class fsmAgent extends AbstractDedaleAgent {
 
 	private MapRepresentation myMap;
 
-	public boolean move = true, successMerge = false, rejoinMode = false;
+	public boolean move = true, successMerge = false, rejoinMode = false, planComputed = false
+			;
+	public boolean isPlanComputed() {
+		return planComputed;
+	}
+
+	public void setPlanComputed(boolean planComputed) {
+		this.planComputed = planComputed;
+	}
+
 	public boolean isRejoinMode() {
 		return rejoinMode;
 	}
@@ -76,7 +85,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 
 	private List<Behaviour> lb;
 	
-	private List<List<String>> paths_to_treasures = new ArrayList<List<String>>();;
+	private List<String> obj_to_treasures = new ArrayList<String>();
 	private List<String> path_to_rejoin = new ArrayList<String>();
 
 	private FSMBehaviour fsmb;
@@ -358,6 +367,26 @@ public class fsmAgent extends AbstractDedaleAgent {
 	return on_node;
 	}
 	
+	public int get_g_cap (String name) {
+		int res = 0;
+		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
+			if(this.ressources_knowledge.get(i).getLeft().equals(name)) {
+				res = this.ressources_knowledge.get(i).getRight().getRight().getRight();
+			}
+		}
+		return res;
+	}
+	
+	public int get_d_cap (String name) {
+		int res = 0;
+		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
+			if(this.ressources_knowledge.get(i).getLeft().equals(name)) {
+				res = Integer.parseInt(this.ressources_knowledge.get(i).getRight().getRight().getLeft());
+			}
+		}
+		return res;
+	}
+	
 	public List<Couple<String, Integer>> get_ags_bckpck_g() {
 		List<Couple<String, Integer>> res = new ArrayList<Couple<String, Integer>>();
 		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
@@ -411,13 +440,6 @@ public class fsmAgent extends AbstractDedaleAgent {
 		return res;
 	}
 
-	public List<List<String>> getPaths_to_treasures() {
-		return paths_to_treasures;
-	}
-
-	public void setPaths_to_treasures(List<List<String>> paths_to_treasures) {
-		this.paths_to_treasures = paths_to_treasures;
-	}
 	
 	public void updatePath_to_rejoin(List<String> path_to_rejoin) {
 		this.path_to_rejoin.clear();
@@ -443,6 +465,14 @@ public class fsmAgent extends AbstractDedaleAgent {
 
 	public void setTargetNode(String targetNode) {
 		this.targetNode = targetNode;
+	}
+
+	public List<String> getObj_to_treasures() {
+		return this.obj_to_treasures;
+	}
+
+	public void setObj_to_treasures(List<String> obj_to_treasures) {
+		this.obj_to_treasures = obj_to_treasures;
 	}
 	
 	
