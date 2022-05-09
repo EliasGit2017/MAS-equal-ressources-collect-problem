@@ -67,7 +67,6 @@ public class SetMeetup extends OneShotBehaviour { //
 			String newMeetPoint = "";
 			
 			if (this.currentTries == 0) {
-				System.out.println(myName + " setting meet point");
 				if (othersMeetPoint.isEmpty() && myMeetPoint.isEmpty() ) { //Both agents have no meet point
 					if (myName.compareTo(othersName) > 0) {newMeetPoint = myPos;}
 					else 								  {newMeetPoint = othersPosition;}
@@ -96,6 +95,7 @@ public class SetMeetup extends OneShotBehaviour { //
 					msg.setContent( stringGroup );
 					msg.addReceiver( interlocutor );
 					((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
+					System.out.println( myName + "'s current group " + group);
 				}
 			}
 			boolean newMsg = ((MainAgent)this.myAgent).checkInbox("SEND-GROUP");

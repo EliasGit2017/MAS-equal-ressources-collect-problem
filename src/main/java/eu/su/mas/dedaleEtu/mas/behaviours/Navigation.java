@@ -35,10 +35,9 @@ public class Navigation extends OneShotBehaviour {
 	private boolean switch_to_standby;
 	
 	private boolean switch_to_unblock;
-	private int 	consecutive_block=0;
 	private String destination;
 	
-	private boolean tryAgain = false;
+
 	
 	public Navigation(Agent a) {
 		super(a);
@@ -47,7 +46,7 @@ public class Navigation extends OneShotBehaviour {
 	@Override
 	public void action() {
 		((MainAgent)this.myAgent).timer();
-		System.out.println("-> " + this.myAgent.getLocalName() + " navigation <-");
+//		System.out.println("-> " + this.myAgent.getLocalName() + " navigation <-");
 		String myName = this.myAgent.getLocalName();
 		MapRepresentation map = ((MainAgent)this.myAgent).getMap();
 		this.currentPosition = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
@@ -61,6 +60,10 @@ public class Navigation extends OneShotBehaviour {
 		this.explo_done = open.isEmpty();
 		switch_to_unblock = false;
 
+		if ( ((MainAgent)this.myAgent).getLastBehaviour().equals("SolveInterlocking") ) {
+			List<String> followPath = ((MainAgent)this.myAgent).getPathToFollow();
+			if ( !(followPath == null) && followPath.isEmpty() ) {this.path = followPath;} }
+		
 		newMsg = ((MainAgent)this.myAgent).checkInbox("BLOCK-WHO");
 		if (newMsg) {
 			this.blocked = true;
@@ -77,10 +80,10 @@ public class Navigation extends OneShotBehaviour {
 		}
 
 	    newMsg = ((MainAgent)this.myAgent).checkInbox("STANDBY");
+	    
 		if (newMsg && ((MainAgent)this.myAgent).interlocutorInMeetupGroup() ) {
 			if (!this.explo_done) { this.shareInit= true;         }
 			else                  { this.switch_to_standby = true;}
-			System.out.println(myName + " recognize  sender ! " + this.explo_done);
 			return;
 		}
 		else if (newMsg && !this.explo_done) {
@@ -97,78 +100,48 @@ public class Navigation extends OneShotBehaviour {
 		}
 		
 		if (this.blocked) {
-//			this.consecutive_block += 1;
-//			if (this.consecutive_block > 4) { 
-//				this.switch_to_unblock = true;
-//				this.consecutive_block = 0;
-//				if (this.path == null) {
-//					if (!this.explo_done) {this.path = map.getShortestPathToClosestOpenNode(currentPosition);}
-//					else {
-//						if (this.destination != null) {this.path = map.getShortestPath(currentPosition, this.destination);}
-//						else						  {System.out.println(myName + " is in trouble"); return;}
-//					}
-//				}
-//				((MainAgent)this.myAgent).setPathToFollow(this.path);
-//				return; 
-//			}
-			String lastTry = ((MainAgent)this.myAgent).getLastTry();
-			((MainAgent)this.myAgent).addBlockedNode(lastTry);
-			MapRepresentation tempMap;
-			if (!this.tryAgain) { tempMap = ((MainAgent)this.myAgent).mapWithoutBlocked(false); }
-			else 		        { tempMap = ((MainAgent)this.myAgent).mapWithoutBlocked(true); this.tryAgain=false; }
-
-			System.out.println("Ici ?");
-			if (!this.explo_done) {
-				if ( tempMap.getOpenNodes().isEmpty() ) {System.out.println("thats where");return;}
-				this.path = tempMap.getShortestPathToRandomOpenNode(currentPosition);
-				System.out.println("Là !");
-				System.out.println(this.path);
-				if (this.path == null) {
-					for (String node : ((tempMap.getOpenNodes() ))) {
-						this.path = tempMap.getShortestPath(currentPosition, node);
-						if (this.path != null) { this.blocked = false; return;}
-					}
+			List<String> desiredPath;
+			
+			if (this.explo_done) { 
+				String meetPoint = ((MainAgent)this.myAgent).getMeetingPoint();
+				if (meetPoint.isEmpty()) {this.switch_to_standby=true;   return;}
+				else {desiredPath = map.getShortestPath(currentPosition, meetPoint); }
+			} else {
+				desiredPath = map.getShortestPathToClosestOpenNode(currentPosition); 
+				if (desiredPath == null) {
+					for (String node : open) {desiredPath = map.getShortestPath(currentPosition, node); if (desiredPath != null) {break;} }
 				}
-				if (this.path == null) {this.tryAgain = true; return;}
 			}
-			else {
-				if (this.destination == null) {this.switch_to_standby = true; this.blocked=false; return;}
-				
-				this.path = tempMap.getShortestPath(currentPosition, this.destination);
-				if (this.path == null) {this.tryAgain=true;return;}
-			}
-
+			System.out.println("Entering unblock");
+			if (desiredPath == null) {System.out.println("Troubleee"); }
+			if (desiredPath.isEmpty()) {System.out.println("Very troubleee"); }
+			
+			boolean letsTry = ((MainAgent)this.myAgent).move( desiredPath.get(0) );
+			if (letsTry) {System.out.println(myName + " found his way");  this.path = desiredPath; this.path.remove(0); this.blocked = false; return;}
+		
+			System.out.println(myName + " computed path " + desiredPath);
+			((MainAgent)this.myAgent).setPathToFollow(desiredPath);
+			return;
 		}
-		else {this.consecutive_block = 0;}
 		
 		if (this.communicate && !this.explo_done && !this.blocked) {
-			System.out.println("We need to talk");
 			this.shareInit = true;
 			return;
 		}
-		if (this.explo_done) {
+		
+		if (this.explo_done && ( this.path == null || this.path.isEmpty()) ) {
+			
 			this.destination = ((MainAgent)this.myAgent).getMeetingPoint();
-			System.out.println(myName + " dest " + this.destination + " currentPos " + currentPosition);
 			if ( this.destination.isEmpty() ) {this.switch_to_standby = true;}
+			
 			else {
-				List<Couple<String, List<Couple<Observation, Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
-				for(int i = 0 ; i < obs.size() ; i++) {
-					String node = obs.get(i).getLeft();
-					if (this.destination.equals(node)) {this.switch_to_standby = true; return;}
-				}
-				
-				
 		
 				if ( this.path == null || this.path.isEmpty()) {this.path = map.getShortestPath(currentPosition, this.destination); }
 				else {
-					String nextNode = this.path.get(0);
-					if(!map.getNeighbors(currentPosition).contains(nextNode)) {
+					if(!map.getNeighbors(currentPosition).contains( this.path.get(0) )) {
 						this.path = map.getShortestPath( currentPosition, this.destination ); //Recompute in case a node is considered as blocked
-						nextNode = this.path.get(0);
 					}
 					
-					boolean success = ((MainAgent)this.myAgent).move(nextNode);
-					if (success) {this.path.remove(0);} else { ((MainAgent)this.myAgent).incrementBlockCount(); }
 				}     
 			}
 			return;
@@ -179,38 +152,38 @@ public class Navigation extends OneShotBehaviour {
 			return;
 		}
 		
-		
-
-
+		// At this point, we are here because we need to find an open node
 		if (this.path == null ||   this.path.isEmpty()) {
+			System.out.println(myName +" is here");
 			if ( ((MainAgent)this.myAgent).getLastBehaviour().equals("ShareMap") ) { this.path = map.getShortestPathToRandomOpenNode(currentPosition);  }
 			else															       { this.path = map.getShortestPathToClosestOpenNode(currentPosition); }
+			
+			if (open.isEmpty()) {System.out.println("Mais wtf"); int a = 1/0;}
+			
+			if (this.path == null) {
+				for (String openNode : open) {
+					this.path = map.getShortestPath(currentPosition, openNode); 
+					if (this.path != null) {break;}
+				}
+			}
+			if (this.path == null) {System.out.println("It's hopeless"); int a = 1/0;}
 
-		} else {										// If we come from unblock, we might not be near the first node
+		} 
+		else {										// If we come from unblock, we might not be near the first node
+			System.out.println(myName + " is there");
 			String firstNode = this.path.get(0);
-			if(!map.getNeighbors(currentPosition).contains(firstNode)) {
-				this.path = map.getShortestPathToRandomOpenNode( currentPosition ); //Recompute in case a node is considered as blocked
-			}
+			if(!map.getNeighbors(currentPosition).contains(firstNode)) { System.out.println("Ayaaa"); int a = 1 / 0; }
 		}
 		
-		if (this.path == null) {
-			for (String node : open) {
-				this.path = map.getShortestPath(currentPosition, node);
-				if ( this.path != null ) {break;}
-			}
+		
+		if ( this.path.isEmpty() ) {
+			this.path = null; this.joined_destination=true; return;
 		}
 		
-		String nextNode = this.path.get(0); //TODO: PEUT ETRE VIDE : si par Share, on recoit un noeud ouvert pas accessible (graphes de connaissance disjoints)
-		
-		if (nextNode == "") {
-			this.joined_destination = true; return;
-		}
-		
-		boolean success = ((MainAgent)this.myAgent).move(nextNode);
-		System.out.println("here they are");
-		if ( success )  { this.path.remove(0); }
-		else            { ((MainAgent)this.myAgent).incrementBlockCount(); }
+		String nextNode = this.path.get(0);		//No need to check for non-emptiness, when called it would switch to Explore behaviour (if open.contains(currentPos) ... )
 
+		boolean success = ((MainAgent)this.myAgent).move(nextNode);
+		if ( success )  { this.path.remove(0); }
 	}
 
 	
@@ -219,12 +192,12 @@ public class Navigation extends OneShotBehaviour {
 		
 		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
 		
-		System.out.println(myAgent.getLocalName() + " navigation time " + ((MainAgent)this.myAgent).timer());
 		
 		((MainAgent)this.myAgent).setLastPosition(currentPosition);
 		((MainAgent)this.myAgent).updateLastBehaviour("Navigation");
 		
 		if(this.switch_to_standby) {
+			this.path = null;
 			return 5;
 		}
 		
@@ -233,19 +206,23 @@ public class Navigation extends OneShotBehaviour {
 		}
 		
 		if (this.switch_to_unblock) {
+			this.path = null;
 			((MainAgent)this.myAgent).resetBlockCount();
 			return 4;
 		}
 		
 		if (this.blocked) {
-			return 0;
+			this.path = null;
+			return 4;
 		}
 		
 		if (this.explo_done) { //Should start navigation to meetup point
+			this.path = null;
 			return 0;
 		}
 		
 		if (this.joined_destination || this.onOpenNode) {
+			this.path = null;
 			return 1;
 		}
 		

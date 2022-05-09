@@ -45,7 +45,7 @@ public class Explore extends OneShotBehaviour {
 		}
 		
 	public void action() {
-		System.out.println("-> " + this.myAgent.getLocalName() + " explore <-");
+//		System.out.println("-> " + this.myAgent.getLocalName() + " explore <-");
 		currentPosition=((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
 		open = ((MainAgent)this.myAgent).getOpenNodes();
 		closed = ((MainAgent)this.myAgent).getClosedNodes();
@@ -58,6 +58,8 @@ public class Explore extends OneShotBehaviour {
 		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate() ;
 		this.blocked = ((MainAgent)this.myAgent).isBlocked();
 		boolean newMsg= false;
+		
+	
 		
 		newMsg = ((MainAgent)this.myAgent).checkInbox("BLOCK-WHO");
 		if (newMsg) {
@@ -132,7 +134,6 @@ public class Explore extends OneShotBehaviour {
 				String node = obs.get(j).getLeft();
 				List<Couple<Observation, Integer>> getInfo = obs.get(j).getRight();	
 				if (!getInfo.isEmpty()) {
-					System.out.println("here");
 					Couple<Observation,Integer> c=null;
 					for (Couple<Observation,Integer> test : getInfo) {
 						String tst = test.getLeft().getName();
@@ -153,7 +154,6 @@ public class Explore extends OneShotBehaviour {
 			
 			
 			if (open.size() == 0 && closed.size() != 0) {
-				System.out.println("END OF EXPLORATION FOR " + myName);
 				this.explo_done = true;
 				return;
 			}
@@ -178,7 +178,7 @@ public class Explore extends OneShotBehaviour {
 					if (success) {break;}
 				}
 			}
-			if (!success) { ((MainAgent)this.myAgent).incrementBlockCount(); }
+			if (!success) { for (int i = 0 ; i < nextNodesChoice.size() ; i++) {((MainAgent)this.myAgent).decrementBlockCount(); } } //Because incremented each call to 'move'
 		}
 	}
 	
@@ -207,7 +207,7 @@ public class Explore extends OneShotBehaviour {
 		}
 		
 		if (this.blocked) {
-			return 4;
+			return 2;
 		}
 		
 		if (this.noOpenNearby) {

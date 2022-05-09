@@ -40,7 +40,7 @@ public class Standby extends OneShotBehaviour { //Called when ended explo and wa
 		String a = ((MainAgent)this.myAgent).getAgentsInfoSerialized();
 		String b = ((MainAgent)this.myAgent).getTreasuresInfoSerialized();
 		
-		System.out.println("###################################################################" + myName + " treasures " + b + " agents " + a );
+		System.out.println("###################################################################" + myName + " met with " + group);
 //		System.out.println(myName + " : meeting with " + group + " at: " + meetPoint + " and sent a total nb of pings: " + ((MainAgent)this.myAgent).getNbPing());
 //		System.out.println("Comm value " + this.communicate + " / needs to match " + COMM_STEP );
 		if (this.communicate >= this.COMM_STEP) {

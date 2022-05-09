@@ -265,7 +265,7 @@ public class MainAgent extends AbstractDedaleAgent {
 	public long getCurrentTime() {return System.currentTimeMillis() - this.initTime;}
 	
 	public boolean interlocutorInMeetupGroup() {
-		return this.meetupGroup.contains( this.getInterlocutorName() );
+		return this.meetupGroup.isEmpty() ||  this.meetupGroup.contains( this.getInterlocutorName() );
 	}
 	
 	public List<String> getMeetupGroup() {
@@ -445,7 +445,6 @@ public class MainAgent extends AbstractDedaleAgent {
 
 			if (ProtocolName.equals("BLOCK-WHO") && !this.getCurrentPosition().equals( msgReceived.getContent().split(",")[1] )) {
 				System.out.println("Agent " + this.getLocalName() + " has IGNORED a message from " + msgReceived.getSender().getLocalName() + "!" + " Protocol: " + ProtocolName);
-				System.out.println("curr pos " + this.getCurrentPosition() + " path " + msgReceived.getContent() + " compare " + msgReceived.getContent().split(",")[1]);
 				return false;
 			}
 			
@@ -507,6 +506,10 @@ public class MainAgent extends AbstractDedaleAgent {
 		this.blockCount += 1;
 	}
 	
+	public void decrementBlockCount() {
+		this.blockCount -= 1;
+	}
+	
 	public void resetBlockCount() {
 		this.blockCount = 0;
 	}
@@ -529,6 +532,7 @@ public class MainAgent extends AbstractDedaleAgent {
 			return true;
 		}
 		this.lastTriedMovement = dest;
+		this.incrementBlockCount();
 		return false;
 	}
 	
@@ -614,12 +618,12 @@ public class MainAgent extends AbstractDedaleAgent {
 		fsm.registerDefaultTransition(Share, Share);
 		fsm.registerTransition(Share, Explo, 1);
 		fsm.registerTransition(Share, Nav, 2);
-		fsm.registerTransition(Share, Unblock, 4);
+//		fsm.registerTransition(Share, Unblock, 4);
 		fsm.registerTransition(Share, SetMeet, 33);
 		
-		fsm.registerDefaultTransition(Unblock, Unblock);
-		fsm.registerTransition(Unblock, Nav, 2);
-		fsm.registerTransition(Unblock, Share, 3);
+//		fsm.registerDefaultTransition(Unblock, Unblock);
+//		fsm.registerTransition(Unblock, Nav, 2);
+//		fsm.registerTransition(Unblock, Share, 3);
 		
 		fsm.registerDefaultTransition(Standby, Standby);
 		fsm.registerTransition(Standby, Share, 3);

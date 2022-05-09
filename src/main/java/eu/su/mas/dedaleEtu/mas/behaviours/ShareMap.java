@@ -51,7 +51,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 		int currentStep = this.step;
 		int lastStep    = 8;
 
-		System.out.println("-*-*-*-*-*- " + this.myAgent.getLocalName() + " abandons communication  with "+ this.tempInterlocutor + " on step " + currentStep);
+//		System.out.println("-*-*-*-*-*- " + this.myAgent.getLocalName() + " abandons communication  with "+ this.tempInterlocutor + " on step " + currentStep);
 		for (int foo = 0 ; foo < lastStep - currentStep ; foo++) {
 			((MainAgent)this.myAgent).incrementShareStep();
 		}
@@ -80,7 +80,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 		((MainAgent)this.myAgent).timer();
 		step = ((MainAgent)this.myAgent).getShareStep();
 		String myName = this.myAgent.getLocalName();
-		if (step > 0) {System.out.println("---------- " + myName + " enters step " + step +  " ---------- (" + this.tries + " tries)");}
+//		if (step > 0) {System.out.println("---------- " + myName + " enters step " + step +  " ---------- (" + this.tries + " tries)");}
 
 		this.meetup = false;
 		this.fromUnblock = ((MainAgent)this.myAgent).getLastBehaviour() == "Unblock" && step ==0;
@@ -90,7 +90,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 		
 		if (step == 0) { //Haven't received any message from other agents yet ; 
 			List<String> agentsNames = ((MainAgent)this.myAgent).getAgenda();
-			System.out.println(myName + " says hello");
+//			System.out.println(myName + " says hello");
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.setProtocol("SM-HELLO");
 			msg.setSender(     this.myAgent.getAID()    );
@@ -115,7 +115,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 			}
 
 			if (this.lastSent < step) {	
-				System.out.println( myName + " sends ACK to " + ((MainAgent)this.myAgent).getInterlocutorName() );
+//				System.out.println( myName + " sends ACK to " + ((MainAgent)this.myAgent).getInterlocutorName() );
 				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 				msg.setProtocol("SM-ACK");
 				msg.setSender( this.myAgent.getAID() );
@@ -240,7 +240,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 			String encoded = this.encode(open);
 			
 			if (this.lastSent < step) {
-				System.out.println(myName + " open nodes " + encoded);
+//				System.out.println(myName + " open nodes " + encoded);
 				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 				msg.setProtocol("SM-OPEN");
 				msg.setConversationId( ((MainAgent)this.myAgent).getCommID() );
@@ -331,7 +331,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 			MapRepresentation mapToShare = new MapRepresentation(false);
 			MapRepresentation myMap = ((MainAgent)this.myAgent).getMap();
 			List<String> otherOpenList = this.open2;
-			System.out.println("nodes to parse " + nodesToParse);
+
 			while (!nodesToParse.isEmpty()) { //Compute nodes to share
 				String newNode = nodesToParse.get(0);
 				nodesToParse.remove(0);
@@ -375,8 +375,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				System.out.println(this.myAgent.getLocalName() + " has map "  + myMap.getSerializableGraph() );
-				System.out.println(this.myAgent.getLocalName() + " shares map " + sg);
+
 				msg.addReceiver( ((MainAgent)this.myAgent).getInterlocutorAID() );
 				((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
 				
@@ -439,7 +438,7 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 
 		else if (step == 7) {
 			String receivedNodeTreasures = ((MainAgent)this.myAgent).getCurrentMsgStringContent();
-			System.out.println(myName + " received " + receivedNodeTreasures);
+
 			((MainAgent)this.myAgent).mergeReceivedNodesTreasuresInfo(receivedNodeTreasures);
 
 			((MainAgent)this.myAgent).incrementShareStep();
@@ -466,17 +465,16 @@ public class ShareMap extends OneShotBehaviour { //TODO: avec this. , la valeur 
 		String myName = this.myAgent.getLocalName();
 		this.myAgent.doWait( ((MainAgent)this.myAgent).getWaitTime() );
 		
-		System.out.println(myName + " time for share " + ((MainAgent)this.myAgent).timer() );
+
 		
 		((MainAgent)this.myAgent).updateLastBehaviour("ShareMap");	
 		
-		if ( this.fromUnblock ) {System.out.println(myName + " back to unblock"); this.fromUnblock=false; return 4;}
 		
 		if ( this.step == 0)  {// have not received a reply or ended comm scheme
 			if (this.meetup) { return 33; }
 			else			 { return 2;  }
 		}
-		System.out.println(myName + " back to share");
+
 		return 0;
 		
 	}
