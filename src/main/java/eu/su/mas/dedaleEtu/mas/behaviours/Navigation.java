@@ -63,7 +63,7 @@ public class Navigation extends OneShotBehaviour {
 		this.shareInit = false;
 		boolean newMsg=false;
 		this.explo_done = open.isEmpty();
-		if (open.size() < 5 && closed.size() > 20) {this.explo_done = true;}
+//		if (open.size() < 5 && closed.size() > 60) {this.explo_done = true;}
 		switch_to_unblock = false;
 
 		if ( ((MainAgent)this.myAgent).getLastBehaviour().equals("SolveInterlocking") ) {
