@@ -26,6 +26,7 @@ public class Navigation extends OneShotBehaviour {
 	private boolean blocked;
 	
 	private List<String> open;
+	private List<String> closed;
 	
 	private List<String> path = new ArrayList<String>();
 	private boolean onOpenNode;
@@ -45,8 +46,11 @@ public class Navigation extends OneShotBehaviour {
 
 	@Override
 	public void action() {
-		((MainAgent)this.myAgent).timer();
-//		System.out.println("-> " + this.myAgent.getLocalName() + " navigation <-");
+		int nbOpen = ((MainAgent)this.myAgent).getOpenNodes().size();
+		int nbClos = ((MainAgent)this.myAgent).getClosedNodes().size();
+		
+
+		System.out.println("-> " + this.myAgent.getLocalName() + " navigation " + " with open " + nbOpen + " with closed " + nbClos);
 		String myName = this.myAgent.getLocalName();
 		MapRepresentation map = ((MainAgent)this.myAgent).getMap();
 		this.currentPosition = ((AbstractDedaleAgent)this.myAgent).getCurrentPosition();
@@ -54,10 +58,12 @@ public class Navigation extends OneShotBehaviour {
 		this.communicate = ((MainAgent)this.myAgent).shouldCommunicate();
 		this.blocked = ((MainAgent)this.myAgent).isBlocked();
 		this.open = ((MainAgent)this.myAgent).getOpenNodes();
+		this.closed = ((MainAgent)this.myAgent).getClosedNodes();
 		this.onOpenNode = false;
 		this.shareInit = false;
 		boolean newMsg=false;
 		this.explo_done = open.isEmpty();
+		if (open.size() < 5 && closed.size() > 20) {this.explo_done = true;}
 		switch_to_unblock = false;
 
 		if ( ((MainAgent)this.myAgent).getLastBehaviour().equals("SolveInterlocking") ) {
@@ -129,23 +135,10 @@ public class Navigation extends OneShotBehaviour {
 			return;
 		}
 		
-		if (this.explo_done && ( this.path == null || this.path.isEmpty()) ) {
-			
-			this.destination = ((MainAgent)this.myAgent).getMeetingPoint();
-			if ( this.destination.isEmpty() ) {this.switch_to_standby = true;}
-			
-			else {
-		
-				if ( this.path == null || this.path.isEmpty()) {this.path = map.getShortestPath(currentPosition, this.destination); }
-				else {
-					if(!map.getNeighbors(currentPosition).contains( this.path.get(0) )) {
-						this.path = map.getShortestPath( currentPosition, this.destination ); //Recompute in case a node is considered as blocked
-					}
-					
-				}     
-			}
-			return;
+		if (this.explo_done) {
+			this.switch_to_standby = true;
 		}
+	
 	
 		if (open.contains(currentPosition)) {
 			onOpenNode = true;

@@ -90,23 +90,19 @@ public class MapRepresentation implements Serializable {
 		List<String> tried = new ArrayList<String>();
 		String goodCandidate = "";
 		
-		for ( String node : this.getNeighbors(currentPos) ) { 
-			if (!node.equals(nodesToAvoid.get(0))) {extend.add(node);} 
-		}
-		
-		while (extend.size() != 0) {
-			String newNode = extend.get(0); extend.remove(0);
-			if (!nodesToAvoid.contains(newNode)) {goodCandidate = newNode; break;}
-			else {
-				tried.add(newNode);
-				for (String neigh: this.getNeighbors(newNode)) {
-					if ( !(tried.contains(neigh) || neigh.equals(nodesToAvoid.get(0) ) ) ) {extend.add(neigh);}
-				}
+		extend.add(currentPos); tried.add(currentPos);
+
+		while (!extend.isEmpty()) {
+			String node = extend.get(0);
+			extend.remove(0);
+			List<String> neighbors = this.getNeighbors(node);
+			for (String neighbor : neighbors) {
+				if (!nodesToAvoid.contains(neighbor)) {goodCandidate = neighbor; break;}
+				if (!tried.contains(neighbor)) {extend.add(neighbor); tried.add(neighbor);}
 			}
+			if (!goodCandidate.isEmpty()) {break;}
 		}
-		
-		if (goodCandidate.isEmpty()) {System.out.println("Error in computing escape path"); return null;}
-		
+		if (goodCandidate.isEmpty()) {System.out.println("Error in computing unblock path "); return null;}
 		return this.getShortestPath(currentPos, goodCandidate);
 	}
 	

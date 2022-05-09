@@ -113,7 +113,7 @@ public class SetMeetup extends OneShotBehaviour { //
 				List<String> myCurrentGroup = ((MainAgent)this.myAgent).getMeetupGroup();
 				String[] group = ((MainAgent)this.myAgent).getCurrentMsgStringContent().split(";");
 				for (String agent: group) {
-					if ( !agent.isBlank() && !(myName.equals(agent) || myCurrentGroup.contains(agent) )) { ((MainAgent)this.myAgent).addToMeetupGroup(agent); }
+					if ( !agent.isEmpty() && !(myName.equals(agent) || myCurrentGroup.contains(agent) )) { ((MainAgent)this.myAgent).addToMeetupGroup(agent); }
 				}
 			}
 			this.step += 1;

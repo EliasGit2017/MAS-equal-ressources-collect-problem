@@ -141,12 +141,13 @@ public class Explore extends OneShotBehaviour {
 							c = test; break;
 						}
 					}
-
-					String treasureType = c.getLeft().getName();
-					int qty 			= c.getRight();
-					long timeOfObs = ((MainAgent)this.myAgent).getCurrentTime();
-					((MainAgent)this.myAgent).addTreasureOnNode(node, treasureType, qty, timeOfObs);
-
+					
+					if (c!=null) {
+						String treasureType = c.getLeft().getName();
+						int qty 			= c.getRight();
+						long timeOfObs = ((MainAgent)this.myAgent).getCurrentTime();
+						((MainAgent)this.myAgent).addTreasureOnNode(node, treasureType, qty, timeOfObs);
+					}
 				}
 			}
 			

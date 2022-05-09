@@ -6,6 +6,8 @@ import jade.core.Agent;
 import java.util.ArrayList;
 import java.util.List;
 
+import dataStructures.tuple.Couple;
+import eu.su.mas.dedale.env.Observation;
 import eu.su.mas.dedale.mas.AbstractDedaleAgent;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -72,12 +74,39 @@ public class SolveInterlocking extends OneShotBehaviour { //Works during collect
 		boolean receivedWHO = ((MainAgent)this.myAgent).getReceivedInterlockIssue();
 		if (receivedWHO) {this.step = 1;}
 		
-		System.out.println("-> " + myName + " advanced unblock on step " +this.step);
+		int nbOpen = ((MainAgent)this.myAgent).getOpenNodes().size();
+		int nbClos = ((MainAgent)this.myAgent).getClosedNodes().size();
+		
+		System.out.println("-> " + myName + " advanced unblock on step " +this.step + " with open " + nbOpen + " with closed " + nbClos);
 		
 		if (this.step == 0) { // I am blocked - send message
 			if (this.tries == 0) {this.pathToFollow = ((MainAgent)this.myAgent).getPathToFollow(); }
+			if (this.pathToFollow==null || this.pathToFollow.isEmpty()) {
+				List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
+				int size = obs.size() ;
+				for (int i = 1 ; i < size ; i ++ ) {
+					String node = obs.get(i).getLeft() ;
+					boolean test = ((MainAgent)this.myAgent).move(node);
+					if (test) {this.step = 3;  ((MainAgent)this.myAgent).doWait( ((MainAgent)this.myAgent).getWaitTime() *2);  return;}
+				}
+				String dest = ((MainAgent)this.myAgent).getLastTry();
+				this.pathToFollow = ((MainAgent)this.myAgent).getMap().getShortestPath(currentPosition, dest);
+			}
 			
-			boolean works = ((MainAgent)this.myAgent).move(this.pathToFollow.get(0)) ; 
+			String next = this.pathToFollow.get(0);
+			MapRepresentation map = ((MainAgent)this.myAgent).getMap();
+			if (!map.getNeighbors(currentPosition).contains(next)) {
+				List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
+				int size = obs.size() ;
+				for (int i = 1 ; i < size ; i ++ ) {
+					String node = obs.get(i).getLeft() ;
+					boolean test = ((MainAgent)this.myAgent).move(node);
+					if (test) {this.step = 3;  ((MainAgent)this.myAgent).doWait( ((MainAgent)this.myAgent).getWaitTime() *2);  return;}
+				}
+				this.step = 3;
+				return;
+			}
+			boolean works = ((MainAgent)this.myAgent).move(next) ; 
 			while (works) {
 				this.tries = 0; 
 				this.pathToFollow.remove(0) ; 
@@ -116,11 +145,15 @@ public class SolveInterlocking extends OneShotBehaviour { //Works during collect
 				String nextNode = pathToFollow.get(0) ;
 				String lastNode = pathToFollow.get( pathToFollow.size() - 1 ) ;
 				newMap.removeNode( nextNode );
-				List<String> path = newMap.getShortestPath(currentPosition, lastNode );
+				List<String> path = null;
+				
+				if (nextNode.equals(lastNode)) {System.out.println(myName + " will have trouble"); }
+				else						   { path = newMap.getShortestPath(currentPosition, lastNode ); }
+				
 				this.pathToFollow = path;
 				if (path == null) {
 					this.pathToFollow = null;
-				} //RETRY
+				} 
 				
 				this.step = 3;
 				return;
@@ -141,7 +174,8 @@ public class SolveInterlocking extends OneShotBehaviour { //Works during collect
 				boolean otherIsBlocking = blockingOther.equals("true");
 				boolean priorityMine = true;
 				
-				if      ( this.blockingSomeone() && otherIsBlocking)  {System.out.println("I'm fucked"); int a = 1/0;}
+				if      ( this.blockingSomeone() && otherIsBlocking)  { if (othersName.compareTo(myName) > 0) { priorityMine = false; } 
+				   else 												 { priorityMine = true;  } }
 				
 				else if ( this.blockingSomeone() && !otherIsBlocking) {priorityMine=true;}
 				
@@ -194,7 +228,7 @@ public class SolveInterlocking extends OneShotBehaviour { //Works during collect
 				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 				msg.setSender( this.myAgent.getAID() );
 				msg.setProtocol("BLOCK-ACK");
-				msg.setContent( this.agentImBlockingPath.get(freeNodeIndx));
+				msg.setContent( String.valueOf(freeNodeIndx) );
 				msg.addReceiver( this.agentImBlocking);
 				((AbstractDedaleAgent)this.myAgent).send(msg);
 			}
@@ -202,14 +236,30 @@ public class SolveInterlocking extends OneShotBehaviour { //Works during collect
 			boolean newMsg = ((MainAgent)this.myAgent).checkInbox("BLOCK-END");
 			if (newMsg) {
 				this.agentImBlocking = null;
+				this.pathToUnblock = null;
 				if (!this.blockedBySomeone()) { this.step = 3; }
-				else                          { this.step = 2; }
+				else                          { this.step = 2; ((MainAgent)this.myAgent).doWait( ((MainAgent)this.myAgent).getWaitTime() *2); }
 				this.tries = 1;
 				return;
 			}
 			
 			String nextNode = this.pathToUnblock.get(0);
-			boolean check = ((AbstractDedaleAgent)this.myAgent).moveTo(nextNode);
+			
+			MapRepresentation map = ((MainAgent)this.myAgent).getMap();
+			if (!map.getNeighbors(currentPosition).contains(nextNode)) {
+				List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
+				int size = obs.size() ;
+				for (int i = 1 ; i < size ; i ++ ) {
+					String node = obs.get(i).getLeft() ;
+					boolean test = ((MainAgent)this.myAgent).move(node);
+					if (test) {this.step = 3;  ((MainAgent)this.myAgent).doWait( ((MainAgent)this.myAgent).getWaitTime() *2);  return;}
+				}
+				this.step = 3;
+				return;
+			}
+			
+			boolean check = ((MainAgent)this.myAgent).move(nextNode);
+			System.out.println(myName +  " managed to move for unblock ? " + check);
 			if (check) {
 				this.pathToUnblock.remove(0); 
 				this.tries = 1;
@@ -231,13 +281,35 @@ public class SolveInterlocking extends OneShotBehaviour { //Works during collect
 			if (!this.initStep2) {
 				this.counterToUnblocked = Integer.parseInt( ((MainAgent)this.myAgent).getCurrentMsgStringContent() );
 				this.initStep2 = true;
+				this.tries = 0;
 			}
-
-			String nextNode = pathToFollow.get(0);
-			boolean success = ((AbstractDedaleAgent)this.myAgent).moveTo(nextNode); 
+			
+			if (this.tries > 2*MAX_TRIES) {
+				List<Couple<String,List<Couple<Observation,Integer>>>> obs = ((AbstractDedaleAgent)this.myAgent).observe();
+				int size = obs.size() ;
+				for (int i = 1 ; i < size ; i ++ ) {
+					String node = obs.get(i).getLeft() ;
+					boolean test = ((MainAgent)this.myAgent).move(node);
+					if (test) {this.step = 3;  ((MainAgent)this.myAgent).doWait( ((MainAgent)this.myAgent).getWaitTime() *2);  return;}
+				}
+				this.step = 3; return;
+			}
+			
+			
+			boolean success;
+			if (pathToFollow != null) {
+				if (pathToFollow.isEmpty()) {this.step = 3 ; return;}
+				
+				String nextNode = pathToFollow.get(0);
+				success = ((MainAgent)this.myAgent).move(nextNode); 
+				System.out.println(myName +  " managed to move for unblock ? " + success);
+			}
+			else {success = true; this.pathToFollow.add("example"); this.counterToUnblocked = 1; } //Trigger end
 			if (success) { 
 				pathToFollow.remove(0); 
 				this.counterToUnblocked -= 1;
+				this.tries = 0;
+				System.out.println(myName + " success, left to go:" + this.counterToUnblocked);
 				if ( this.counterToUnblocked == 0 ) {
 					
 					ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
@@ -255,6 +327,7 @@ public class SolveInterlocking extends OneShotBehaviour { //Works during collect
 					return;
 				}
 			}
+			else {this.tries += 1;}
 			return;
 		}		
 	}
@@ -270,6 +343,7 @@ public class SolveInterlocking extends OneShotBehaviour { //Works during collect
 			this.agentImBlocking=null;
 			this.pathToUnblock=null;
 			this.agentThatBlocksMe=null;
+			((MainAgent)this.myAgent).resetBlockCount();
 			((MainAgent)this.myAgent).setPathToFollow(this.pathToFollow);
 			this.pathToFollow=null;
 			return 2;
