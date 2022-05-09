@@ -82,7 +82,8 @@ public final class ConfigurationFile {
 	//public static String INSTANCE_TOPOLOGY="resources/interlocking/mapInterlocking2-topology";
 	//public static String INSTANCE_TOPOLOGY="resources/topology/map2021-topologyExam1-graph.dgs";
 	//public static String INSTANCE_TOPOLOGY="resources/map2018-topology";
-	public static String INSTANCE_TOPOLOGY="resources/topology/map2019-topologyExam1";
+	//public static String INSTANCE_TOPOLOGY="resources/topology/map2019-topologyExam1";
+	public static String INSTANCE_TOPOLOGY="resources/topology/map2022-topologyExam.dgs";
 
 	
 	/**
@@ -99,7 +100,8 @@ public final class ConfigurationFile {
 	//public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/interlocking/mapInterlocking2-elements";
 	//public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/map2018-elements";
 	//public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/mapInterlocking2-elements";
-	public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/treasureHunt/map2019-elementsExam1";
+	//public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/treasureHunt/map2019-elementsExam1";
+	public static String INSTANCE_CONFIGURATION_ELEMENTS="resources/topology/map2022-elements";
 	
 	
 	/************************************
@@ -152,7 +154,8 @@ public final class ConfigurationFile {
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="resources/agentExplo-2";
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="resources/agentExploCoop-2";
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="resources/explo-test1";
-	public static String INSTANCE_CONFIGURATION_ENTITIES="resources/treasureHunt/test-resources-display";
+	//public static String INSTANCE_CONFIGURATION_ENTITIES="resources/treasureHunt/test-resources-display";
+	public static String INSTANCE_CONFIGURATION_ENTITIES="resources/topology/map2022-entities.json";
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="resources/agentExploCoop-2.json";
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="resources/agentKeyboardControlled";
 	//public static String INSTANCE_CONFIGURATION_ENTITIES="resources/hunt/map2020-entitiesTree";

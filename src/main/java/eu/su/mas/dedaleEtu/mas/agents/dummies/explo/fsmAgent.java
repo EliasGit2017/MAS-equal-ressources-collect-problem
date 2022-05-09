@@ -26,22 +26,14 @@ public class fsmAgent extends AbstractDedaleAgent {
 
 	private MapRepresentation myMap;
 
-	public boolean move = true, successMerge = false, rejoinMode = false, planComputed = false
-			;
-	public boolean isPlanComputed() {
-		return planComputed;
+	public boolean move = true, successMerge = false, rejoinMode = false, planComputed = false, bpaths_to_r = false;
+
+	public boolean isBpaths_to_r() {
+		return bpaths_to_r;
 	}
 
-	public void setPlanComputed(boolean planComputed) {
-		this.planComputed = planComputed;
-	}
-
-	public boolean isRejoinMode() {
-		return rejoinMode;
-	}
-
-	public void setRejoinMode(boolean rejoinMode) {
-		this.rejoinMode = rejoinMode;
+	public void setBpaths_to_r(boolean bpaths_to_r) {
+		this.bpaths_to_r = bpaths_to_r;
 	}
 
 	// private static final int PokeTime = 3000; // might be usefull to reduce # of
@@ -53,11 +45,13 @@ public class fsmAgent extends AbstractDedaleAgent {
 
 	public final int speed = 1000;
 
-	private int cptAgents;
+	private int cptAgents, bump_cpt = 0, cur_r;
 
 	private int CollectedQty = 0;
 	
 	private String targetNode;
+	
+	private List<String> t_Nodes_obj = new ArrayList<String>();
 
 	private List<Couple<Observation, Integer>> BackpackCapacity;
 
@@ -81,11 +75,16 @@ public class fsmAgent extends AbstractDedaleAgent {
 
 	private List<String> agenda;
 	
+	private List<String> B_path = new ArrayList<String>();
+	
 	private List<String> meeting_room = new ArrayList<String>();
 
 	private List<Behaviour> lb;
 	
 	private List<String> obj_to_treasures = new ArrayList<String>();
+	
+	private List<List<String>> paths_to_treasures = new ArrayList<List<String>>();
+
 	private List<String> path_to_rejoin = new ArrayList<String>();
 
 	private FSMBehaviour fsmb;
@@ -132,8 +131,8 @@ public class fsmAgent extends AbstractDedaleAgent {
 		fsmb.registerState(new ShareMapB(this, this.myMap, this.agenda), ShareMap); // ShareMap Behaviour
 		fsmb.registerState(new ReceiveMap(this), R_Map); // ReceiveMap Behaviour
 		fsmb.registerState(new ExploreBehaviour(this, this.myMap, this.agenda), Explo); // Exploration
-		fsmb.registerState(new StopBehaviour(), StopAg); // Ending
-		fsmb.registerLastState(new ComputeColl(this, this.myMap, this.agenda), ComputeColl);
+		fsmb.registerState(new ComputeColl(this, this.myMap, this.agenda), ComputeColl);
+		fsmb.registerLastState(new StopBehaviour(), StopAg); // Ending
 
 		// Define transitions :
 
@@ -150,6 +149,8 @@ public class fsmAgent extends AbstractDedaleAgent {
 		fsmb.registerDefaultTransition(R_Map, Explo); // receive map -> explo
 
 		fsmb.registerTransition(Explo, ComputeColl, 102); // finishing exploration
+		fsmb.registerTransition(ComputeColl, Explo, 103);
+		fsmb.registerTransition(Explo, StopAg, 104);
 		//fsmb.registerDefaultTransition(StopAg, ComputeColl); // Rejoin at meeting room
 		
 		/*
@@ -377,6 +378,17 @@ public class fsmAgent extends AbstractDedaleAgent {
 		return res;
 	}
 	
+	public String node_obj (/*String r_type,*/ Integer value) {
+		String res = "Unknown";
+		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
+			if(/*this.ressources_knowledge.get(i).getRight().getRight().getLeft().equals(r_type) &&*/ this.ressources_knowledge.get(i).getRight().getRight().getRight().equals(value)) {
+				res = this.ressources_knowledge.get(i).getLeft();
+				break;
+			}
+		}
+		return res;
+	}
+	
 	public int get_d_cap (String name) {
 		int res = 0;
 		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
@@ -475,9 +487,68 @@ public class fsmAgent extends AbstractDedaleAgent {
 		this.obj_to_treasures = obj_to_treasures;
 	}
 	
+	public void addObj_to_treasure(String node) {
+		this.obj_to_treasures.add(node);
+	}
 	
+	public boolean isPlanComputed() {
+		return planComputed;
+	}
+
+	public void setPlanComputed(boolean planComputed) {
+		this.planComputed = planComputed;
+	}
+
+	public boolean isRejoinMode() {
+		return rejoinMode;
+	}
+
+	public void setRejoinMode(boolean rejoinMode) {
+		this.rejoinMode = rejoinMode;
+	}
 	
+	public int getBump_cpt() {
+		return bump_cpt;
+	}
+
+	public void setBump_cpt(int bump_cpt) {
+		this.bump_cpt = bump_cpt;
+	}
 	
+	public void incBump_cpt() {
+		this.bump_cpt += 1;
+	}
 	
+	public List<List<String>> getPaths_to_treasures() {
+		return paths_to_treasures;
+	}
+
+	public void setPaths_to_treasures(List<List<String>> paths_to_treasures) {
+		this.paths_to_treasures = paths_to_treasures;
+	}
+
+	public int getCur_r() {
+		return cur_r;
+	}
+
+	public void setCur_r(int cur_r) {
+		this.cur_r = cur_r;
+	}
+
+	public List<String> getB_path() {
+		return B_path;
+	}
+
+	public void setB_path(List<String> b_path) {
+		B_path = b_path;
+	}
+
+	public List<String> getT_Nodes_obj() {
+		return t_Nodes_obj;
+	}
+
+	public void setT_Nodes_obj(List<String> t_Nodes_obj) {
+		this.t_Nodes_obj = t_Nodes_obj;
+	}
 	
 }

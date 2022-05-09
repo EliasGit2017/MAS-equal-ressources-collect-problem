@@ -96,7 +96,7 @@ public class ComputeColl extends OneShotBehaviour {
 			int k = ((fsmAgent) this.myAgent).getCptAgents() + 1;
 			printAllKLength(set1, k);
 
-			List<Couple<String, Couple<Integer, Integer>>> res = new ArrayList<Couple<String, Couple<Integer, Integer>>>();
+			//List<Couple<String, Couple<Integer, Integer>>> res = new ArrayList<Couple<String, Couple<Integer, Integer>>>();
 			String cur = "";
 			for (int i = 0; i < this.tmp.size(); i++) {
 				int t_g = 0;
@@ -244,12 +244,18 @@ public class ComputeColl extends OneShotBehaviour {
 		      System.out.println("Total packed value: " + solver.objectiveValue());
 		      long totalWeight = 0;
 		      for (int b : allBins) {
+		    	//List<String> go_get = new ArrayList<String>();
 		        long binWeight = 0;
 		        long binValue = 0;
 		        System.out.println("Bin " + b);
 		        for (int i : allItems) {
 		          if (solver.booleanValue(x[i][b])) {
 		            System.out.println("Item " + i + " weight: " + weights[i] + " value: " + values[i]);
+		            //go_get.add(i);
+		            // Spécialisaton
+		            if (b == Character.getNumericValue(this.myAgent.getLocalName().charAt(0)) - 1) {
+		            	((fsmAgent) this.myAgent).addObj_to_treasure(String.valueOf(weights[i]));
+		            }
 		            binWeight += weights[i];
 		            binValue += values[i];
 		          }
@@ -259,34 +265,110 @@ public class ComputeColl extends OneShotBehaviour {
 		        totalWeight += binWeight;
 		      }
 		      System.out.println("Total packed weight: " + totalWeight);
-		      
-		      
-		      
+		         
+		    } else {
+		      System.err.println("The problem does not have an optimal solution.");
+		    }
+		  
+		    
 		      /*
 				 * Compute Diamond
 			  */
-		      
-		      
+		    
+		    
+		    int[] weights2 = diam_w;
+		    int[] values2 = diam_w;
+		    int numItems2 = weights2.length;
+		    int[] allItems2 = IntStream.range(0, numItems2).toArray();
+			
+			//int[] binCapacities = {89, 89, 100, 100, 100};
+			
+			int numBins2 = binCapacitiesD.length;
+		    int[] allBins2 = IntStream.range(0, numBins).toArray();
+
+		    CpModel model2 = new CpModel();
+
+		    // Variables.
+		    Literal[][] x2 = new Literal[numItems2][numBins2];
+		    for (int i : allItems2) {
+		      for (int b : allBins2) {
+		        x2[i][b] = model2.newBoolVar("x_" + i + "_" + b);
+		      }
+		    }
+
+		    // Constraints.
+		    // Each item is assigned to at most one bin.
+		    for (int i : allItems2) {
+		      List<Literal> bins = new ArrayList<>();
+		      for (int b : allBins2) {
+		        bins.add(x2[i][b]);
+		      }
+		      model2.addAtMostOne(bins);
+		    }
+
+		    // The amount packed in each bin cannot exceed its capacity.
+		    for (int b : allBins2) {
+		      LinearExprBuilder load = LinearExpr.newBuilder();
+		      for (int i : allItems2) {
+		        load.addTerm(x2[i][b], weights2[i]);
+		      }
+		      model2.addLessOrEqual(load, binCapacitiesD[b]);
+		    }
+
+		    // Objective.
+		    // Maximize total value of packed items.
+		    LinearExprBuilder obj2 = LinearExpr.newBuilder();
+		    for (int i : allItems2) {
+		      for (int b : allBins2) {
+		        obj2.addTerm(x2[i][b], values2[i]);
+		      }
+		    }
+		    model2.maximize(obj2);
+
+		    CpSolver solver2 = new CpSolver();
+		    final CpSolverStatus status2 = solver2.solve(model2);
+
+		    // Check that the problem has an optimal solution.
+		    if (status2 == CpSolverStatus.OPTIMAL) {
+		      System.out.println("Total packed value: " + solver2.objectiveValue());
+		      long totalWeight = 0;
+		      for (int b : allBins2) {
+		        long binWeight = 0;
+		        long binValue = 0;
+		        System.out.println("Bin " + b);
+		        for (int i : allItems2) {
+		          if (solver2.booleanValue(x2[i][b])) {
+		            System.out.println("Item " + i + " weight: " + weights2[i] + " value: " + values2[i]);
+		            // Spécialisaton
+		            if (b == Character.getNumericValue(this.myAgent.getLocalName().charAt(0)) - 1) {
+		            	((fsmAgent) this.myAgent).addObj_to_treasure(String.valueOf(weights2[i]));
+		            }
+		            binWeight += weights2[i];
+		            binValue += values2[i];
+		          }
+		        }
+		        System.out.println("Packed bin weight: " + binWeight);
+		        System.out.println("Packed bin value: " + binValue);
+		        totalWeight += binWeight;
+		      }
+		      System.out.println("Total packed weight: " + totalWeight);
 		      
 		      
 		    } else {
 		      System.err.println("The problem does not have an optimal solution.");
 		    }
-		  
-
 			
-//			for (int i = 0; i < cur.length(); i++) {
-//				
-//			}
-			
-
 			System.out.println(Arrays.toString(tmp.toArray()));
-
+			System.out.println( "Going to get : " + Arrays.toString(((fsmAgent) this.myAgent).getObj_to_treasures().toArray()));
+			
+			((fsmAgent) this.myAgent).setPlanComputed(true);
+			
 		} else {
-			System.out.println("waiting for objs");
+			System.out.println("waiting for objs ----> if shown loop explo - computecoll");
+			
 		}
 
-		this.exitCode = 3; // see if exchange
+		this.exitCode = 103; // see if exchange
 
 	}
 

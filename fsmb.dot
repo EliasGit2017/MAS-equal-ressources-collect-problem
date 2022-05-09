@@ -1,20 +1,23 @@
 graph g{
         Init
         Boop
+        Booped
         ShareMap
         R_MAP
         Explo
-        StopAg
+        ComputeColl
 
         Init -- Explo
         Explo -- Explo
         Explo -- Boop
+        Boop -- Booped
+        Booped -- Explo
         Explo -- ShareMap
-        Boop -- Explo
         ShareMap -- R_MAP
-        R_MAP -- R_MAP
         R_MAP -- Explo
-        Explo -- StopAg
+        Explo -- R_MAP
+        Explo -- ComputeColl
+        ComputeColl -- Explo
 
 }
 
