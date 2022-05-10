@@ -1,0 +1,90 @@
+[
+{ 
+  "agentType":"agentCollect",
+  "agentName": "1stAgent",
+  "communicationRange": 3,
+  "initialLocation": "M30",
+  "backPackCapacityGold": 20,
+  "backPackCapacityDiamond":20, 
+  "detectionRadius": 0,
+  "strengthExpertise": 1000,
+  "lockPickingExpertise":1000
+  },
+{ 
+  "agentType":"agentCollect",
+  "agentName": "2ndAgent",
+  "communicationRange": 4,
+  "initialLocation": "94",
+  "backPackCapacityGold": 5,
+  "backPackCapacityDiamond":30, 
+  "detectionRadius": 0,
+  "strengthExpertise": 1000,
+  "lockPickingExpertise":1000
+  },
+{ 
+  "agentType":"agentCollect",
+  "agentName": "3ndAgent",
+  "communicationRange": 2,
+  "initialLocation": "47",
+  "backPackCapacityGold": 25,
+  "backPackCapacityDiamond":10, 
+  "detectionRadius": 0,
+  "strengthExpertise": 1000,
+  "lockPickingExpertise":1000
+  },
+{ 
+  "agentType":"agentCollect",
+  "agentName": "4ndAgent",
+  "communicationRange": 3,
+  "initialLocation": "M7",
+  "backPackCapacityGold": 10,
+  "backPackCapacityDiamond":40, 
+  "detectionRadius": 0,
+  "strengthExpertise": 1000,
+  "lockPickingExpertise":1000
+  },
+{ 
+  "agentType":"agentCollect",
+  "agentName": "5ndAgent",
+  "communicationRange": 2,
+  "initialLocation": "19",
+  "backPackCapacityGold": 70,
+  "backPackCapacityDiamond":100, 
+  "detectionRadius": 0,
+  "strengthExpertise": 1000,
+  "lockPickingExpertise":1000
+  },
+{ 
+  "agentType":"agentCollect",
+  "agentName": "6ndAgent",
+  "communicationRange": 2,
+  "initialLocation": "88",
+  "backPackCapacityGold": 7,
+  "backPackCapacityDiamond":30, 
+  "detectionRadius": 0,
+  "strengthExpertise": 1000,
+  "lockPickingExpertise":1000
+  },
+{ 
+  "agentType":"wumpus",
+  "agentName": "G1",
+  "communicationRange": 2,
+  "initialLocation": "M26",
+  "backPackCapacityGold": 20,
+  "backPackCapacityDiamond":80, 
+  "detectionRadius": 2,
+  "strengthExpertise": 2,
+  "lockPickingExpertise":2
+  },
+{ 
+  "agentType":"wumpus",
+  "agentName": "G2",
+  "communicationRange": 2,
+  "initialLocation": "M11",
+  "backPackCapacityGold": 40,
+  "backPackCapacityDiamond":40, 
+  "detectionRadius": 3,
+  "strengthExpertise": 1,
+  "lockPickingExpertise":1
+  }
+]

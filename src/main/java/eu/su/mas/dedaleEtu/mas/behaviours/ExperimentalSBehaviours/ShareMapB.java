@@ -20,8 +20,9 @@ public class ShareMapB extends OneShotBehaviour {
 	private MapRepresentation myMap;
 	private List<String> AgentsReceivers;
 	
-	private boolean finished=false;
+	//private boolean finished=false;
 	
+	private int exitCode; // used to fire specific transitions
 	
 	public ShareMapB(Agent cur_a, MapRepresentation myMap, List<String> agentsReceivers) {
 		super(cur_a);
@@ -32,8 +33,9 @@ public class ShareMapB extends OneShotBehaviour {
 	@Override
 	public void action() {
 		
+		System.out.println(" ---> ShareMapB running for ---> " + this.myAgent.getLocalName() + " <---");
+		
 		this.myMap = ((fsmAgent)this.myAgent).getMyMap();
-		System.out.println("ShareMapB running for ---> " + this.myAgent.getLocalName() + " <---");
 		
 		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 		msg.setProtocol("ProtocoleShareMap");
@@ -50,9 +52,17 @@ public class ShareMapB extends OneShotBehaviour {
 			System.out.println("Problem in ShareMapB for ---> " + this.myAgent.getLocalName() + "<---");
 			e.printStackTrace();
 		}
+		
 		((AbstractDedaleAgent)this.myAgent).sendMessage(msg);
 		
+		this.exitCode = 4; // back to ping
+		
 		System.out.println(" ---> " + this.myAgent.getLocalName() + " just sent its map");
+	}
+	
+	@Override
+	public int onEnd() {
+		return this.exitCode;
 	}
 
 }

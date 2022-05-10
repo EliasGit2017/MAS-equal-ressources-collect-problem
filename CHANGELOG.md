@@ -1,11 +1,15 @@
 # Dedale : Francesco & Elias
 
-- [x]  Définition des agents sous forme de FSMAgent :+1:
+- [x] Définition des agents sous forme de FSMAgent :+1:
 
-- [ ]  Mise en place des behaviours de communications 
+- [x] Mise en place des behaviours de communications 
 
-- [ ]  Collecte
+- [x]  RandomWalk
 
-- [ ]  Affiner l'exploration
+- [ ]  explo :arrow_up:
 
+- [ ]  improve comms + general accuracy
 
+- [ ] Collecte
+
+- [ ] Affiner l'exploration
