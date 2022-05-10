@@ -43,7 +43,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 
 	public String CollectorType = "Undefined"; // (Undefined, Gold, Diamond)
 
-	public final int speed = 1000;
+	public final int speed = 300;
 
 	private int cptAgents, bump_cpt = 0, cur_r;
 
@@ -382,7 +382,8 @@ public class fsmAgent extends AbstractDedaleAgent {
 		String res = "Unknown";
 		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
 			if(/*this.ressources_knowledge.get(i).getRight().getRight().getLeft().equals(r_type) &&*/ this.ressources_knowledge.get(i).getRight().getRight().getRight().equals(value)) {
-				res = this.ressources_knowledge.get(i).getLeft();
+				
+				res = this.ressources_knowledge.get(i).getRight().getRight().getLeft();
 				break;
 			}
 		}
@@ -393,7 +394,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 		int res = 0;
 		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
 			if(this.ressources_knowledge.get(i).getLeft().equals(name)) {
-				res = Integer.parseInt(this.ressources_knowledge.get(i).getRight().getRight().getLeft());
+				res = this.ressources_knowledge.get(i).getRight().getRight().getRight();
 			}
 		}
 		return res;
@@ -402,7 +403,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 	public List<Couple<String, Integer>> get_ags_bckpck_g() {
 		List<Couple<String, Integer>> res = new ArrayList<Couple<String, Integer>>();
 		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
-			if(this.ressources_knowledge.get(i).getLeft().equals("1stAgent") || this.ressources_knowledge.get(i).getLeft().equals("2ndAgent") || this.ressources_knowledge.get(i).getLeft().equals("3ndAgent")) {
+			if(this.ressources_knowledge.get(i).getLeft().equals("1stAgent") || this.ressources_knowledge.get(i).getLeft().equals("2ndAgent") || this.ressources_knowledge.get(i).getLeft().equals("3ndAgent") || this.ressources_knowledge.get(i).getLeft().equals("4ndAgent") || this.ressources_knowledge.get(i).getLeft().equals("5ndAgent") || this.ressources_knowledge.get(i).getLeft().equals("6ndAgent")) {
 				res.add(new Couple<String, Integer>(this.ressources_knowledge.get(i).getLeft(), this.ressources_knowledge.get(i).getRight().getRight().getRight()));
 			}
 		}
@@ -412,7 +413,7 @@ public class fsmAgent extends AbstractDedaleAgent {
 	public List<Couple<String, Integer>> get_ags_bckpck_d() {
 		List<Couple<String, Integer>> res = new ArrayList<Couple<String, Integer>>();
 		for (int i = 0; i < this.ressources_knowledge.size(); i++) {
-			if(this.ressources_knowledge.get(i).getLeft().equals("1stAgent") || this.ressources_knowledge.get(i).getLeft().equals("2ndAgent") || this.ressources_knowledge.get(i).getLeft().equals("3ndAgent")) {
+			if(this.ressources_knowledge.get(i).getLeft().equals("1stAgent") || this.ressources_knowledge.get(i).getLeft().equals("2ndAgent") || this.ressources_knowledge.get(i).getLeft().equals("3ndAgent") || this.ressources_knowledge.get(i).getLeft().equals("4ndAgent") || this.ressources_knowledge.get(i).getLeft().equals("5ndAgent") || this.ressources_knowledge.get(i).getLeft().equals("6ndAgent")) {
 				res.add(new Couple<String, Integer>(this.ressources_knowledge.get(i).getLeft(), Integer.parseInt(this.ressources_knowledge.get(i).getRight().getRight().getLeft())));
 			}
 		}

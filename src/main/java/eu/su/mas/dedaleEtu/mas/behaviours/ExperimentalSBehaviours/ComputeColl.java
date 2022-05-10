@@ -69,7 +69,7 @@ public class ComputeColl extends OneShotBehaviour {
 		if (k == 0) {
 			if (!((prefix.equals(new String(new char[((fsmAgent) this.myAgent).getCptAgents() + 1]).replace("\0", "g")))
 					|| (prefix.equals(
-							new String(new char[((fsmAgent) this.myAgent).getCptAgents() + 1]).replace("\0", "d"))))) {
+							new String(new char[((fsmAgent) this.myAgent).getCptAgents() + 1]).replace("\0", "d")))) ) {
 				this.tmp.add(prefix);
 			}
 			return;
@@ -117,9 +117,13 @@ public class ComputeColl extends OneShotBehaviour {
 						}
 					}					
 				}
-				if (opt > t_g + t_d) {
-					opt = t_g + t_d;
+
+				Long count = this.tmp.get(i).chars().filter(ch -> ch == 'g').count();
+				Long count2 = this.tmp.get(i).chars().filter(ch -> ch == 'd').count();
+				if (opt > t_g - tot_g + t_d - tot_d && count.compareTo(count2) > 0) {
+					opt = t_g - tot_g + t_d - tot_d;
 					cur = this.tmp.get(i);
+					
 				}
 			}
 			

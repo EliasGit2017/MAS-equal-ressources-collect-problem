@@ -129,7 +129,7 @@ public final class ConfigurationFile {
 	/**
 	 * 	Agents communication radius
 	 */
-	public static Integer DEFAULT_COMMUNICATION_REACH = 3;
+	public static Integer DEFAULT_COMMUNICATION_REACH = 2;
 
 	/**
 	 * Elements on the map

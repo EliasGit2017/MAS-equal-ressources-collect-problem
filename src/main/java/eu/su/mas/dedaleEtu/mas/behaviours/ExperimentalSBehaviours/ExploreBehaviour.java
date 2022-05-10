@@ -95,7 +95,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 				// Improve here */*/*/*/
 				if (/*(agent_name.charAt(0) == '1')
 						&& */ (((fsmAgent) this.myAgent).sizeMeetR() <= ((fsmAgent) this.myAgent).getCptAgents())
-						&& (lobs.size() > ((fsmAgent) this.myAgent).getCptAgents() + 1)) {
+						&& (lobs.size() > ((fsmAgent) this.myAgent).getCptAgents() + 1) && nodeId.charAt(0) != 'h') {
 					((fsmAgent) this.myAgent).add_to_m_room(nodeId);
 				}
 
@@ -284,22 +284,35 @@ public class ExploreBehaviour extends OneShotBehaviour {
 						List<List<String>> paths_to_tre = new ArrayList<List<String>>();
 						List<String> t_n = new ArrayList<String>();
 						
+						try {
 						paths_to_tre.add(this.myMap.getShortestPath(
 									((AbstractDedaleAgent) this.myAgent).getCurrentPosition(),
 									((fsmAgent) this.myAgent).node_obj(
 											Integer.parseInt(((fsmAgent) this.myAgent).getObj_to_treasures().get(0)))));
-						
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 						for (int i = 0; i < ((fsmAgent) this.myAgent).getObj_to_treasures().size() - 1; i++) {
 
 							List<String> path_to_t = null;
 							t_n.add(((fsmAgent) this.myAgent).node_obj(
 									Integer.parseInt(((fsmAgent) this.myAgent).getObj_to_treasures().get(i))));
-
-							path_to_t = this.myMap.getShortestPath(
-									((fsmAgent) this.myAgent).node_obj(
-											Integer.parseInt(((fsmAgent) this.myAgent).getObj_to_treasures().get(i))),
-									((fsmAgent) this.myAgent).node_obj(
-											Integer.parseInt(((fsmAgent) this.myAgent).getObj_to_treasures().get(i+1))));
+							
+							try {
+								path_to_t = this.myMap.getShortestPath(
+										((fsmAgent) this.myAgent).node_obj(
+												Integer.parseInt(((fsmAgent) this.myAgent).getObj_to_treasures().get(i))),
+										((fsmAgent) this.myAgent).node_obj(
+												Integer.parseInt(((fsmAgent) this.myAgent).getObj_to_treasures().get(i+1))));
+							} catch (Exception e) {
+								// TODO: handle exception
+								e.printStackTrace();
+							}
+//							path_to_t = this.myMap.getShortestPath(
+//									((fsmAgent) this.myAgent).node_obj(
+//											Integer.parseInt(((fsmAgent) this.myAgent).getObj_to_treasures().get(i))),
+//									((fsmAgent) this.myAgent).node_obj(
+//											Integer.parseInt(((fsmAgent) this.myAgent).getObj_to_treasures().get(i+1))));
 
 							if (path_to_t != null) {
 								paths_to_tre.add(path_to_t);
@@ -369,6 +382,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 							((fsmAgent) this.myAgent).getB_path().remove(step);
 
 						} else {
+							String cc = ((AbstractDedaleAgent) this.myAgent).getCurrentPosition();
 							List<Couple<String, List<Couple<Observation, Integer>>>> lobs2 = ((AbstractDedaleAgent) this.myAgent)
 									.observe();
 							Random r = new Random();
@@ -378,13 +392,14 @@ public class ExploreBehaviour extends OneShotBehaviour {
 
 							// checkInbox();
 							try {
-								this.myAgent.doWait(((fsmAgent) this.myAgent).speed - 700); // wait : 300ms default
+								this.myAgent.doWait(((fsmAgent) this.myAgent).speed); // wait : 300ms default
 																							// (agent speed)
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
 							// checkInbox();
-							((AbstractDedaleAgent) this.myAgent).moveTo(cur_pos);
+							((AbstractDedaleAgent) this.myAgent).moveTo(cc);
+							//return;
 						}
 						
 					}
@@ -418,7 +433,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 
 								// checkInbox();
 								try {
-									this.myAgent.doWait(((fsmAgent) this.myAgent).speed - 700); // wait : 300ms default
+									this.myAgent.doWait(((fsmAgent) this.myAgent).speed); // wait : 300ms default
 																								// (agent speed)
 								} catch (Exception e) {
 									e.printStackTrace();
@@ -458,7 +473,7 @@ public class ExploreBehaviour extends OneShotBehaviour {
 				}
 
 				try {
-					this.myAgent.doWait(((fsmAgent) this.myAgent).speed - 700); // wait : 300ms default (agent speed)
+					this.myAgent.doWait(((fsmAgent) this.myAgent).speed); // wait : 300ms default (agent speed)
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
