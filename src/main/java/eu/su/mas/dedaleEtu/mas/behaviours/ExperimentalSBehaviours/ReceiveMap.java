@@ -16,9 +16,9 @@ public class ReceiveMap extends OneShotBehaviour {
 
 	private MapRepresentation myMap;
 	
-	private boolean msg_holder=true;
+	//private boolean msg_holder=true;
 	
-	private int exitCode;
+	//private int exitCode;
 
 	public ReceiveMap(final Agent cur_a) {
 		super(cur_a);
@@ -28,7 +28,8 @@ public class ReceiveMap extends OneShotBehaviour {
 	@Override
 	public void action() {
 		// Receive a Map
-		this.exitCode = 0;
+		
+		System.out.println(" ---> ReceiveMap running for ---> " + this.myAgent.getLocalName() + " <---");
 		
 		MessageTemplate msgT = MessageTemplate.and(
 				MessageTemplate.MatchProtocol("ProtocoleShareMap"),
@@ -58,25 +59,14 @@ public class ReceiveMap extends OneShotBehaviour {
 				((fsmAgent)this.myAgent).successMerge = true;
 			}
 			
-			System.out.println(" ---> " + this.myAgent.getLocalName() + " Merged its map with Map from "
-					+ msg.getSender().getLocalName());
+			System.out.println(" ---> " + this.myAgent.getLocalName() + " Merged its map with Map from " + msg.getSender().getLocalName());
 			
 		}else {
-			if(!msg_holder) {
-				msg_holder = true;
-				((fsmAgent)this.myAgent).successMerge = false;
-				System.out.println("--><-- Problem in Map exchange (ReceiveMap behaviour) for : "
-						+this.myAgent.getLocalName());
-			}
-			this.msg_holder = false;
-			block(6000);
+			
+			//block(300);
 		}
 		
 	}
 
-	@Override
-	public int onEnd() {
-		return exitCode;
-	}
 		
 }

@@ -313,6 +313,14 @@ public class MapRepresentation implements Serializable {
 				.filter(n -> n.getAttribute("ui.class")==MapAttribute.open.toString())
 				.findAny()).isPresent();
 	}
+	
+	public synchronized void openNode(String target) {
+		//this.g.removeNode(target);
+		Node n = this.g.getNode(target);
+		n.clearAttributes();
+		n.setAttribute("ui.class", MapAttribute.open.toString());
+		n.setAttribute("ui.label",target);
+	}
 
 
 

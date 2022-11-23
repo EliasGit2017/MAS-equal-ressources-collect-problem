@@ -1,0 +1,23 @@
+graph g{
+        Init
+        Boop
+        Booped
+        ShareMap
+        R_MAP
+        Explo
+        ComputeColl
+
+        Init -- Explo
+        Explo -- Explo
+        Explo -- Boop
+        Boop -- Booped
+        Booped -- Explo
+        Explo -- ShareMap
+        ShareMap -- R_MAP
+        R_MAP -- Explo
+        Explo -- R_MAP
+        Explo -- ComputeColl
+        ComputeColl -- Explo
+
+}
+

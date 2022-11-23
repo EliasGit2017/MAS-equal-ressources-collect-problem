@@ -24,5 +24,10 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="/home/elias/Downloads/or-tools_Ubuntu-20.04-64bit_v9.3.10497/ortools-linux-x86-64-9.3.10497-sources.jar"/>
+	<classpathentry kind="lib" path="/home/elias/Downloads/or-tools_Ubuntu-20.04-64bit_v9.3.10497/ortools-linux-x86-64-9.3.10497.jar"/>
+	<classpathentry kind="lib" path="/home/elias/Downloads/or-tools_Ubuntu-20.04-64bit_v9.3.10497/ortools-java-9.3.10497-sources.jar"/>
+	<classpathentry kind="lib" path="/home/elias/Downloads/or-tools_Ubuntu-20.04-64bit_v9.3.10497/ortools-java-9.3.10497-javadoc.jar"/>
+	<classpathentry kind="lib" path="/home/elias/Downloads/or-tools_Ubuntu-20.04-64bit_v9.3.10497/ortools-java-9.3.10497.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
